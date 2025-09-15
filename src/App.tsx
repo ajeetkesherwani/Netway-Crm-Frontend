@@ -20,6 +20,10 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
+// New import
+
+import UserList from "./pages/User/UserList";
+
 export default function App() {
   return (
     <>
@@ -53,6 +57,9 @@ export default function App() {
             <Route path="videos" element={<Videos />} />
             <Route path="line-chart" element={<LineChart />} />
             <Route path="bar-chart" element={<BarChart />} />
+
+            {/* New Routes */}
+            <Route path="user-list" element={<FormElements />} />
           </Route>
 
           {/* Fallback Route */}

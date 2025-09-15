@@ -1,25 +1,50 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { Link } from "react-router";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
+import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-// import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import { login } from "../../service/login";
+import { login as setAuth } from "../../utils/auth";
+import { useNavigate } from "react-router-dom";
 
+// export default function login() {
+  
 export default function SignInForm() {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  // Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    try {
+      const res = await login(formData);
+      console.log(res, ' response from the login api');
+      if (res?.success) {
+        setAuth(); // ✅ sets localStorage
+        navigate("/"); // ✅ redirects AFTER auth is set
+      } else {  
+        toast.error(res?.error || "Failed to create airdrop");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to create airdrop");
+    }
+  };
   const [showPassword, setShowPassword] = useState(false);
-  // const [isChecked, setIsChecked] = useState(false);
   return (
     <div className="flex flex-col flex-1">
-      {/* <div className="w-full max-w-md pt-10 mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon className="size-5" />
-          Back to dashboard
-        </Link>
-      </div> */}
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
@@ -31,13 +56,13 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" />
+                  <Input placeholder="info@gmail.com" name="email" onChange={handleChange}/>
                 </div>
                 <div className="mb-1">
                   <Label>
@@ -47,6 +72,8 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      onChange={handleChange}
+                      name="password"
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -62,10 +89,6 @@ export default function SignInForm() {
                 </div>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    {/* <Checkbox checked={isChecked} onChange={setIsChecked} />
-                    <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
-                    </span> */}
                   </div>
                   <Link
                     to="/reset-password"
@@ -81,18 +104,6 @@ export default function SignInForm() {
                 </div>
               </div>
             </form>
-
-            {/* <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Don&apos;t have an account? {""}
-                <Link
-                  to="/signup"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Sign Up
-                </Link>
-              </p>
-            </div> */}
           </div>
         </div>
       </div>
