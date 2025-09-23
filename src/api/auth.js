@@ -10,4 +10,5 @@ export const getProfile = () => axios.get("/auth/profile");
 
 export const logout = () => {
   localStorage.removeItem("token");
+  // Optionally clear other user data here
 };

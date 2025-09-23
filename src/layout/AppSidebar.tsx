@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    subItems: [{ name: "dashboard", path: "/", pro: false }],
   },
   // {
   //   icon: <CalenderIcon />,
@@ -39,6 +39,38 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     subItems: [{ name: "User List", path: "/user-list", pro: false }],
   },
+
+  {
+    name: "Staff",
+    icon: <ListIcon />,
+    subItems: [{ name: "staff List", path: "/staff/list", pro: false }],
+  },
+
+    {
+    name: "Retailer",
+    icon: <ListIcon />,
+    subItems: [{ name: "Retailer List", path: "/retailer/list", pro: false }],
+  },
+
+   {
+    name: "Lco",
+    icon: <ListIcon />,
+    subItems: [{ name: "Lco List", path: "/lco/list", pro: false }],
+  },
+
+   {
+    name: "Packege",
+    icon: <ListIcon />,
+    subItems: [{ name: "Package List", path: "/package/list", pro: false }],
+  },
+
+  
+   {
+    name: "Customer",
+    icon: <ListIcon />,
+    subItems: [{ name: "Customer List", path: "/user/list", pro: false }],
+  },
+
   // {
   //   name: "Forms",
   //   icon: <ListIcon />,

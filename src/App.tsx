@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -19,10 +22,23 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import StaffList from "./pages/Staff/StaffList";
+import RetailerList from "./pages/Retailer/RetailerList";
+import RetailerView from "./pages/Retailer/RetailerDetails";
+import RetailerUpdate from "./pages/Retailer/RetailerUpdate";
+import RetailerCreate from "./pages/Retailer/RetailerCreate";
+import LcoList from "./pages/LcoPage/LcoList";
+import LcoDetails from "./pages/LcoPage/LcoDetails";
+import PackageList from "./pages/Package/PackageList";
+import CreateLco from "./pages/LcoPage/LcoCreate";
+import PackageDetails from "./pages/Package/PackageDetails";
+import PackageCreate from "./pages/Package/PackageCreate";
+import CustomerList from "./pages/Customer/CustomerList";
+import UserDetails from "./pages/Customer/CustomerDetails";
+import CreateUser from "./pages/Customer/CustomerCreate";
+import SignInReseller from "./pages/AuthPages/SignInReseller";
 
-// New import
-
-import UserList from "./pages/User/UserList";
+// import UserList from "./pages/User/UserList";
 
 export default function App() {
   return (
@@ -33,6 +49,8 @@ export default function App() {
           {/* Auth Routes (Public) */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+           <Route path="/reseller" element={<SignInReseller />} />
+
 
           {/* Protected Dashboard Layout */}
           <Route
@@ -60,11 +78,49 @@ export default function App() {
 
             {/* New Routes */}
             <Route path="user-list" element={<FormElements />} />
+
+            <Route path="staff/list" element={<StaffList />} />
+
+            {/* retailer Routes */}
+            <Route path="retailer/list" element={<RetailerList/>} />
+            <Route path="retailer/create" element={<RetailerCreate/>} />
+             <Route path="retailer/list/:id" element={<RetailerView/>} />
+             <Route path="retailer/update/:id" element={<RetailerUpdate/>} />
+
+             {/* lco Routes */}
+             <Route path="lco/list" element={<LcoList/>} />
+             <Route path="lco/create" element={<CreateLco/>} />
+             <Route path="lco/list/:id" element={<LcoDetails/>} />
+
+             {/* package Routes */}
+              <Route path="package/list" element={<PackageList/>} />
+              <Route path="package/list/:id" element={<PackageDetails/>} />
+              <Route path="package/create" element={<PackageCreate/>} />
+
+               {/*Customer Routes */}
+              <Route path="user/list" element={<CustomerList/>} />
+               <Route path="user/create" element={<CreateUser/>} />
+              <Route path="user/:id" element={<UserDetails/>} />
+             
+        
           </Route>
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+           {/* Toast Container (Global) */}
+        <ToastContainer 
+         position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{ marginTop: "70px" }}
+         />
       </Router>
     </>
   );
