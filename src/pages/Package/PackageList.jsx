@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { getAllPackageList } from "../../service/package"; // API for fetching packages
+import { getAllPackageList } from "../../service/package"; 
 import { useNavigate } from "react-router-dom";
 import { FaEllipsisV, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function PackageList() {
   const [packages, setPackages] = useState([]);
@@ -67,12 +68,15 @@ export default function PackageList() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Package List</h1>
-        <button
-          onClick={() => navigate("/package/create")}
-          className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-        >
-          Add Package
-        </button>
+        <ProtectedAction module="package" action="create">
+          <button
+            onClick={() => navigate("/package/create")}
+            className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
+            aria-label="Add Package"
+          >
+            Add Package
+          </button>
+        </ProtectedAction>
       </div>
 
       {packages.length === 0 ? (
@@ -80,63 +84,63 @@ export default function PackageList() {
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto text-[12px]">
             <table className="min-w-[800px] w-full border border-gray-200 divide-y divide-gray-200">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-4 py-2 text-left">S.No</th>
-                  <th className="px-4 py-2 text-left">Package Name</th>
-                  <th className="px-4 py-2 text-left">Validity</th>
-                  <th className="px-4 py-2 text-left">Category</th>
-                  <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Action</th>
+                  <th className="px-[2px] py-[2px] text-left">S.No</th>
+                  <th className="px-[2px] py-[2px] text-left">Package Name</th>
+                  <th className="px-[2px] py-[2px] text-left">Validity</th>
+                  <th className="px-[2px] py-[2px] text-left">Category</th>
+                  <th className="px-[2px] py-[2px] text-left">Status</th>
+                  <th className="px-[2px] py-[2px] text-left">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {packages.map((pkg, index) => (
                   <tr key={pkg._id} className="hover:bg-gray-50 relative">
-                    <td className="px-4 py-2">{index + 1}</td>
-                    <td className="px-4 py-2">{pkg.name}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-[2px] py-[2px]">{index + 1}</td>
+                    <td className="px-[2px] py-[2px] hover:underline hover:cursor-pointer"  onClick={() => handleView(pkg._id)} >{pkg.name}</td>
+                    <td className="px-[2px] py-[2px]">
                       {pkg.validity?.number} {pkg.validity?.unit}
                     </td>
-                    <td className="px-4 py-2">{pkg.categoryOfPlan}</td>
-                    <td className="px-4 py-2">{pkg.status}</td>
-                    <td className="px-4 py-2 text-right relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(openMenuId === pkg._id ? null : pkg._id)
-                        }
-                        className="p-2 rounded hover:bg-gray-200"
-                      >
-                        <FaEllipsisV />
-                      </button>
-
-                      {openMenuId === pkg._id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded shadow-md z-30"
-                        >
+                    <td className="px-[2px] py-[2px]">{pkg.categoryOfPlan}</td>
+                    <td className="px-[2px] py-[2px]">{pkg.status}</td>
+                    <td className="px-[2px] py-[2px] text-right relative">
+                      <div className="flex items-center justify-start space-x-2">
+                        <ProtectedAction module="package" action="view">
                           <button
                             onClick={() => handleView(pkg._id)}
-                            className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-100"
+                            className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
+                            title="View"
+                            aria-label="View"
                           >
-                            <FaEye className="mr-2" /> View
+                            <FaEye size={14} />
                           </button>
+                        </ProtectedAction>
+
+                        <ProtectedAction module="package" action="edit">
                           <button
                             onClick={() => handleEdit(pkg._id)}
-                            className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-100"
+                            className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
+                            title="Edit"
+                            aria-label="Edit"
                           >
-                            <FaEdit className="mr-2" /> Edit
+                            <FaEdit size={14} />
                           </button>
+                        </ProtectedAction>
+
+                        <ProtectedAction module="package" action="delete">
                           <button
                             onClick={() => handleDelete(pkg._id)}
-                            className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
+                            title="Delete"
+                            aria-label="Delete"
                           >
-                            <FaTrash className="mr-2" /> Delete
+                            <FaTrash size={14} />
                           </button>
-                        </div>
-                      )}
+                        </ProtectedAction>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -161,24 +165,33 @@ export default function PackageList() {
                 <p className="text-sm">Status: {pkg.status}</p>
 
                 <div className="flex justify-end space-x-3 mt-3">
-                  <button
-                    onClick={() => handleView(pkg._id)}
-                    className="text-blue-600 flex items-center text-sm"
-                  >
-                    <FaEye className="mr-1" /> View
-                  </button>
-                  <button
-                    onClick={() => handleEdit(pkg._id)}
-                    className="text-green-600 flex items-center text-sm"
-                  >
-                    <FaEdit className="mr-1" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(pkg._id)}
-                    className="text-red-600 flex items-center text-sm"
-                  >
-                    <FaTrash className="mr-1" /> Delete
-                  </button>
+                  <ProtectedAction module="package" action="view">
+                    <button
+                      onClick={() => handleView(pkg._id)}
+                      className="text-blue-600 flex items-center text-sm"
+                      aria-label="View"
+                    >
+                      <FaEye className="mr-1" /> View
+                    </button>
+                  </ProtectedAction>
+                  <ProtectedAction module="package" action="edit">
+                    <button
+                      onClick={() => handleEdit(pkg._id)}
+                      className="text-green-600 flex items-center text-sm"
+                      aria-label="Edit"
+                    >
+                      <FaEdit className="mr-1" /> Edit
+                    </button>
+                  </ProtectedAction>
+                  <ProtectedAction module="package" action="delete">
+                    <button
+                      onClick={() => handleDelete(pkg._id)}
+                      className="text-red-600 flex items-center text-sm"
+                      aria-label="Delete"
+                    >
+                      <FaTrash className="mr-1" /> Delete
+                    </button>
+                  </ProtectedAction>
                 </div>
               </div>
             ))}

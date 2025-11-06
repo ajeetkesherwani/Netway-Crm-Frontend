@@ -27,12 +27,10 @@ export const createUser = async (packages) => {
     },
     body: JSON.stringify(packages),
   });
-
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create user");
   return data;
 };
-
 // get UserDetails
 export const getUserDetails = async (id) => {
   const res = await fetch(`${BASE_URL}/user/${id}`, {
@@ -47,3 +45,74 @@ export const getUserDetails = async (id) => {
   return res.json();
 };
 
+
+// export const getUserDetails = async (id) => {
+  //   const res = await fetch(`${BASE_URL}/api/admin/customer/${id}`, {
+    //     method: "GET",
+    //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${getToken()}`,
+      //     },
+      //   });
+      //   const data = await res.json();
+      //   if (!res.ok) throw new Error(data.message || "Failed to fetch customer details");
+      //   return data;
+      // };
+      
+      // update the users
+export const updateUser = async (id, userData) => {
+  const res = await fetch(`${BASE_URL}/api/admin/customer/update/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(userData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update customer");
+  return data;
+};
+
+// In ../../service/user.js
+export const deleteUser = async (id) => {
+  const res = await fetch(`${BASE_URL}/user/delete/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to delete user");
+  return data;
+};
+
+//-----------------------------------------------------this api is used to update the status of the customer -----------------------------------------------------
+export const updateUserStatus = async (id, status) => {
+  const res = await fetch(`${BASE_URL}/userManage/update-status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ userId:id, status }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update user status");
+  return data;
+};
+//-------------------------------------------------------this api for purchase plan -------------------------------------------------------
+export const getPurchasedPlanList = async (userId, page, limit, search) => {
+  const url = `${BASE_URL}/purchasedPlan/list?userId=${userId}&page=${page}&limit=${limit}&search=${search}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load purchase plans");
+  return data;
+};

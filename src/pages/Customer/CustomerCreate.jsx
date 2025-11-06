@@ -12,6 +12,7 @@ export default function CreateUser() {
   const [roles, setRoles] = useState([]);
   const [retailers, setRetailers] = useState([]);
   const [lcos, setLcos] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
 
   const nasOptions = [
     "Netway-103.255.235.3",
@@ -21,7 +22,6 @@ export default function CreateUser() {
   ];
 
   const categoryOptions = ["Category1", "Category2", "Category3"];
-
   const initialFormData = {
     generalInformation: {
       title: "Mr",
@@ -120,8 +120,15 @@ export default function CreateUser() {
         },
       }));
     }
-  };
 
+    // clear specific field error when user edits it
+    setFormErrors((prev) => {
+      if (!prev || !prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
   const handleNasChange = (nasValue) => {
     setFormData((prev) => {
       let updatedNAS = [...prev.networkInformation.statisIp.nas];
@@ -140,9 +147,38 @@ export default function CreateUser() {
     });
   };
 
+  const validateForm = () => {
+    const errors = {};
+    const email = formData.generalInformation.email?.trim();
+    const phone = formData.generalInformation.phone?.trim();
+
+    if (!email) {
+      errors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      errors.email = "Enter a valid email";
+    }
+
+    if (!phone) {
+      errors.phone = "Mobile number is required";
+    } else if (!/^\d{10,}$/.test(phone)) {
+      errors.phone = "Enter a valid mobile number (min 10 digits)";
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error("Please correct the highlighted errors");
+      setLoading(false);
+      return;
+    }
+
     try {
       await createUser(formData);
       toast.success("User created successfully ✅");
@@ -155,7 +191,10 @@ export default function CreateUser() {
     }
   };
 
-  const handleClear = () => setFormData(initialFormData);
+  const handleClear = () => {
+    setFormData(initialFormData);
+    setFormErrors({});
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
@@ -167,8 +206,8 @@ export default function CreateUser() {
           { label: "Name", key: "name" },
           { label: "Username", key: "username" },
           { label: "Password", key: "password", type: "password" },
-          { label: "Email", key: "email", type: "email" },
-          { label: "Phone", key: "phone" },
+          { label: "Email *", key: "email", type: "email" },
+          { label: "Phone *", key: "phone", type: "tel" },
           { label: "Telephone", key: "telephone" },
           { label: "CAF No", key: "cafNo" },
           { label: "GST", key: "gst" },
@@ -179,8 +218,8 @@ export default function CreateUser() {
           { label: "Country", key: "country" },
           { label: "District", key: "district" },
           { label: "Payment Method", key: "paymentMethod", type: "select", options: ["Cash","Online"] },
-          { label: "Role", key: "roleId", type: "select", options: roles.map(r => ({ id: r._id, name: r.roleName })) },
-          { label: "Retailer", key: "retailerId", type: "select", options: retailers.map(r => ({ id: r._id, name: r.resellerName })) },
+          // { label: "Role", key: "roleId", type: "select", options: roles.map(r => ({ id: r._id, name: r.roleName })) },
+          { label: "Reseller", key: "retailerId", type: "select", options: retailers.map(r => ({ id: r._id, name: r.resellerName })) },
           { label: "LCO", key: "lcoId", type: "select", options: lcos.map(l => ({ id: l._id, name: l.lcoName })) },
         ].map((field) => (
           <div key={field.key}>
@@ -190,7 +229,7 @@ export default function CreateUser() {
                 value={formData.generalInformation[field.key] || ""}
                 onChange={(e) => handleChange(e, "generalInformation", field.key)}
                 className="border p-2 w-full rounded"
-                required
+                required={field.key === "email" || field.key === "phone"}
               >
                 <option value="">Select {field.label}</option>
                 {field.options.map((opt, idx) =>
@@ -202,18 +241,23 @@ export default function CreateUser() {
                 )}
               </select>
             ) : (
-              <input
-                type={field.type || "text"}
-                value={formData.generalInformation[field.key] || ""}
-                onChange={(e) => handleChange(e, "generalInformation", field.key)}
-                className="border p-2 w-full rounded"
-              />
+              <>
+                <input
+                  type={field.type || "text"}
+                  value={formData.generalInformation[field.key] || ""}
+                  onChange={(e) => handleChange(e, "generalInformation", field.key)}
+                  className={`border p-2 w-full rounded ${formErrors[field.key] ? "border-red-500" : ""}`}
+                  required={field.key === "email" || field.key === "phone"}
+                />
+                {formErrors[field.key] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors[field.key]}</p>
+                )}
+              </>
             )}
           </div>
         ))}
-
         {/* Network Information */}
-        <div>
+        {/* <div>
           <label className="block font-medium">Network Type</label>
           <select
             value={formData.networkInformation.networkType}
@@ -225,7 +269,7 @@ export default function CreateUser() {
             <option>IP-Pass throw</option>
             <option>MAC_TAL</option>
           </select>
-        </div>
+        </div> */}
 
         <div>
           <label className="block font-medium">IP Type</label>
@@ -239,9 +283,9 @@ export default function CreateUser() {
           </select>
         </div>
 
-        <div className="col-span-2">
+      {formData.networkInformation.ipType ==="Static IP" && <div className="col-span-2">
           <label className="block font-medium mb-2">NAS (Multiple Select)</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col  gap-2 border rounded p-2 border-black">
             {nasOptions.map((nas) => (
               <label key={nas} className="flex items-center gap-2">
                 <input
@@ -254,9 +298,9 @@ export default function CreateUser() {
               </label>
             ))}
           </div>
-        </div>
+        </div>}  
 
-        <div>
+       {formData.networkInformation.ipType ==="Static IP" && <div>
           <label className="block font-medium">Category</label>
           <select
             value={formData.networkInformation.statisIp.category}
@@ -269,8 +313,8 @@ export default function CreateUser() {
             ))}
           </select>
         </div>
-
-        <div>
+}
+      {formData.networkInformation.ipType ==="Dynamic IP Pool" &&  <div>
           <label className="block font-medium">Dynamic IP Pool</label>
           <input
             type="text"
@@ -278,13 +322,13 @@ export default function CreateUser() {
             onChange={(e) => handleChange(e, "networkInformation", "dynamicIpPool")}
             className="border p-2 w-full rounded"
           />
-        </div>
+        </div>}
 
         {/* Additional Information */}
         <div>
           <label className="block font-medium">DOB</label>
           <input
-            type="date"
+            type="datetime-local"
             value={formData.additionalInformation.dob}
             onChange={(e) => handleChange(e, "additionalInformation", "dob")}
             className="border p-2 w-full rounded"
@@ -313,8 +357,10 @@ export default function CreateUser() {
         ))}
 
         {/* Document */}
-        {[
-          { label: "Document Type", key: "documentType", options: ["ID proof","Profile Id","Adhar Card","Insurence Paper","Signature","Other"] },
+        {[{
+          label: "Document Type",
+          key: "documentType",
+          options: ["ID proof","Profile Id","Adhar Card","Insurence Paper","Signature","Other"] },
           { label: "Document Details", key: "documentDetails", options: ["Licence","Pancard","Gst","Address Proof","Passport"] },
         ].map((field) => (
           <div key={field.key}>

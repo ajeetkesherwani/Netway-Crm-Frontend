@@ -11,7 +11,6 @@ interface HeaderProps {
 }
 const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
