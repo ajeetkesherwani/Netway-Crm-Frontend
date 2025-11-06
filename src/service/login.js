@@ -18,15 +18,12 @@ export const login = async (payload) => {
             // save JWT and auth flag
             localStorage.setItem("token", result.token);
         }
-
         return result;
-
     } catch (err) {
         toast.error(err.message || 'Something went wrong!');
         throw new Error(err.message);
     }
 };
-
 //reseller
 export const resellerLogin = async (payload) => {
     console.log(payload, ' data for send in the api');
@@ -34,9 +31,9 @@ export const resellerLogin = async (payload) => {
         const res = await fetch(`${BASE_URL}/auth/reseller/login`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json", // ✅ tell backend we're sending JSON
+                "Content-Type": "application/json", 
             },
-            body: JSON.stringify(payload) // ✅ convert object to JSON string
+            body: JSON.stringify(payload)
         });
         const result = await res.json();
         console.log(result, "res");
@@ -44,9 +41,7 @@ export const resellerLogin = async (payload) => {
             // save JWT and auth flag
             localStorage.setItem("token", result.token);
         }
-
         return result;
-
     } catch (err) {
         toast.error(err.message || 'Something went wrong!');
         throw new Error(err.message);

@@ -27,7 +27,6 @@ export const createPackage = async (packages) => {
     },
     body: JSON.stringify(packages),
   });
-
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create package");
   return data;
@@ -47,3 +46,18 @@ export const getPackageDetails = async (id) => {
   return res.json();
 };
 
+// Update package
+export const updatePackage = async (id, packageData) => {
+  const res = await fetch(`${BASE_URL}/package/update/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(packageData),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update package");
+  return data;
+};
