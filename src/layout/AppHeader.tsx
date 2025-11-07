@@ -115,7 +115,7 @@ const AppHeader: React.FC = () => {
               />
             </svg>
           </button>
-{/* search box in the header */}
+          {/* search box in the header */}
           {/* <div className="hidden lg:block">
             <form>
               <div className="relative">
