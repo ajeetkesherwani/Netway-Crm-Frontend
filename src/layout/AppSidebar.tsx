@@ -507,22 +507,52 @@ const AppSidebar: React.FC = () => {
       });
     }
 
-    // Reseller menu
+    // Reseller main menu
     const resellerSubItems = [];
+
+    // ✅ Submenu: Reseller List
     if (rolePermission.retailer?.listing !== false) {
       resellerSubItems.push({
-        name: "Reseller/Lco List",
+        name: "Reseller List",
         path: "/retailer/list",
         pro: false,
       });
     }
+
+    // ✅ Submenu: LCO List
+    if (rolePermission.lco?.listing !== false) {
+      resellerSubItems.push({
+        name: "LCO List",
+        path: "/lco/list",
+        pro: false,
+      });
+    }
+
+    // ✅ Push only if at least one submenu is visible
     if (resellerSubItems.length > 0) {
       generatedNavItems.push({
-        name: "Reseller/Lco",
+        name: "Reseller",
         icon: <ListIcon />,
         subItems: resellerSubItems,
       });
     }
+
+    // // Reseller menu
+    // const resellerSubItems = [];
+    // if (rolePermission.retailer?.listing !== false) {
+    //   resellerSubItems.push({
+    //     name: "Reseller/Lco List",
+    //     path: "/retailer/list",
+    //     pro: false,
+    //   });
+    // }
+    // if (resellerSubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Reseller/Lco",
+    //     icon: <ListIcon />,
+    //     subItems: resellerSubItems,
+    //   });
+    // }
     // Lco menu (assume permission key "lco.listing")
     // const lcoSubItems = [];
     // if (rolePermission.lco?.listing !== false) {
@@ -705,6 +735,21 @@ const AppSidebar: React.FC = () => {
         pro: false,
       });
     }
+    if (rolePermission.setting?.ticketreply !== false) {
+      settingSubItems.push({
+        name: "Ticket Reply",
+        path: "/setting/ticketReplyOption/List",
+        pro: false,
+      });
+    }
+    if (rolePermission.setting?.resolution !== false) {
+      settingSubItems.push({
+        name: "Resolution",
+        path: "/setting/resolution/List",
+        pro: false,
+      });
+    }
+
     if (settingSubItems.length > 0) {
       generatedNavItems.push({
         name: "Setting",
