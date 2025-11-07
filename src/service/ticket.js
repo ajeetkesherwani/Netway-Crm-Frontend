@@ -124,7 +124,7 @@ export const getReassignTicketList = async (page = 1, limit = 10) => {
 
 // ✅ Fetch Ticket Replies
 export const getTicketReplies = async (ticketId) => {
-  const res = await fetch(`${BASE_URL}/api/admin/ticketReply/list/${ticketId}`, {
+  const res = await fetch(`${BASE_URL}/ticketReply/list/${ticketId}`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
@@ -138,7 +138,7 @@ export const getTicketReplies = async (ticketId) => {
 
 // ✅ Create Ticket Reply
 export const createTicketReply = async (ticketId, payload) => {
-  const res = await fetch(`${BASE_URL}/api/admin/ticketReply/create`, {
+  const res = await fetch(`${BASE_URL}/ticketReply/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -168,7 +168,7 @@ export const getTicketTimeline = async (ticketId) => {
 
 // Get Ticket Details
 export const getTicketDetails = async (ticketId) => {
-  const res = await fetch(`${BASE_URL}/api/admin/ticket/list/${ticketId}`, {
+  const res = await fetch(`${BASE_URL}/ticket/list/${ticketId}`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
@@ -179,7 +179,7 @@ export const getTicketDetails = async (ticketId) => {
 
 // Get Staff Role List
 export const getStaffRoleList = async () => {
-  const res = await fetch(`${BASE_URL}/api/admin/common/staff/roleList`, {
+  const res = await fetch(`${BASE_URL}/common/staff/roleList`, {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
@@ -190,7 +190,7 @@ export const getStaffRoleList = async () => {
 
 //asign to staff
 export const assignTicketToStaff = async (body) => {
-  const res = await fetch(`${BASE_URL}/api/admin/ticketAssign/toStaff`, {
+  const res = await fetch(`${BASE_URL}/ticketAssign/toStaff`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -203,7 +203,7 @@ export const assignTicketToStaff = async (body) => {
 
 //update ticket
 export const updateTicketDetails = async (ticketId, body) => {
-  const res = await fetch(`${BASE_URL}/api/admin/ticket/update/${ticketId}`, {
+  const res = await fetch(`${BASE_URL}/ticket/update/${ticketId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -213,4 +213,21 @@ export const updateTicketDetails = async (ticketId, body) => {
   });
   return res.json();
 };
+
+
+
+// ✅ Get Category List
+export const getCategoryList = async () => {
+  const res = await fetch(`${BASE_URL}/category/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await res.json();
+  return data;
+};
+
 
