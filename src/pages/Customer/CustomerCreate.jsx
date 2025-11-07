@@ -107,7 +107,11 @@ export default function CreateUser() {
           [key]: {
             ...prev[section][key],
             [nestedKey]:
-              type === "checkbox" ? checked : type === "file" ? files[0] : value,
+              type === "checkbox"
+                ? checked
+                : type === "file"
+                ? files[0]
+                : value,
           },
         },
       }));
@@ -116,7 +120,8 @@ export default function CreateUser() {
         ...prev,
         [section]: {
           ...prev[section],
-          [key]: type === "checkbox" ? checked : type === "file" ? files[0] : value,
+          [key]:
+            type === "checkbox" ? checked : type === "file" ? files[0] : value,
         },
       }));
     }
@@ -199,10 +204,18 @@ export default function CreateUser() {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
       <h2 className="text-2xl font-bold mb-6">Create User</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
         {/* General Information */}
         {[
-          { label: "Title", key: "Title", type: "select", options: ["M/s", "Mr", "Ms", "Mrs", "Miss"] },
+          {
+            label: "Title",
+            key: "Title",
+            type: "select",
+            options: ["M/s", "Mr", "Ms", "Mrs", "Miss"],
+          },
           { label: "Name", key: "name" },
           { label: "Username", key: "username" },
           { label: "Password", key: "password", type: "password" },
@@ -214,29 +227,58 @@ export default function CreateUser() {
           { label: "Adhar No", key: "adharNo" },
           { label: "Address", key: "address" },
           { label: "Pincode", key: "pincode" },
-          { label: "State", key: "state", type: "select", options: ["Maharashtra","Delhi","Haryana","Uttar Pradesh"] },
+          {
+            label: "State",
+            key: "state",
+            type: "select",
+            options: ["Maharashtra", "Delhi", "Haryana", "Uttar Pradesh"],
+          },
           { label: "Country", key: "country" },
           { label: "District", key: "district" },
-          { label: "Payment Method", key: "paymentMethod", type: "select", options: ["Cash","Online"] },
+          {
+            label: "Payment Method",
+            key: "paymentMethod",
+            type: "select",
+            options: ["Cash", "Online"],
+          },
           // { label: "Role", key: "roleId", type: "select", options: roles.map(r => ({ id: r._id, name: r.roleName })) },
-          { label: "Reseller", key: "retailerId", type: "select", options: retailers.map(r => ({ id: r._id, name: r.resellerName })) },
-          { label: "LCO", key: "lcoId", type: "select", options: lcos.map(l => ({ id: l._id, name: l.lcoName })) },
+          {
+            label: "Reseller",
+            key: "retailerId",
+            type: "select",
+            options: retailers.map((r) => ({
+              id: r._id,
+              name: r.resellerName,
+            })),
+          },
+          {
+            label: "LCO",
+            key: "lcoId",
+            type: "select",
+            options: lcos.map((l) => ({ id: l._id, name: l.lcoName })),
+          },
         ].map((field) => (
           <div key={field.key}>
             <label className="block font-medium">{field.label}</label>
             {field.type === "select" ? (
               <select
                 value={formData.generalInformation[field.key] || ""}
-                onChange={(e) => handleChange(e, "generalInformation", field.key)}
+                onChange={(e) =>
+                  handleChange(e, "generalInformation", field.key)
+                }
                 className="border p-2 w-full rounded"
                 required={field.key === "email" || field.key === "phone"}
               >
                 <option value="">Select {field.label}</option>
                 {field.options.map((opt, idx) =>
                   typeof opt === "object" ? (
-                    <option key={idx} value={opt.id}>{opt.name}</option>
+                    <option key={idx} value={opt.id}>
+                      {opt.name}
+                    </option>
                   ) : (
-                    <option key={idx} value={opt}>{opt}</option>
+                    <option key={idx} value={opt}>
+                      {opt}
+                    </option>
                   )
                 )}
               </select>
@@ -245,12 +287,18 @@ export default function CreateUser() {
                 <input
                   type={field.type || "text"}
                   value={formData.generalInformation[field.key] || ""}
-                  onChange={(e) => handleChange(e, "generalInformation", field.key)}
-                  className={`border p-2 w-full rounded ${formErrors[field.key] ? "border-red-500" : ""}`}
+                  onChange={(e) =>
+                    handleChange(e, "generalInformation", field.key)
+                  }
+                  className={`border p-2 w-full rounded ${
+                    formErrors[field.key] ? "border-red-500" : ""
+                  }`}
                   required={field.key === "email" || field.key === "phone"}
                 />
                 {formErrors[field.key] && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors[field.key]}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors[field.key]}
+                  </p>
                 )}
               </>
             )}
@@ -283,46 +331,61 @@ export default function CreateUser() {
           </select>
         </div>
 
-      {formData.networkInformation.ipType ==="Static IP" && <div className="col-span-2">
-          <label className="block font-medium mb-2">NAS (Multiple Select)</label>
-          <div className="flex flex-col  gap-2 border rounded p-2 border-black">
-            {nasOptions.map((nas) => (
-              <label key={nas} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.networkInformation.statisIp.nas.includes(nas)}
-                  onChange={() => handleNasChange(nas)}
-                  className="h-4 w-4"
-                />
-                {nas}
-              </label>
-            ))}
+        {formData.networkInformation.ipType === "Static IP" && (
+          <div className="col-span-2">
+            <label className="block font-medium mb-2">
+              NAS (Multiple Select)
+            </label>
+            <div className="flex flex-col  gap-2 border rounded p-2 border-black">
+              {nasOptions.map((nas) => (
+                <label key={nas} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.networkInformation.statisIp.nas.includes(
+                      nas
+                    )}
+                    onChange={() => handleNasChange(nas)}
+                    className="h-4 w-4"
+                  />
+                  {nas}
+                </label>
+              ))}
+            </div>
           </div>
-        </div>}  
+        )}
 
-       {formData.networkInformation.ipType ==="Static IP" && <div>
-          <label className="block font-medium">Category</label>
-          <select
-            value={formData.networkInformation.statisIp.category}
-            onChange={(e) => handleChange(e, "networkInformation", "statisIp", "category")}
-            className="border p-2 w-full rounded"
-          >
-            <option value="">Select Category</option>
-            {categoryOptions.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-}
-      {formData.networkInformation.ipType ==="Dynamic IP Pool" &&  <div>
-          <label className="block font-medium">Dynamic IP Pool</label>
-          <input
-            type="text"
-            value={formData.networkInformation.dynamicIpPool}
-            onChange={(e) => handleChange(e, "networkInformation", "dynamicIpPool")}
-            className="border p-2 w-full rounded"
-          />
-        </div>}
+        {formData.networkInformation.ipType === "Static IP" && (
+          <div>
+            <label className="block font-medium">Category</label>
+            <select
+              value={formData.networkInformation.statisIp.category}
+              onChange={(e) =>
+                handleChange(e, "networkInformation", "statisIp", "category")
+              }
+              className="border p-2 w-full rounded"
+            >
+              <option value="">Select Category</option>
+              {categoryOptions.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {formData.networkInformation.ipType === "Dynamic IP Pool" && (
+          <div>
+            <label className="block font-medium">Dynamic IP Pool</label>
+            <input
+              type="text"
+              value={formData.networkInformation.dynamicIpPool}
+              onChange={(e) =>
+                handleChange(e, "networkInformation", "dynamicIpPool")
+              }
+              className="border p-2 w-full rounded"
+            />
+          </div>
+        )}
 
         {/* Additional Information */}
         <div>
@@ -340,7 +403,9 @@ export default function CreateUser() {
           <input
             type="text"
             value={formData.additionalInformation.description}
-            onChange={(e) => handleChange(e, "additionalInformation", "description")}
+            onChange={(e) =>
+              handleChange(e, "additionalInformation", "description")
+            }
             className="border p-2 w-full rounded"
           />
         </div>
@@ -357,11 +422,24 @@ export default function CreateUser() {
         ))}
 
         {/* Document */}
-        {[{
-          label: "Document Type",
-          key: "documentType",
-          options: ["ID proof","Profile Id","Adhar Card","Insurence Paper","Signature","Other"] },
-          { label: "Document Details", key: "documentDetails", options: ["Licence","Pancard","Gst","Address Proof","Passport"] },
+        {[
+          {
+            label: "Document Type",
+            key: "documentType",
+            options: [
+              "ID proof",
+              "Profile Id",
+              "Adhar Card",
+              "Insurence Paper",
+              "Signature",
+              "Other",
+            ],
+          },
+          {
+            label: "Document Details",
+            key: "documentDetails",
+            options: ["Licence", "Pancard", "Gst", "Address Proof", "Passport"],
+          },
         ].map((field) => (
           <div key={field.key}>
             <label className="block font-medium">{field.label}</label>
@@ -371,7 +449,9 @@ export default function CreateUser() {
               className="border p-2 w-full rounded"
             >
               {field.options.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
               ))}
             </select>
           </div>
@@ -391,7 +471,12 @@ export default function CreateUser() {
           <label className="block font-medium">Status</label>
           <select
             value={formData.status}
-            onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value === "true" }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                status: e.target.value === "true",
+              }))
+            }
             className="border p-2 w-full rounded"
           >
             <option value="true">Active</option>

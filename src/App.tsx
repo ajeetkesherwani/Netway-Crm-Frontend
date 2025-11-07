@@ -117,6 +117,8 @@ import LcoWiseDetail from "./pages/Dashboard/components/LcoWise/LcoWiseDetail";
 import DashboardBarUsers from "./pages/Dashboard/components/DateWiseDashboardDetails";
 import DashboardDetails from "./pages/Dashboard/components/DashboardDetails";
 import ReassignTicketList from "./pages/Ticket/RenewalTicket";
+import { TicketReplyOptionList } from "./pages/Setting/TicketReplyOptionList";
+import { ResolutionList } from "./pages/Setting/ResolutionList";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -310,6 +312,18 @@ export default function App() {
               path="/setting/hardware/update/:id"
               element={<HardwareUpdate />}
             />
+            {/*---------------------------------------------------------ticket reply--------------------------------------------- */}
+            <Route
+              path="/setting/ticketReplyOption/list"
+              element={<TicketReplyOptionList />}
+            />
+
+            {/* --------------------------------------resolution----------------------------------------- */}
+            <Route
+              path="/setting/resolution/list"
+              element={<ResolutionList />}
+            ></Route>
+
             {/* this is for the setting end of the ticket */}
             <Route path="/ticket/renewal" element={<ReassignTicketList />} />
             <Route path="/ticket/close" element={<CloseTicket />} />
