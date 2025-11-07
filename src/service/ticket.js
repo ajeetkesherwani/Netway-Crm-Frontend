@@ -64,7 +64,7 @@ export const createTicket = async (ticketData) => {
 // };
 // Update ticket
 export const updateTicket = async (id, ticketData) => {
-  const res = await fetch(`${BASE_URL}/ticket/${id}`, {
+  const res = await fetch(`${BASE_URL}/ticket/status/${id}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${getToken()}`,
@@ -75,6 +75,8 @@ export const updateTicket = async (id, ticketData) => {
   if (!res.ok) throw new Error(data.message || "Failed to update ticket");
   return data;
 };
+
+
 // 2. Get staff list for "Assign To" dropdown
 export const getStaffList = async () => {
   const res = await fetch(`${BASE_URL}/common/staff/roleList`, {
