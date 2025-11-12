@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllTicketList } from "../../service/ticket";
+import { getAllTicketList, deleteTicket } from "../../service/ticket"; // ✅ added deleteTicket import
 import {
   FaTrash,
   FaClipboardList,
@@ -20,38 +20,39 @@ export default function ClosedTicket() {
   const navigate = useNavigate();
 
   // ✅ Fetch Closed Tickets
+  const loadTickets = async () => {
+    setLoading(true);
+    try {
+      const res = await getAllTicketList(page, limit, "", "Closed");
+      console.log("✅ API Response:", res);
+
+      const ticketData =
+        res?.data?.data?.closedTickets ||
+        res?.data?.closedTickets ||
+        res?.closedTickets ||
+        [];
+
+      const cleaned = ticketData.map((t) => ({
+        _id: t._id,
+        personName: t.personName || "N/A",
+        email: t.email || "N/A",
+        personNumber: t.personNumber || "N/A",
+        status: t.status || "Closed",
+        severity: t.severity || "Low",
+        createdAt: t.createdAt || "",
+      }));
+
+      setTickets(cleaned);
+      setTotalPages(Math.ceil(cleaned.length / limit));
+    } catch (err) {
+      console.error("Error fetching tickets:", err);
+      setError("Failed to load tickets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadTickets = async () => {
-      setLoading(true);
-      try {
-        const res = await getAllTicketList(page, limit, "", "Closed");
-        console.log("✅ API Response:", res);
-
-        const ticketData =
-          res?.data?.data?.closedTickets ||
-          res?.data?.closedTickets ||
-          res?.closedTickets ||
-          [];
-
-        const cleaned = ticketData.map((t) => ({
-          _id: t._id,
-          personName: t.personName || "N/A",
-          email: t.email || "N/A",
-          personNumber: t.personNumber || "N/A",
-          status: t.status || "Closed",
-          severity: t.severity || "Low",
-          createdAt: t.createdAt || "",
-        }));
-
-        setTickets(cleaned);
-        setTotalPages(Math.ceil(cleaned.length / limit));
-      } catch (err) {
-        console.error("Error fetching tickets:", err);
-        setError("Failed to load tickets");
-      } finally {
-        setLoading(false);
-      }
-    };
     loadTickets();
   }, [page]);
 
@@ -72,17 +73,38 @@ export default function ClosedTicket() {
   // ✅ Action handlers
   const handleViewTicket = (id) => navigate(`/ticket/view/${id}`);
   const handleMenuToggle = (id) => setMenuOpen(menuOpen === id ? null : id);
+
   const handleResolution = (id) => {
-    alert(`Resolution clicked for: ${id}`);
+    navigate(`/ticket/resolution/${id}`);
     setMenuOpen(null);
   };
+
   const handleHistory = (id) => {
-    alert(`History clicked for: ${id}`);
+    navigate(`/ticket/history/${id}`);
     setMenuOpen(null);
   };
-  const handleRemove = (id) => {
-    alert(`Remove ticket: ${id}`);
-    setMenuOpen(null);
+
+  // ✅ Fully working DELETE function
+  const handleRemove = async (id) => {
+    if (window.confirm("Are you sure you want to delete this ticket?")) {
+      try {
+        console.log("🗑 Deleting ticket:", id);
+        const res = await deleteTicket(id);
+        console.log("✅ Delete Response:", res);
+
+        if (res.status || res.success) {
+          alert("✅ Ticket deleted successfully!");
+          await loadTickets(); // refresh list
+        } else {
+          alert("❌ Failed to delete: " + (res.message || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("❌ Error deleting ticket:", err);
+        alert(err.message || "Error deleting ticket");
+      } finally {
+        setMenuOpen(null);
+      }
+    }
   };
 
   // ✅ Pagination
@@ -195,7 +217,7 @@ export default function ClosedTicket() {
                         <FaClipboardList className="text-gray-500" /> History
                       </button>
                       <button
-                        onClick={() => handleRemove(ticket._id)}
+                        onClick={() => handleRemove(ticket._id)} // ✅ DELETE connected
                         className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left text-red-600"
                       >
                         <FaTrash /> Remove

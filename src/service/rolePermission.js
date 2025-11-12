@@ -44,6 +44,7 @@ export const getRoleDetails = async (id) => {
 
 // Update role
 export const updateRole = async (id, roleData) => {
+  console.log("roleData", roleData);
   const res = await fetch(`${BASE_URL}/role/permission/${id}`, {
     method: "PATCH",
     headers: {

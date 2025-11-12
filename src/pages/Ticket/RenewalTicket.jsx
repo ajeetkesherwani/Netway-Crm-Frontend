@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { getReassignTicketList } from "../../service/ticket"; // API service
+import { getReassignTicketList, deleteTicket } from "../../service/ticket";
 
 export default function ReassignTicketList() {
   const [tickets, setTickets] = useState([]);
@@ -9,30 +9,33 @@ export default function ReassignTicketList() {
   const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState(null);
   const limit = 10;
-
   const navigate = useNavigate();
-  const menuRef = useRef(null);
 
-  // ✅ Fetch Tickets API
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const res = await getReassignTicketList(page, limit);
-        if (res.status) {
-          setTickets(res.data.tickets || []);
-          setTotal(res.data.total || 0);
-        }
-      } catch (err) {
-        console.error("Error fetching reassign tickets:", err);
+  // ✅ Fetch Tickets
+  const fetchTickets = async () => {
+    try {
+      const res = await getReassignTicketList(page, limit);
+      if (res.status) {
+        setTickets(res.data.tickets || []);
+        setTotal(res.data.total || 0);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching reassign tickets:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchTickets();
   }, [page]);
 
-  // ✅ Close menu when clicked outside
+  // ✅ Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (e) => {
+      // Close dropdown if clicked anywhere outside of the menu button or menu
+      if (
+        !e.target.closest(".action-menu") &&
+        !e.target.closest(".menu-toggle")
+      ) {
         setOpenMenuId(null);
       }
     };
@@ -40,13 +43,27 @@ export default function ReassignTicketList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Handlers
-  const handleTicketClick = (id) => navigate(`/ticket/view/${id}`);
-  const handleUserClick = (name) => navigate(`/user/detail/${name}`);
+  // ✅ Delete Ticket
+  const handleRemove = async (id) => {
+    if (window.confirm("Are you sure you want to delete this ticket?")) {
+      try {
+        console.log("🗑 Deleting ticket:", id);
+        const res = await deleteTicket(id);
+        console.log("✅ Delete Response:", res);
 
-  const handleRemove = (id) => {
-    alert(`Remove Ticket ID: ${id}`);
-    setOpenMenuId(null);
+        if (res.status || res.success) {
+          alert("✅ Ticket deleted successfully!");
+          await fetchTickets(); // Refresh list
+        } else {
+          alert("❌ Failed to delete: " + (res.message || "Unknown error"));
+        }
+      } catch (err) {
+        console.error("❌ Error deleting ticket:", err);
+        alert(err.message || "Error deleting ticket");
+      } finally {
+        setOpenMenuId(null);
+      }
+    }
   };
 
   const handleResolve = (id) => {
@@ -66,7 +83,7 @@ export default function ReassignTicketList() {
 
   return (
     <div className="p-5 bg-[#edf2f7] min-h-screen">
-      {/* 🔹 Header */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           Reassign Tickets
@@ -76,7 +93,7 @@ export default function ReassignTicketList() {
         </h1>
       </div>
 
-      {/* 🔹 Table */}
+      {/* Table */}
       <div className="overflow-x-auto bg-white shadow-md rounded-md border">
         <table className="min-w-full border-collapse text-sm">
           <thead className="bg-[#f5f7fa] text-gray-700 border-b">
@@ -111,20 +128,18 @@ export default function ReassignTicketList() {
                   <td className="px-3 py-1 border text-gray-700 text-sm">
                     {(page - 1) * limit + index + 1}
                   </td>
-
-                  {/* Ticket No */}
                   <td
                     className="px-3 py-1 border text-blue-600 font-semibold cursor-pointer hover:underline"
-                    onClick={() => handleTicketClick(ticket._id)}
+                    onClick={() => navigate(`/ticket/view/${ticket._id}`)}
                   >
                     {ticket.ticketNumber || "N/A"}
                   </td>
-
-                  {/* User Name */}
                   <td className="px-3 py-1 border">
                     <span
                       className="text-blue-700 cursor-pointer font-medium hover:underline"
-                      onClick={() => handleUserClick(ticket.user.name)}
+                      onClick={() =>
+                        navigate(`/user/detail/${ticket.user.name}`)
+                      }
                     >
                       {ticket.user.name}
                     </span>
@@ -132,38 +147,24 @@ export default function ReassignTicketList() {
                       {ticket.user.phoneNo}
                     </p>
                   </td>
-
-                  {/* Priority */}
                   <td className="px-3 py-1 border">
                     {ticket.severity || "Low"}
                   </td>
-
-                  {/* Ticket Date */}
                   <td className="px-3 py-1 border">
                     {new Date(ticket.createdAt).toLocaleString()}
                   </td>
-
-                  {/* Call Source */}
                   <td className="px-3 py-1 border">{ticket.user.callSource}</td>
-
-                  {/* Assigned Date */}
                   <td className="px-3 py-1 border">
                     {new Date(
                       ticket.currentAssignee.assignedAt
                     ).toLocaleString()}
                   </td>
-
-                  {/* Assigned To */}
                   <td className="px-3 py-1 border text-gray-700">
                     {ticket.currentAssignee.id || "N/A"}
                   </td>
-
-                  {/* Description */}
                   <td className="px-3 py-1 border text-gray-700">
                     {"Reassign Ticket"}
                   </td>
-
-                  {/* Status + Action */}
                   <td className="px-3 py-1 border relative">
                     <div className="flex items-center justify-between">
                       <span
@@ -178,7 +179,7 @@ export default function ReassignTicketList() {
                         {ticket.currentAssignee.currentStatus}
                       </span>
 
-                      <div className="relative" ref={menuRef}>
+                      <div className="relative">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -186,16 +187,16 @@ export default function ReassignTicketList() {
                               openMenuId === ticket._id ? null : ticket._id
                             );
                           }}
-                          className="p-1 rounded hover:bg-gray-200 ml-2"
+                          className="p-1 rounded hover:bg-gray-200 ml-2 menu-toggle"
                         >
                           <FaEllipsisV className="text-gray-600 text-sm" />
                         </button>
 
                         {openMenuId === ticket._id && (
-                          <div className="absolute right-0 top-6 w-36 bg-white border shadow-md rounded z-20 text-left">
+                          <div className="absolute right-0 top-6 w-36 bg-white border shadow-md rounded z-20 text-left action-menu">
                             <button
                               onClick={() => handleRemove(ticket._id)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-red-600"
                             >
                               Remove
                             </button>
@@ -223,7 +224,7 @@ export default function ReassignTicketList() {
         </table>
       </div>
 
-      {/* 🔹 Pagination */}
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-3 text-sm">
         <button
           onClick={handlePrev}

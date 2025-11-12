@@ -16,19 +16,37 @@
 //   );
 // }
 
+// import PageMeta from "../../components/common/PageMeta";
+// import AuthLayout from "./AuthPageLayout";
+// import SignInForm from "../../components/auth/SignInForm";
+// import { useLogin } from "../../service/login";
+
+// export default function SignIn() {
+//   return (
+//     <>
+//       <PageMeta title="Admin Login Dashboard" description="Admin login page" />
+//       <AuthLayout>
+//         <SignInForm loginApi={useLogin} heading="Admin Login" />
+//       </AuthLayout>
+//     </>
+//   );
+// }
+
 import PageMeta from "../../components/common/PageMeta";
 import AuthLayout from "./AuthPageLayout";
 import SignInForm from "../../components/auth/SignInForm";
-import { login } from "../../service/login";
+import { useLogin } from "../../service/login";
 
 export default function SignIn() {
+  const { login } = useLogin(); // ✅ Call hook here
+
   return (
     <>
       <PageMeta title="Admin Login Dashboard" description="Admin login page" />
       <AuthLayout>
+        {/* ✅ Pass login function, not hook */}
         <SignInForm loginApi={login} heading="Admin Login" />
       </AuthLayout>
     </>
   );
 }
-

@@ -318,7 +318,7 @@ export default function CreateUser() {
             <option>MAC_TAL</option>
           </select>
         </div> */}
-
+        {/* 
         <div>
           <label className="block font-medium">IP Type</label>
           <select
@@ -385,7 +385,7 @@ export default function CreateUser() {
               className="border p-2 w-full rounded"
             />
           </div>
-        )}
+        )} */}
 
         {/* Additional Information */}
         <div>
