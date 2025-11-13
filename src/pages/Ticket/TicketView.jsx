@@ -1,212 +1,282 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
-  getTicketReplies,
+  getAdminTicketDetails,
   createTicketReply,
-  getTicketTimeline,
-  getTicketDetails,
-  getStaffRoleList,
+  getStaffList,
   getCategoryList,
+  updateTicket,
+  updateTicketDetails,
+  getTicketResolutionOptions,
+  getTicketReplyOptions,
 } from "../../service/ticket";
 import { FaUserCircle, FaEdit, FaSave, FaTimes } from "react-icons/fa";
-
-const BASE_URL = import.meta.env.VITE_BASE_URL;
-const getToken = () => localStorage.getItem("token");
 
 export default function TicketDetails() {
   const { id: ticketId } = useParams();
 
-  const [activeTab, setActiveTab] = useState("reply");
+  const [ticketDetails, setTicketDetails] = useState(null);
   const [replies, setReplies] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [replyText, setReplyText] = useState("");
-  const [selectedType, setSelectedType] = useState("Select");
-  const [ticketDetails, setTicketDetails] = useState(null);
-  const [staffRoles, setStaffRoles] = useState([]);
-  const [selectedStaff, setSelectedStaff] = useState("");
+  const [replyType, setReplyType] = useState("");
+  const [replyOptions, setReplyOptions] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editableDetails, setEditableDetails] = useState({});
+  const [files, setFiles] = useState({});
   const [showFixModal, setShowFixModal] = useState(false);
+  const [resolutionList, setResolutionList] = useState([]);
+  const [selectedResolution, setSelectedResolution] = useState("");
+  const [activeTab, setActiveTab] = useState("reply");
+  const [loading, setLoading] = useState(false);
 
-  const replyTypes = [
-    "Select",
-    "Need Technician Visit",
-    "Internet Stable",
-    "Power Issue",
-    "Fiber Cut",
-  ];
-
-  // ✅ Fetch all data on mount
-  useEffect(() => {
-    if (ticketId) {
-      fetchTicketDetails();
-      fetchReplies();
-      fetchTimeline();
-      fetchStaffRoles();
+  // normalize helper: accept responses that either return { status, data: [...] } or direct arrays/objects
+  const normalizeData = (res) => {
+    if (!res) return null;
+    // res might be array/object directly
+    if (Array.isArray(res)) return res;
+    // maybe res.data is array/object
+    if (res?.data !== undefined) {
+      // if data is nested like { data: { data: [...] } } handle both
+      if (res.data?.data !== undefined) return res.data.data;
+      return res.data;
     }
+    // fallback to res itself
+    return res;
+  };
+
+  // Load everything once ticketId available
+  useEffect(() => {
+    if (ticketId) loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId]);
 
-  // ✅ Fetch ticket details
-  const fetchTicketDetails = async () => {
+  const loadAll = async () => {
     try {
-      const res = await getTicketDetails(ticketId);
-      if (res?.status) {
-        setTicketDetails(res.data);
-        setEditableDetails(res.data);
-        if (res.data?.assignedTo?._id) {
-          setSelectedStaff(res.data.assignedTo._id);
+      const [ticketRes, staffRes, catRes, resolutionRes, replyOptRes] =
+        await Promise.all([
+          getAdminTicketDetails(ticketId),
+          getStaffList(),
+          getCategoryList(),
+          getTicketResolutionOptions(),
+          getTicketReplyOptions(),
+        ]);
+
+      // Ticket details (getAdminTicketDetails returns { status, data: { ticket, replies, timeline } })
+      if (ticketRes?.status) {
+        const ticketData = ticketRes.data.ticket;
+        setTicketDetails(ticketData);
+        // prefill editable fields - store scalar ids where needed
+        setEditableDetails({
+          ...ticketData,
+          category: ticketData.category?._id || ticketData.category || "",
+          assignToId:
+            (ticketData.assignToId &&
+              (ticketData.assignToId._id || ticketData.assignToId)) ||
+            "",
+          severity: ticketData.severity || "",
+          isChargeable: !!ticketData.isChargeable,
+          price: ticketData.price ?? "",
+          callDescription: ticketData.callDescription ?? "",
+        });
+        setReplies(ticketRes.data.replies || []);
+        setTimeline(ticketRes.data.timeline?.[0]?.activities || []);
+      } else {
+        // fallback: maybe API returned details in another shape
+        const maybeTicket = normalizeData(ticketRes);
+        if (maybeTicket) {
+          setTicketDetails(maybeTicket);
+          setEditableDetails({
+            ...maybeTicket,
+            category: maybeTicket.category?._id || maybeTicket.category || "",
+          });
         }
       }
+
+      // staff list: normalize and set - staffRes may return { status, data: [...] }
+      const staffData = normalizeData(staffRes);
+      // staffData sometimes contains roles list (roleName) or full staff objects
+      setStaffList(Array.isArray(staffData) ? staffData : []);
+
+      // categories
+      const catData = normalizeData(catRes);
+      setCategories(Array.isArray(catData) ? catData : []);
+
+      // resolution options
+      const resolutionData = normalizeData(resolutionRes);
+      setResolutionList(Array.isArray(resolutionData) ? resolutionData : []);
+
+      // reply options
+      const replyData = normalizeData(replyOptRes);
+      setReplyOptions(Array.isArray(replyData) ? replyData : []);
     } catch (err) {
-      console.error("Error fetching ticket details:", err);
+      console.error("Error loading ticket details:", err);
+      // optional: show an alert or toast
     }
   };
 
-  // ✅ Fetch replies
-  const fetchReplies = async () => {
-    try {
-      const res = await getTicketReplies(ticketId);
-      if (res?.status) setReplies(res.data || []);
-    } catch (err) {
-      console.error("Error fetching replies:", err);
-    }
+  const handleChange = (field, value) => {
+    setEditableDetails((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ✅ Fetch timeline
-  const fetchTimeline = async () => {
-    try {
-      const res = await getTicketTimeline(ticketId);
-      if (res?.status) setTimeline(res.data || []);
-    } catch (err) {
-      console.error("Error fetching timeline:", err);
-    }
+  const handleFileChange = (e, key) => {
+    const file = e.target.files[0];
+    setFiles((prev) => ({ ...prev, [key]: file }));
   };
 
-  // ✅ Fetch staff roles
-  const fetchStaffRoles = async () => {
-    try {
-      const res = await getStaffRoleList();
-      if (res?.status) setStaffRoles(res.data || []);
-    } catch (err) {
-      console.error("Error fetching staff roles:", err);
-    }
-  };
-
-  // ✅ Fetch category list
-  const fetchCategoryList = async () => {
-    try {
-      const res = await getCategoryList();
-      if (res?.status) setCategories(res.data || []);
-    } catch (err) {
-      console.error("Error fetching categories:", err);
-    }
-  };
-
-  // ✅ Handle Assign to Staff
-  const handleAssignToStaff = async (staffId) => {
-    if (!staffId) return;
-    setSelectedStaff(staffId);
-
-    const isReassign = ticketDetails?.assignedTo?._id;
-    const endpoint = isReassign
-      ? `${BASE_URL}/api/admin/ticketAssign/toStaff/reAssign`
-      : `${BASE_URL}/api/admin/ticketAssign/toStaff`;
-
-    const payload = isReassign
-      ? { ticketId, assignToId: staffId }
-      : { ticketId, staffId };
-
-    try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.status) {
-        alert(
-          isReassign
-            ? "✅ Ticket reassigned successfully!"
-            : "✅ Ticket assigned successfully!"
-        );
-        fetchTicketDetails();
-      } else alert(data.message || "Failed to assign staff");
-    } catch (err) {
-      console.error("Error assigning staff:", err);
-    }
-  };
-
-  // ✅ Toggle edit mode & load categories
-  const handleEditToggle = async () => {
-    if (!editMode) await fetchCategoryList();
-    setEditMode(!editMode);
-  };
-
-  // ✅ Save ticket update
+  // Update ticket (FormData)
   const handleUpdateTicket = async () => {
     try {
-      const res = await fetch(
-        `${BASE_URL}/api/admin/ticket/update/${ticketId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`,
-          },
-          body: JSON.stringify(editableDetails),
+      const formData = new FormData();
+      // append editableDetails keys
+      for (const key in editableDetails) {
+        const value = editableDetails[key];
+        // If it's an object with _id (e.g., category), send id string
+        if (value && typeof value === "object" && value._id) {
+          formData.append(key, value._id);
+        } else {
+          // handle booleans & numbers correctly by converting to string (FormData required)
+          if (typeof value === "boolean" || typeof value === "number")
+            formData.append(key, String(value));
+          else if (value !== undefined && value !== null)
+            formData.append(key, value);
         }
-      );
-      const data = await res.json();
-      if (data.status) {
+      }
+      // append files
+      for (const key in files) {
+        if (files[key]) formData.append(key, files[key]);
+      }
+
+      const res = await updateTicketDetails(ticketId, formData);
+      if (res?.status) {
         alert("✅ Ticket updated successfully!");
         setEditMode(false);
-        fetchTicketDetails();
-      } else alert(data.message || "Failed to update ticket");
+        setFiles({});
+        await loadAll();
+      } else {
+        alert(res?.message || "Failed to update ticket");
+      }
     } catch (err) {
       console.error("Error updating ticket:", err);
+      alert("Error updating ticket - see console");
     }
   };
 
-  // ✅ Submit reply
-  const handleSubmit = async () => {
-    if (!selectedType || selectedType === "Select") {
-      alert("Please select a reply type");
+  // Create reply (option or text)
+  // ✅ Create reply (select or new text)
+  const handleSubmitReply = async () => {
+    // user must either select or type
+    if (!replyText.trim() && !replyType) {
+      alert("Please select a reply type or enter a reply message.");
       return;
     }
+
     setLoading(true);
     try {
+      // final reply message
+      const replyMessage = replyText.trim() ? replyText.trim() : replyType;
+
+      // ✅ Check if user typed new text (not from dropdown)
+      const isNewReply =
+        replyText.trim() &&
+        !replyOptions.some(
+          (opt) =>
+            opt.optionText?.toLowerCase() === replyText.trim().toLowerCase() ||
+            opt.name?.toLowerCase() === replyText.trim().toLowerCase() ||
+            opt.option?.toLowerCase() === replyText.trim().toLowerCase()
+        );
+
+      // ✅ Step 1: If new reply, create the reply option first
+      if (isNewReply) {
+        const createRes = await createTicketReplyOption({
+          optionText: replyText.trim(),
+        });
+
+        if (createRes?.status) {
+          console.log("✅ New reply option created successfully");
+          // Refresh dropdown options
+          const replyOptRes = await getTicketReplyOptions();
+          const replyData = normalizeData(replyOptRes);
+          setReplyOptions(Array.isArray(replyData) ? replyData : []);
+        } else {
+          console.warn("⚠️ Failed to create reply option:", createRes?.message);
+        }
+      }
+
+      // ✅ Step 2: Create the actual reply
       const res = await createTicketReply(ticketId, {
-        replyType: selectedType,
-        description: replyText || selectedType,
+        description: replyMessage,
       });
+
       if (res?.status) {
-        alert("Reply submitted successfully!");
+        alert("✅ Reply added successfully!");
         setReplyText("");
-        setSelectedType("Select");
-        fetchReplies();
+        setReplyType("");
+        await loadAll(); // refresh replies & details
+      } else {
+        alert(res?.message || "Failed to add reply");
       }
     } catch (err) {
-      console.error("Error submitting reply:", err);
+      console.error("Error creating reply:", err);
+      alert("Error creating reply - see console");
     } finally {
       setLoading(false);
     }
   };
 
+  // const handleSubmitReply = async () => {
+  //   if (!replyText.trim() && !replyType) {
+  //     alert("Please select a reply type or enter a reply message.");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     const payload = {
+  //       description: replyText?.trim() ? replyText : replyType,
+  //     };
+  //     const res = await createTicketReply(ticketId, payload);
+  //     if (res?.status) {
+  //       alert("✅ Reply added successfully!");
+  //       setReplyText("");
+  //       setReplyType("");
+  //       await loadAll();
+  //     } else {
+  //       alert(res?.message || "Failed to add reply");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error submitting reply:", err);
+  //     alert("Error creating reply - see console");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Fix ticket
   const handleFixTicketClick = () => setShowFixModal(true);
   const closeFixModal = () => setShowFixModal(false);
 
   const handleFixTicket = async () => {
+    if (!selectedResolution) {
+      alert("Please select a resolution first");
+      return;
+    }
     try {
-      alert("✅ Ticket marked as Fixed!");
-      setShowFixModal(false);
-      fetchTicketDetails();
+      const res = await updateTicket(ticketId, {
+        status: "Fixed",
+        resolution: selectedResolution,
+      });
+      if (res?.status) {
+        alert("✅ Ticket marked Fixed!");
+        setShowFixModal(false);
+        await loadAll();
+      } else {
+        alert(res?.message || "Failed to mark fixed");
+      }
     } catch (err) {
       console.error("Error fixing ticket:", err);
+      alert("Error fixing ticket - see console");
     }
   };
 
@@ -218,11 +288,18 @@ export default function TicketDetails() {
       <div className="flex flex-col lg:flex-row gap-5">
         {/* LEFT PANEL */}
         <div className="w-full lg:w-[38%] bg-white border shadow-sm rounded-md relative min-h-[85vh]">
-          <div className="absolute top-3 right-3 text-gray-600 hover:text-teal-700 cursor-pointer">
+          {/* Edit Button */}
+          <div className="absolute top-3 right-3 cursor-pointer">
             {editMode ? (
-              <FaTimes onClick={handleEditToggle} />
+              <FaTimes
+                onClick={() => setEditMode(false)}
+                className="text-red-600 text-xl hover:text-red-800"
+              />
             ) : (
-              <FaEdit onClick={handleEditToggle} />
+              <FaEdit
+                onClick={() => setEditMode(true)}
+                className="text-green-600 text-xl animate-pulse hover:text-green-800"
+              />
             )}
           </div>
 
@@ -230,148 +307,198 @@ export default function TicketDetails() {
             Ticket Information
           </div>
 
-          <div className="p-4 text-sm text-gray-700 space-y-2">
+          <div className="p-4 text-sm text-gray-700 space-y-3">
             {editMode ? (
               <>
+                {/* Category */}
                 <div>
                   <label className="font-semibold">Category:</label>
                   <select
-                    value={editableDetails.categoryName || ""}
-                    onChange={(e) =>
-                      setEditableDetails({
-                        ...editableDetails,
-                        categoryName: e.target.value,
-                      })
-                    }
-                    className="border border-gray-300 w-full rounded-md py-1 px-2 mt-1 text-sm"
+                    value={editableDetails.category || ""}
+                    onChange={(e) => handleChange("category", e.target.value)}
+                    className="border w-full rounded-md py-1 px-2 mt-1"
                   >
                     <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat.categoryName}>
-                        {cat.categoryName}
+                    {categories.map((c) => (
+                      <option key={c._id} value={c._id}>
+                        {c.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
+                {/* Assign To (role/staff list) */}
+                <div>
+                  <label className="font-semibold">Assign To:</label>
+                  <select
+                    value={editableDetails.assignToId || ""}
+                    onChange={(e) => handleChange("assignToId", e.target.value)}
+                    className="border w-full rounded-md py-1 px-2 mt-1"
+                  >
+                    <option value="">Select Staff / Role</option>
+                    {staffList.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {/* staffList may be roles (roleName) or staff (staffName/name) */}
+                        {s.staffName || s.name || s.roleName || s.role}
+                        {s.roleName || s.role
+                          ? ` (${s.roleName || s.role})`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Severity */}
                 <div>
                   <label className="font-semibold">Severity:</label>
                   <select
                     value={editableDetails.severity || ""}
-                    onChange={(e) =>
-                      setEditableDetails({
-                        ...editableDetails,
-                        severity: e.target.value,
-                      })
-                    }
-                    className="border border-gray-300 w-full rounded-md py-1 px-2 mt-1 text-sm"
+                    onChange={(e) => handleChange("severity", e.target.value)}
+                    className="border w-full rounded-md py-1 px-2 mt-1"
                   >
+                    <option value="">Select Severity</option>
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
                   </select>
                 </div>
 
+                {/* Description */}
                 <div>
                   <label className="font-semibold">Description:</label>
                   <textarea
-                    value={editableDetails.description || ""}
-                    onChange={(e) =>
-                      setEditableDetails({
-                        ...editableDetails,
-                        description: e.target.value,
-                      })
-                    }
                     rows={3}
-                    className="border border-gray-300 w-full rounded-md py-1 px-2 mt-1 text-sm"
+                    value={editableDetails.callDescription || ""}
+                    onChange={(e) =>
+                      handleChange("callDescription", e.target.value)
+                    }
+                    className="border w-full rounded-md py-1 px-2 mt-1"
                   />
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="font-semibold">Price:</label>
+                  <input
+                    type="number"
+                    value={editableDetails.price ?? ""}
+                    onChange={(e) => handleChange("price", e.target.value)}
+                    className="border w-full rounded-md py-1 px-2 mt-1"
+                  />
+                </div>
+
+                {/* Chargeable */}
+                <div className="flex items-center gap-2">
+                  <label className="font-semibold">Chargeable:</label>
+                  <input
+                    type="checkbox"
+                    checked={!!editableDetails.isChargeable}
+                    onChange={(e) =>
+                      handleChange("isChargeable", e.target.checked)
+                    }
+                  />
+                </div>
+
+                {/* File uploads */}
+                <div>
+                  <label className="font-semibold">Upload Files:</label>
+                  {["fileI", "fileII", "fileIII"].map((key) => (
+                    <div key={key} className="mt-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, key)}
+                        className="border w-full rounded-md py-1 px-2 text-sm"
+                      />
+                    </div>
+                  ))}
                 </div>
 
                 <button
                   onClick={handleUpdateTicket}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-full mt-3"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-full mt-3 font-semibold shadow"
                 >
-                  <FaSave className="inline mr-2" />
-                  Save Changes
+                  <FaSave className="inline mr-2" /> Save Changes
                 </button>
               </>
             ) : (
               <>
+                {/* Read-only display */}
                 <p>
                   <strong>Ticket No:</strong> #{ticketDetails.ticketNumber}
                 </p>
                 <p>
                   <strong>Category:</strong>{" "}
-                  {ticketDetails.categoryName || "N/A"}
+                  {ticketDetails.category?.name || "N/A"}
                 </p>
                 <p>
-                  <strong>Description:</strong>{" "}
-                  {ticketDetails.description || "No description available"}
-                </p>
-                <p>
-                  <strong>Call Source:</strong>{" "}
-                  {ticketDetails.callSource || "N/A"}
+                  <strong>Assigned To:</strong>{" "}
+                  {ticketDetails.assignToId?.staffName ||
+                    ticketDetails.assignToId?.name ||
+                    ticketDetails.assignToId?.roleName ||
+                    "Unassigned"}
                 </p>
                 <p>
                   <strong>Severity:</strong> {ticketDetails.severity || "N/A"}
                 </p>
                 <p>
-                  <strong>Created By:</strong>{" "}
-                  {ticketDetails.createdByName || "N/A"}
+                  <strong>Price:</strong> ₹{ticketDetails.price ?? 0}
                 </p>
                 <p>
-                  <strong>Create At:</strong>{" "}
-                  {new Date(ticketDetails.createdAt).toLocaleString()}
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs text-white ${
+                      ticketDetails.status === "Fixed"
+                        ? "bg-green-600"
+                        : "bg-orange-500"
+                    }`}
+                  >
+                    {ticketDetails.status}
+                  </span>
                 </p>
+                <p>
+                  <strong>Description:</strong>{" "}
+                  {ticketDetails.callDescription ?? "N/A"}
+                </p>
+
+                {/* Files preview */}
+                <div className="flex gap-3 mt-2">
+                  {["fileI", "fileII", "fileIII"].map(
+                    (key) =>
+                      ticketDetails[key] && (
+                        <img
+                          key={key}
+                          src={`${process.env.REACT_APP_IMAGE_URL}/${ticketDetails[key]}`}
+                          alt={key}
+                          className="w-16 h-16 object-cover rounded border"
+                        />
+                      )
+                  )}
+                </div>
               </>
             )}
-
-            <div>
-              <strong>Assign To:</strong>
-              <select
-                value={selectedStaff}
-                onChange={(e) => handleAssignToStaff(e.target.value)}
-                className="border border-gray-300 w-full mt-1 rounded-md py-1 px-2 text-sm"
-              >
-                <option value="">Select Staff</option>
-                {staffRoles.map((role) => (
-                  <option key={role._id} value={role._id}>
-                    {role.roleName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <p>
-              <strong>Status:</strong>{" "}
-              <span
-                className={`px-2 py-0.5 rounded text-xs text-white ${
-                  ticketDetails.status === "Fixed"
-                    ? "bg-green-600"
-                    : "bg-red-500"
-                }`}
-              >
-                {ticketDetails.status}
-              </span>
-            </p>
           </div>
 
+          {/* Customer Info */}
           <div className="border-t bg-[#004c70] text-white px-3 py-2 font-semibold">
             Customer Information
           </div>
-
           <div className="p-4 text-sm text-gray-700 space-y-2 pb-16">
             <p>
-              <strong>Name:</strong> {ticketDetails.personName}
+              <strong>Name:</strong>{" "}
+              {ticketDetails.userId?.generalInformation?.name}
             </p>
             <p>
-              <strong>Email:</strong> {ticketDetails.email}
+              <strong>Email:</strong>{" "}
+              {ticketDetails.userId?.generalInformation?.email}
             </p>
             <p>
-              <strong>Mobile:</strong> {ticketDetails.personNumber}
+              <strong>Mobile:</strong>{" "}
+              {ticketDetails.userId?.generalInformation?.phone}
             </p>
             <p>
-              <strong>Address:</strong> {ticketDetails.address}
+              <strong>Address:</strong>{" "}
+              {ticketDetails.userId?.generalInformation?.address}
             </p>
           </div>
 
@@ -387,7 +514,7 @@ export default function TicketDetails() {
           )}
         </div>
 
-        {/* RIGHT PANEL (Reply + Timeline) */}
+        {/* RIGHT PANEL */}
         <div className="w-full lg:w-[62%] bg-white border shadow-sm rounded-md">
           <div className="flex border-b text-sm">
             <button
@@ -412,22 +539,29 @@ export default function TicketDetails() {
             </button>
           </div>
 
+          {/* Reply Tab */}
           {activeTab === "reply" && (
-            <div className="p-4 space-y-4 min-h-[250px]">
+            <div className="p-4 space-y-4">
               <h2 className="text-md font-semibold text-[#004c70] mb-2">
-                Reply Of Ticket No. {ticketDetails.ticketNumber}
+                Replies for Ticket #{ticketDetails.ticketNumber}
               </h2>
+
               <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                value={replyType}
+                onChange={(e) => setReplyType(e.target.value)}
                 className="border border-gray-300 rounded-md w-full py-2 px-3 text-sm"
               >
-                {replyTypes.map((type, i) => (
-                  <option key={i} value={type}>
-                    {type}
+                <option value="">Select Reply Type</option>
+                {replyOptions.map((r) => (
+                  <option
+                    key={r._id}
+                    value={r.optionText || r.name || r.option}
+                  >
+                    {r.optionText || r.name || r.option}
                   </option>
                 ))}
               </select>
+
               <textarea
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
@@ -436,26 +570,27 @@ export default function TicketDetails() {
                 className="border border-gray-300 rounded-md w-full px-3 py-2 text-sm"
               />
               <button
-                onClick={handleSubmit}
+                onClick={handleSubmitReply}
                 disabled={loading}
-                className="bg-[#004c70] hover:bg-[#00324d] text-white px-5 py-2 rounded-md"
+                className="bg-[#004c70] hover:bg-[#00324d] text-white px-5 py-2 rounded-md font-semibold shadow"
               >
-                {loading ? "Submitting..." : "Submit"}
+                {loading ? "Submitting..." : "Submit Reply"}
               </button>
 
+              {/* Replies List */}
               <div className="mt-4 border-t pt-2 space-y-3">
                 {replies.length === 0 ? (
                   <p className="text-gray-500 text-sm">No replies yet</p>
                 ) : (
-                  replies.map((r, i) => (
+                  replies.map((r) => (
                     <div
-                      key={i}
+                      key={r._id}
                       className="flex items-start gap-3 bg-gray-50 border rounded-md p-2"
                     >
                       <FaUserCircle className="text-3xl text-gray-600" />
                       <div className="flex-1">
                         <p className="font-semibold text-[#004c70]">
-                          {r.createdByName || "Unknown User"}
+                          {r.createdById?.name || r.createdBy}
                         </p>
                         <p className="text-gray-700 text-sm">{r.description}</p>
                         <p className="text-xs text-gray-500">
@@ -469,45 +604,56 @@ export default function TicketDetails() {
             </div>
           )}
 
+          {/* Timeline Tab */}
           {activeTab === "timeline" && (
-            <div className="p-4 min-h-[250px]">
+            <div className="p-4">
               <h2 className="text-md font-semibold text-[#004c70] mb-2">
-                Ticket History
+                Ticket Timeline
               </h2>
-              <div className="space-y-4">
-                {timeline.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No timeline found</p>
-                ) : (
-                  timeline.map((t, i) => (
-                    <div
-                      key={i}
-                      className="border-l-4 border-[#004c70] pl-3 pb-2 ml-2"
-                    >
-                      <p className="text-gray-800 text-sm">
-                        <strong>{t.actionType}</strong> — {t.message}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(t.createdAt).toLocaleString()}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
+              {timeline.length === 0 ? (
+                <p className="text-gray-500 text-sm">No activities found</p>
+              ) : (
+                timeline.map((a) => (
+                  <div
+                    key={a._id}
+                    className="border-l-4 border-[#004c70] pl-3 pb-2 ml-2 mb-2"
+                  >
+                    <p className="text-gray-800 text-sm">
+                      <strong>Action Type:</strong> {a.activityType} —{" "}
+                      {a.performedBy?.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(a.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* ✅ Fix Ticket Modal */}
+      {/* Fix Modal */}
       {showFixModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Fix This Ticket
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              This popup will later show your Fix Ticket API content.
-            </p>
+
+            <select
+              value={selectedResolution}
+              onChange={(e) => setSelectedResolution(e.target.value)}
+              className="border border-gray-300 w-full rounded-md py-2 px-3 mb-4 text-sm"
+            >
+              <option value="">Select Resolution</option>
+              {resolutionList.map((r) => (
+                <option key={r._id} value={r.name || r.option || r._id}>
+                  {r.name || r.option}
+                </option>
+              ))}
+            </select>
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeFixModal}

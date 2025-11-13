@@ -44,7 +44,7 @@ import AssignPackage from "./pages/Retailer/AssignPackage/AssignPackage";
 import AssignPackageList from "./pages/Retailer/AssignPackage/AssignPackageList";
 import ViewAssignedPackage from "./pages/Retailer/AssignPackage/ViewAssignedPackage";
 // import TicketList from "./pages/Ticket/RenewalTicket";
-import TicketCreate from "./pages/Ticket/TIcketCreate";
+// import TicketCreate from "./pages/Ticket/TIcketCreate";
 import SignInStaff from "./pages/AuthPages/StaffSignIn";
 import SignInLco from "./pages/AuthPages/LcoSignIn";
 import RetailerWalletList from "./pages/Retailer/RetailerWallet/RetailerWalletList";
@@ -59,7 +59,7 @@ import PriceBookCreate from "./pages/PriceBook/PriceBookCreate";
 import PriceBookView from "./pages/PriceBook/PriceBookView";
 import StaffCreate from "./pages/Staff/StaffCreate";
 import StaffView from "./pages/Staff/StaffView";
-import TicketView from "./pages/Ticket/TicketView";
+// import TicketView from "./pages/Ticket/TicketView";
 import CloseTicket from "./pages/Ticket/CloseTicket";
 import ManageTicket from "./pages/Ticket/ManageTicket";
 import AllTicket from "./pages/Ticket/AllTicket";
@@ -117,8 +117,20 @@ import LcoWiseDetail from "./pages/Dashboard/components/LcoWise/LcoWiseDetail";
 import DashboardBarUsers from "./pages/Dashboard/components/DateWiseDashboardDetails";
 import DashboardDetails from "./pages/Dashboard/components/DashboardDetails";
 import ReassignTicketList from "./pages/Ticket/RenewalTicket";
-import { TicketReplyOptionList } from "./pages/Setting/TicketReplyOptionList";
-import { ResolutionList } from "./pages/Setting/ResolutionList";
+import TicketCreate from "./pages/Ticket/CreateTicket";
+import TicketReplyOptionList from "./pages/Setting/TicketReplyOptionList";
+import TicketReplyOptionUpdate from "./pages/Setting/TicketReplyOptionUpdate";
+import PurchasedPlanList from "./pages/Invoice/PurchedPackageList";
+import OttPackageList from "./pages/Invoice/OttPackageList";
+import IptvPackageList from "./pages/Invoice/IptvPackageList";
+import CompletePaymentList from "./pages/Payment/SuccessPayment";
+import PendingPaymentList from "./pages/Payment/PendingPayment";
+import TicketReplyOptionCreate from "./pages/Setting/TicketReplyOptionCreate";
+import TicketResolutionOptionList from "./pages/Setting/TicketResolutionOptionList";
+import TicketResolutionOptionCreate from "./pages/Setting/TicketResolutionOptionCreate";
+import TicketResolutionOptionUpdate from "./pages/Setting/TicketResolutionOptionUpdate";
+import TicketDetails from "./pages/Ticket/TicketView";
+// import TicketDetails from "./pages/Ticket/TicketView";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -317,11 +329,27 @@ export default function App() {
               path="/setting/ticketReplyOption/list"
               element={<TicketReplyOptionList />}
             />
+            <Route
+              path="/setting/ticketReplyOption/create"
+              element={<TicketReplyOptionCreate />}
+            />
+            <Route
+              path="/setting/ticketReplyOption/update/:id"
+              element={<TicketReplyOptionUpdate />}
+            />
 
             {/* --------------------------------------resolution----------------------------------------- */}
             <Route
               path="/setting/resolution/list"
-              element={<ResolutionList />}
+              element={<TicketResolutionOptionList />}
+            ></Route>
+            <Route
+              path="/setting/resolution/create"
+              element={<TicketResolutionOptionCreate />}
+            ></Route>
+            <Route
+              path="/setting/resolution/update/:id"
+              element={<TicketResolutionOptionUpdate />}
             ></Route>
 
             {/* this is for the setting end of the ticket */}
@@ -331,13 +359,31 @@ export default function App() {
             <Route path="/ticket/all" element={<AllTicket />} />
             <Route path="/ticket/approvel" element={<ApprovelTicket />} />
             <Route path="/ticket/create" element={<TicketCreate />} />
-            <Route path="/ticket/view/:id" element={<TicketView />} />
+            <Route path="/ticket/view/:id" element={<TicketDetails />} />
 
             {/*---------------------------------------------------------Price Book  --------------------------------------------------------- */}
             <Route path="/pricebook/list" element={<PriceBookList />} />
             <Route path="/pricebook/create" element={<PriceBookCreate />} />
             <Route path="/pricebook/view/:id" element={<PriceBookView />} />
             <Route path="/pricebook/update/:id" element={<PriceBookUpdate />} />
+
+            {/*----------------------------------------------------------payment------------------------------------------------------------ */}
+
+            <Route path="/received/payment" element={<CompletePaymentList />} />
+            <Route path="/pending/payment" element={<PendingPaymentList />} />
+
+            {/*--------------------------puched plan list-------------------------------------------------------------------*/}
+
+            <Route
+              path="/invoice/package-recharge"
+              element={<PurchasedPlanList />}
+            />
+            <Route path="/invoice/ott-recharge" element={<OttPackageList />} />
+            <Route
+              path="/invoice/iptv-recharge"
+              element={<IptvPackageList />}
+            />
+
             {/*-------------------------------------------------------------------------config list ------------------------------------------------------------------------- */}
             <Route path="/config/list" element={<RoleConfigList />} />
             <Route path="/config/create" element={<RoleConfigCreate />} />
@@ -432,6 +478,7 @@ export default function App() {
               element={<ResolvedTicketReport />}
             />
           </Route>
+
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>

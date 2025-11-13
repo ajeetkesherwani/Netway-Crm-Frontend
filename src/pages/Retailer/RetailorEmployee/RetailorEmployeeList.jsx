@@ -1,8 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
-import { deleteEmployee, getRetailerEmployees } from "../../../service/retailerEmployee";
-import { login } from "../../../service/login";
+import {
+  deleteEmployee,
+  getRetailerEmployees,
+} from "../../../service/retailerEmployee";
+// import { login } from "../../../service/login";
+import { useLogin } from "../../../service/login";
 import { IoMdArrowBack } from "react-icons/io";
 import { toast } from "react-hot-toast";
 
@@ -65,18 +69,35 @@ export default function RetailerEmployeeList() {
     }
   };
   // this is for the  reseller
+
   const handleRetailerLogin = async (data) => {
-    console.log(data, " this is the data inside the retailer login function");
-    const formData = { employeeUserName: data.employeeUserName, password: data?.plainPassword };
+    console.log(data, "this is the data inside the retailer login function");
+
+    const formData = {
+      employeeUserName: data.employeeUserName,
+      password: data?.plainPassword,
+    };
+
     try {
       const res = await login(formData);
+
       if (res && res.success) {
-        console.log(res, res?.data?.user?.role?.permissions, "This is the response");
-        // setAuth(res.token); // store token
-        // localStorage.setItem("token", res.token);
+        console.log(
+          res,
+          res?.data?.user?.role?.permissions,
+          "This is the response"
+        );
+
+        // Store token and permissions
+        localStorage.setItem("token", res.token);
         localStorage.setItem("auth", "true");
-        localStorage.setItem("rolePermission", JSON.stringify(res?.data?.user?.role?.permissions));
-        return;
+        localStorage.setItem(
+          "rolePermission",
+          JSON.stringify(res?.data?.user?.role?.permissions)
+        );
+
+        // ✅ Redirect after successful login
+        toast.success(`Logged in as ${data.employeeName}`);
         navigate("/");
       } else {
         toast.error(res?.error || "Login failed");
@@ -86,8 +107,30 @@ export default function RetailerEmployeeList() {
       toast.error("Login failed");
     }
   };
-  if (loading) return <p className="p-4">Loading employees...</p>;
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
+
+  // const handleRetailerLogin = async (data) => {
+  //   console.log(data, " this is the data inside the retailer login function");
+  //   const formData = { employeeUserName: data.employeeUserName, password: data?.plainPassword };
+  //   try {
+  //     const res = await login(formData);
+  //     if (res && res.success) {
+  //       console.log(res, res?.data?.user?.role?.permissions, "This is the response");
+  //       // setAuth(res.token); // store token
+  //       // localStorage.setItem("token", res.token);
+  //       localStorage.setItem("auth", "true");
+  //       localStorage.setItem("rolePermission", JSON.stringify(res?.data?.user?.role?.permissions));
+  //       return;
+  //       navigate("/");
+  //     } else {
+  //       toast.error(res?.error || "Login failed");
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Login failed");
+  //   }
+  // };
+  // if (loading) return <p className="p-4">Loading employees...</p>;
+  // if (error) return <p className="p-4 text-red-500">{error}</p>;
   return (
     <div className="">
       <div className="flex items-center justify-between h-0">
@@ -133,12 +176,26 @@ export default function RetailerEmployeeList() {
                 {employees.map((employee, index) => (
                   <tr key={employee._id} className="hover:bg-gray-50 relative">
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
-                    <td className="px-[2px] py-[2px]">{employee.employeeName}</td>
-                    <td className="px-[2px] py-[2px]">{employee.employeeUserName}</td>
+                    <td className="px-[2px] py-[2px]">
+                      {employee.employeeName}
+                    </td>
+                    <td className="px-[2px] py-[2px]">
+                      {employee.employeeUserName}
+                    </td>
                     <td className="px-[2px] py-[2px]">{employee.type}</td>
                     <td className="px-[2px] py-[2px]">{employee.mobile}</td>
-                    <td className="px-[2px] py-[2px]">{employee.email || "—"}</td>
-                    <td className={`px-[2px] py-[2px] ${employee.status === "active" ? "text-green-700" : "text-red-700"}`}>{employee.status}</td>
+                    <td className="px-[2px] py-[2px]">
+                      {employee.email || "—"}
+                    </td>
+                    <td
+                      className={`px-[2px] py-[2px] ${
+                        employee.status === "active"
+                          ? "text-green-700"
+                          : "text-red-700"
+                      }`}
+                    >
+                      {employee.status}
+                    </td>
                     {/* <td className="px-[2px] py-[2px] text-right relative">
                       <button
                         onClick={() =>
@@ -214,7 +271,15 @@ export default function RetailerEmployeeList() {
                 <p className="text-sm">{employee.type}</p>
                 <p className="text-sm">{employee.mobile}</p>
                 <p className="text-sm">{employee.email || "—"}</p>
-                <p className={`text-sm ${employee.status === "active" ? "text-green-700" : "text-red-700"}`}>{employee.status}</p>
+                <p
+                  className={`text-sm ${
+                    employee.status === "active"
+                      ? "text-green-700"
+                      : "text-red-700"
+                  }`}
+                >
+                  {employee.status}
+                </p>
                 <div className="flex justify-end space-x-3 mt-3">
                   <button
                     onClick={() => handleEdit(employee._id)}
