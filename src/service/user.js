@@ -14,7 +14,7 @@ export const getAllUserList = async () => {
 
   if (!res.ok) throw new Error("Failed to fetch user");
   return res.json();
- 
+
 };
 
 // Create package
@@ -47,19 +47,19 @@ export const getUserDetails = async (id) => {
 
 
 // export const getUserDetails = async (id) => {
-  //   const res = await fetch(`${BASE_URL}/api/admin/customer/${id}`, {
-    //     method: "GET",
-    //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${getToken()}`,
-      //     },
-      //   });
-      //   const data = await res.json();
-      //   if (!res.ok) throw new Error(data.message || "Failed to fetch customer details");
-      //   return data;
-      // };
-      
-      // update the users
+//   const res = await fetch(`${BASE_URL}/api/admin/customer/${id}`, {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${getToken()}`,
+//     },
+//   });
+//   const data = await res.json();
+//   if (!res.ok) throw new Error(data.message || "Failed to fetch customer details");
+//   return data;
+// };
+
+// update the users
 export const updateUser = async (id, userData) => {
   const res = await fetch(`${BASE_URL}/api/admin/customer/update/${id}`, {
     method: "PATCH",
@@ -96,7 +96,7 @@ export const updateUserStatus = async (id, status) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify({ userId:id, status }),
+    body: JSON.stringify({ userId: id, status }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to update user status");
@@ -115,4 +115,26 @@ export const getPurchasedPlanList = async (userId, page, limit, search) => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to load purchase plans");
   return data;
+};
+
+
+
+// Global user search
+export const searchUsersGlobally = async (query) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/admin/common/user/Global/details/${query}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }
+    );
+    return await res.json();
+  } catch (error) {
+    console.error("Global user search error:", error);
+    return { status: false, data: [] };
+  }
 };
