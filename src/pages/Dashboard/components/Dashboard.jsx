@@ -3,7 +3,7 @@ import Card from './Cards';
 import DashboardDetails from './DashboardDetails';
 import { getUserList, getAllType } from '../../../service/dashboardApi';
 import { useNavigate } from 'react-router';
-
+import { usePermission } from "../../../context/PermissionContext";
 const typeMap = {
   'Registration *': 'register',
   'Renewal': 'renewal',
@@ -13,6 +13,9 @@ const typeMap = {
   'Upcoming Renewal *': 'upcoming-renewal',
 };
 const Dashboard = () => {
+  const { permissions, loading } = usePermission();
+  const hasTruePermission = (group) =>
+    group && Object.values(group).some((v) => v === true);
   const [data, setData] = useState({
     registration: { big: 0, today: 0, week: 0, month: 0 },
     renewal: { big: 0, today: 0, week: 0, month: 0 },
@@ -33,6 +36,7 @@ const Dashboard = () => {
         const currentMonth = currentDate.getMonth() + 1; // Months are 0-indexed
         const currentYear = currentDate.getFullYear();
         const currentWeek = Math.ceil(currentDay / 7);
+        
         const fetchForType = async (type) => {
           try {
             // Single API call for the type, assuming it returns all periods in one response
@@ -101,7 +105,10 @@ const Dashboard = () => {
           color="blue"
           onViewDetails={() => handleViewDetails('Registration *')}
           onResellerWise={() => handleResellerWise('register')}
+          viewPermission={permissions.dashboard?.RegistrationViewDetail}
+          resellerWisePermission={permissions.dashboard?.RegistrationResellerWise}
         />
+
         <Card
           title="Renewal"
           big={data.renewal.big}
@@ -109,9 +116,12 @@ const Dashboard = () => {
           week={data.renewal.week}
           month={data.renewal.month}
           color="yellow"
-          onViewDetails={() => handleViewDetails('Renewal')}
+          onViewDetails={() => handleViewDetails('Renewal *')}
           onResellerWise={() => handleResellerWise('renewal')}
+          viewPermission={permissions.dashboard?.RenewalViewDetail}
+          resellerWisePermission={permissions.dashboard?.RenewalResellerWise}
         />
+
         <Card
           title="Active"
           big={data.active.big}
@@ -119,9 +129,12 @@ const Dashboard = () => {
           week={data.active.week}
           month={data.active.month}
           color="green"
-          onViewDetails={() => handleViewDetails('Active')}
+          onViewDetails={() => handleViewDetails('Active*')}
           onResellerWise={() => handleResellerWise('active')}
+          viewPermission={permissions.dashboard?.ActiveViewDetail}
+          resellerWisePermission={permissions.dashboard?.ActiveResellerWise}
         />
+
         <Card
           title="Inactive"
           big={data.inactive.big}
@@ -129,19 +142,11 @@ const Dashboard = () => {
           week={data.inactive.week}
           month={data.inactive.month}
           color="gray"
-          onViewDetails={() => handleViewDetails('Inactive')}
+          onViewDetails={() => handleViewDetails('Inactive *')}
           onResellerWise={() => handleResellerWise('inActive')}
+          viewPermission={permissions.dashboard?.InactiveViewDetail}
+          resellerWisePermission={permissions.dashboard?.InactiveResellerWise}
         />
-        {/* <Card
-          title="Case *"
-          big={data.case.big}
-          today={data.case.today}
-          week={data.case.week}
-          month={data.case.month}
-          color="yellow"
-          onViewDetails={() => handleViewDetails('Case *')}
-          onResellerWise={() => handleResellerWise('Case')}
-        /> */}
         <Card
           title="Upcoming Renewal *"
           big={data.upcomingRenewal.big}
@@ -151,11 +156,9 @@ const Dashboard = () => {
           color="blue"
           onViewDetails={() => handleViewDetails('Upcoming Renewal *')}
           onResellerWise={() => handleResellerWise('upcomingRenewal')}
+          viewPermission={permissions.dashboard?.UpComRenewalViewDetail}
+          resellerWisePermission={permissions.dashboard?.UpComRenewalResellerWise}
         />
-        {/* <div className="bg-green-500 text-white p-4 rounded-lg shadow-sm flex items-center justify-center">
-          <span className="text-3xl font-semibold">Online User </span>
-          <span className="ml-2 text-2xl">{data.onlineUser}</span>
-        </div> */}
       </div>
     </div>
   );
