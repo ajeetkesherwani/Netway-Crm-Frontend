@@ -1341,7 +1341,7 @@ const AppSidebar: React.FC = () => {
 
     // 📊 Reports
     const reportsSubItems = [];
-    if (hasTruePermission(permissions.reports))
+    if (hasTruePermission(permissions.report))
       reportsSubItems.push({ name: "Report List", path: "/report/list" });
     if (reportsSubItems.length > 0)
       generatedNavItems.push({

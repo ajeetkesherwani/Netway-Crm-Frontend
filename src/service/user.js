@@ -18,15 +18,20 @@ export const getAllUserList = async () => {
 };
 
 // Create package
-export const createUser = async (packages) => {
-  const res = await fetch(`${BASE_URL}/user/create`, {
+export const createUser = async (payload) => {
+  let options = {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(packages),
-  });
+    body: payload,
+  };
+  // If not FormData, send as JSON
+  if (!(payload instanceof FormData)) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(payload);
+  }
+  const res = await fetch(`${BASE_URL}/user/create`, options);
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to create user");
   return data;
