@@ -1259,7 +1259,7 @@ const AppSidebar: React.FC = () => {
   const hasTruePermission = (group: any) =>
     group && Object.values(group).some((v) => v === true);
 
-  // ✅ Build sidebar items dynamically from permissions
+  // ✅ Build sidebar items dynamically from permissions 
   useEffect(() => {
     if (loading) {
       console.log("⏳ Still loading permissions...");

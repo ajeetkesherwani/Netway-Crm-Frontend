@@ -143,3 +143,18 @@ export const searchUsersGlobally = async (query) => {
     return { status: false, data: [] };
   }
 };
+
+//zone listing
+export const getAllZoneList = async () => {
+  const res = await fetch(`${BASE_URL}/zone/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch Area");
+  return res.json();
+
+};
