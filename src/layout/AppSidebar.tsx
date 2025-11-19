@@ -1603,7 +1603,10 @@ const AppSidebar: React.FC = () => {
 
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
             <div
-              ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
+              // ref={(el) => (subMenuRefs.current[`${menuType}-${index}`] = el)}
+              ref={(el) => {
+                subMenuRefs.current[`${menuType}-${index}`] = el;
+              }}
               className="overflow-hidden transition-all duration-300"
               style={{
                 height:
