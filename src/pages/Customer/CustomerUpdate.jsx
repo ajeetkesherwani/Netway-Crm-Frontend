@@ -1,1043 +1,409 @@
-// import { useState, useEffect } from "react";
-// import { useNavigate, useParams } from "react-router-dom";
-// import { getRoles } from "../../service/role";
-// import { getRetailer } from "../../service/retailer";
-// import { getAllLco } from "../../service/lco";
-// import { toast } from "react-toastify";
-// import { getUserDetails } from "../../service/user";
 
-// export default function CustomerUpdate() {
-//   const { id } = useParams(); // Customer ID
-//   const navigate = useNavigate();
-//   const [loading, setLoading] = useState(false);
-//   const [roles, setRoles] = useState([]);
-//   const [retailers, setRetailers] = useState([]);
-//   const [lcos, setLcos] = useState([]);
-
-//   //   const nasOptions = [
-//   //     "Netway-103.255.235.3",
-//   //     "Netway-Tyagjibroadband",
-//   //     "Netway-Shivamnet",
-//   //     "Netway-Netwayinternet",
-//   //   ];
-
-//   const categoryOptions = ["Category1", "Category2", "Category3"];
-
-//   const initialFormData = {
-//     generalInformation: {
-//       title: "Mr",
-//       name: "",
-//       username: "",
-//       password: "",
-//       email: "",
-//       phone: "",
-//       roleId: "",
-//       telephone: "",
-//       cafNo: "",
-//       gst: "",
-//       adharNo: "",
-//       address: "",
-//       pincode: "",
-//       state: "",
-//       country: "India",
-//       district: "",
-//       retailerId: "",
-//       lcoId: "",
-//       paymentMethod: "Online",
-//     },
-//     networkInformation: {
-//       networkType: "PPPOE",
-//       ipType: "Static IP",
-//       statisIp: { nas: [], category: "" },
-//       dynamicIpPool: "",
-//     },
-//     additionalInformation: {
-//       dob: "",
-//       description: "",
-//       notification: false,
-//       addPlan: false,
-//       addCharges: true,
-//     },
-//     document: {
-//       documentType: "Other",
-//       documentDetails: "Pancard",
-//       documentImage: "",
-//     },
-//     status: false,
-//   };
-
-//   const [formData, setFormData] = useState(initialFormData);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         // Fetch customer details for prefill
-//         const customerRes = await getUserDetails(id);
-//         console.log(customerRes, " this is the data in  the customer");
-//         if (customerRes.status && customerRes.data) {
-//           const customer = customerRes.data;
-//           setFormData({
-//             generalInformation: {
-//               title: customer?.generalInformation?.title || "Mr",
-//               name: customer?.generalInformation?.name || "",
-//               username: customer?.generalInformation?.username || "",
-//               password: "", // Do not prefill password for security
-//               email: customer?.generalInformation?.email || "",
-//               phone: customer?.generalInformation?.phone || "",
-//               roleId: customer?.generalInformation?.roleId || "",
-//               telephone: customer?.generalInformation?.telephone || "",
-//               cafNo: customer?.generalInformation?.cafNo || "",
-//               gst: customer?.generalInformation?.gst || "",
-//               adharNo: customer?.generalInformation?.adharNo || "",
-//               address: customer?.generalInformation?.address || "",
-//               pincode: customer?.generalInformation?.pincode || "",
-//               state: customer?.generalInformation?.state || "",
-//               country: customer?.generalInformation?.country || "India",
-//               district: customer?.generalInformation?.district || "",
-//               retailerId: customer?.generalInformation?.retailerId || "",
-//               lcoId: customer?.generalInformation?.lcoId || "",
-//               paymentMethod:
-//                 customer?.generalInformation?.paymentMethod || "Online",
-//             },
-//             networkInformation: {
-//               networkType: customer?.networkInformation?.networkType || "PPPOE",
-//               ipType: customer?.networkInformation?.ipType || "Static IP",
-//               statisIp: {
-//                 nas: customer?.networkInformation?.statisIp?.nas || [],
-//                 category:
-//                   customer?.networkInformation?.statisIp?.category || "",
-//               },
-//               dynamicIpPool: customer?.networkInformation?.dynamicIpPool || "",
-//             },
-//             additionalInformation: {
-//               dob: customer?.additionalInformation?.dob || "",
-//               description: customer?.additionalInformation?.description || "",
-//               notification:
-//                 customer?.additionalInformation?.notification || false,
-//               addPlan: customer?.additionalInformation?.addPlan || false,
-//               addCharges: customer?.additionalInformation?.addCharges || true,
-//             },
-//             document: {
-//               documentType: customer?.document?.documentType || "Other",
-//               documentDetails: customer?.document?.documentDetails || "Pancard",
-//               documentImage: customer?.document?.documentImage || "",
-//             },
-//             status: customer?.status || false,
-//           });
-//         }
-//       } catch (err) {
-//         console.error("Failed to load customer details:", err);
-//         toast.error("Failed to load customer details ❌");
-//       }
-//     };
-
-//     const fetchRoles = async () => {
-//       try {
-//         const res = await getRoles();
-//         if (res.status && res.data) setRoles(res.data);
-//       } catch (err) {
-//         console.error("Failed to load roles:", err);
-//       }
-//     };
-//     const fetchRetailers = async () => {
-//       try {
-//         const res = await getRetailer();
-//         if (res.status && res.data) setRetailers(res.data);
-//       } catch (err) {
-//         console.error("Failed to load retailers:", err);
-//       }
-//     };
-//     const fetchLcos = async () => {
-//       try {
-//         const res = await getAllLco();
-//         if (res.status && res.data) setLcos(res.data);
-//       } catch (err) {
-//         console.error("Failed to load LCOs:", err);
-//       }
-//     };
-
-//     fetchData();
-//     fetchRoles();
-//     fetchRetailers();
-//     fetchLcos();
-//   }, [id]);
-
-//   const handleChange = (e, section, key, nestedKey) => {
-//     const { value, type, checked, files } = e.target;
-//     if (nestedKey) {
-//       setFormData((prev) => ({
-//         ...prev,
-//         [section]: {
-//           ...prev[section],
-//           [key]: {
-//             ...prev[section][key],
-//             [nestedKey]:
-//               type === "checkbox"
-//                 ? checked
-//                 : type === "file"
-//                 ? files[0]
-//                 : value,
-//           },
-//         },
-//       }));
-//     } else {
-//       setFormData((prev) => ({
-//         ...prev,
-//         [section]: {
-//           ...prev[section],
-//           [key]:
-//             type === "checkbox" ? checked : type === "file" ? files[0] : value,
-//         },
-//       }));
-//     }
-//   };
-
-//   // const handleNasChange = (nasValue) => {
-//   //     setFormData((prev) => {
-//   //         let updatedNAS = [...prev.networkInformation.statisIp.nas];
-//   //         if (updatedNAS.includes(nasValue)) {
-//   //             updatedNAS = updatedNAS.filter((n) => n !== nasValue);
-//   //         } else {
-//   //             updatedNAS.push(nasValue);
-//   //         }
-//   //         return {
-//   //             ...prev,
-//   //             networkInformation: {
-//   //                 ...prev.networkInformation,
-//   //                 statisIp: { ...prev.networkInformation.statisIp, nas: updatedNAS },
-//   //             },
-//   //         };
-//   //     });
-//   // };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     try {
-//       await updateUser(id, formData);
-//       toast.success("Customer updated successfully ✅");
-//       navigate("/user/list");
-//     } catch (err) {
-//       console.error(err);
-//       toast.error(err.message || "Failed to update customer ❌");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleClear = () => setFormData(initialFormData);
-
-//   return (
-//     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
-//       <h2 className="text-2xl font-bold mb-6">Update Customer</h2>
-//       <form
-//         onSubmit={handleSubmit}
-//         className="grid grid-cols-1 md:grid-cols-2 gap-4"
-//       >
-//         {/* General Information */}
-//         {[
-//           {
-//             label: "Title",
-//             key: "title",
-//             type: "select",
-//             options: ["M/s", "Mr", "Ms", "Mrs", "Miss"],
-//           },
-//           { label: "Name", key: "name" },
-//           { label: "Username", key: "username" },
-//           { label: "Password", key: "password", type: "password" },
-//           { label: "Email", key: "email", type: "email" },
-//           { label: "Phone", key: "phone" },
-//           { label: "Telephone", key: "telephone" },
-//           { label: "CAF No", key: "cafNo" },
-//           { label: "GST", key: "gst" },
-//           { label: "Adhar No", key: "adharNo" },
-//           { label: "Address", key: "address" },
-//           { label: "Pincode", key: "pincode" },
-//           {
-//             label: "State",
-//             key: "state",
-//             type: "select",
-//             options: ["Maharashtra", "Delhi", "Haryana", "Uttar Pradesh"],
-//           },
-//           { label: "Country", key: "country" },
-//           { label: "District", key: "district" },
-//           {
-//             label: "Payment Method",
-//             key: "paymentMethod",
-//             type: "select",
-//             options: ["Cash", "Online"],
-//           },
-//           {
-//             label: "Role",
-//             key: "roleId",
-//             type: "select",
-//             options: roles.map((r) => ({ id: r._id, name: r.roleName })),
-//           },
-//           {
-//             label: "Retailer",
-//             key: "retailerId",
-//             type: "select",
-//             options: retailers.map((r) => ({
-//               id: r._id,
-//               name: r.resellerName,
-//             })),
-//           },
-//           {
-//             label: "LCO",
-//             key: "lcoId",
-//             type: "select",
-//             options: lcos.map((l) => ({ id: l._id, name: l.lcoName })),
-//           },
-//         ].map((field) => (
-//           <div key={field.key}>
-//             <label className="block font-medium">{field.label}</label>
-//             {field.type === "select" ? (
-//               <select
-//                 value={formData.generalInformation[field.key] || ""}
-//                 onChange={(e) =>
-//                   handleChange(e, "generalInformation", field.key)
-//                 }
-//                 className="border p-2 w-full rounded"
-//                 required
-//               >
-//                 <option value="">Select {field.label}</option>
-//                 {field.options.map((opt, idx) =>
-//                   typeof opt === "object" ? (
-//                     <option key={idx} value={opt.id}>
-//                       {opt.name}
-//                     </option>
-//                   ) : (
-//                     <option key={idx} value={opt}>
-//                       {opt}
-//                     </option>
-//                   )
-//                 )}
-//               </select>
-//             ) : (
-//               <input
-//                 type={field.type || "text"}
-//                 value={formData.generalInformation[field.key] || ""}
-//                 onChange={(e) =>
-//                   handleChange(e, "generalInformation", field.key)
-//                 }
-//                 className="border p-2 w-full rounded"
-//               />
-//             )}
-//           </div>
-//         ))}
-
-//         {/* Network Information */}
-//         <div>
-//           <label className="block font-medium">Network Type</label>
-//           <select
-//             value={formData.networkInformation.networkType}
-//             onChange={(e) =>
-//               handleChange(e, "networkInformation", "networkType")
-//             }
-//             className="border p-2 w-full rounded"
-//           >
-//             <option>PPPOE</option>
-//             <option>PPOE</option>
-//             <option>IP-Pass throw</option>
-//             <option>MAC_TAL</option>
-//           </select>
-//         </div>
-
-//         <div>
-//           <label className="block font-medium">IP Type</label>
-//           <select
-//             value={formData.networkInformation.ipType}
-//             onChange={(e) => handleChange(e, "networkInformation", "ipType")}
-//             className="border p-2 w-full rounded"
-//           >
-//             <option>Static IP</option>
-//             <option>Dynamic IP Pool</option>
-//           </select>
-//         </div>
-//         {/*
-//         {formData.networkInformation.ipType === "Static IP" && (
-//           <div className="col-span-2">
-//             <label className="block font-medium mb-2">
-//               NAS (Multiple Select)
-//             </label>
-//             <div className="flex flex-col gap-2 border rounded p-2 border-black">
-//               {nasOptions.map((nas) => (
-//                 <label key={nas} className="flex items-center gap-2">
-//                   <input
-//                     type="checkbox"
-//                     checked={formData.networkInformation.statisIp.nas.includes(
-//                       nas
-//                     )}
-//                     onChange={() => handleNasChange(nas)}
-//                     className="h-4 w-4"
-//                   />
-//                   {nas}
-//                 </label>
-//               ))}
-//             </div>
-//           </div>
-//         )} */}
-
-//         {formData.networkInformation.ipType === "Static IP" && (
-//           <div>
-//             <label className="block font-medium">Category</label>
-//             <select
-//               value={formData.networkInformation.statisIp.category}
-//               onChange={(e) =>
-//                 handleChange(e, "networkInformation", "statisIp", "category")
-//               }
-//               className="border p-2 w-full rounded"
-//             >
-//               <option value="">Select Category</option>
-//               {categoryOptions.map((cat) => (
-//                 <option key={cat} value={cat}>
-//                   {cat}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//         )}
-
-//         {formData.networkInformation.ipType === "Dynamic IP Pool" && (
-//           <div>
-//             <label className="block font-medium">Dynamic IP Pool</label>
-//             <input
-//               type="text"
-//               value={formData.networkInformation.dynamicIpPool}
-//               onChange={(e) =>
-//                 handleChange(e, "networkInformation", "dynamicIpPool")
-//               }
-//               className="border p-2 w-full rounded"
-//             />
-//           </div>
-//         )}
-
-//         {/* Additional Information */}
-//         <div>
-//           <label className="block font-medium">DOB</label>
-//           <input
-//             type="date"
-//             value={formData.additionalInformation.dob}
-//             onChange={(e) => handleChange(e, "additionalInformation", "dob")}
-//             className="border p-2 w-full rounded"
-//           />
-//         </div>
-
-//         <div>
-//           <label className="block font-medium">Description</label>
-//           <input
-//             type="text"
-//             value={formData.additionalInformation.description}
-//             onChange={(e) =>
-//               handleChange(e, "additionalInformation", "description")
-//             }
-//             className="border p-2 w-full rounded"
-//           />
-//         </div>
-
-//         {["notification", "addPlan", "addCharges"].map((key) => (
-//           <div key={key} className="flex items-center gap-2">
-//             <input
-//               type="checkbox"
-//               checked={formData.additionalInformation[key]}
-//               onChange={(e) => handleChange(e, "additionalInformation", key)}
-//             />
-//             <label>{key}</label>
-//           </div>
-//         ))}
-
-//         {/* Document */}
-//         {[
-//           {
-//             label: "Document Type",
-//             key: "documentType",
-//             options: [
-//               "ID proof",
-//               "Profile Id",
-//               "Adhar Card",
-//               "Insurence Paper",
-//               "Signature",
-//               "Other",
-//             ],
-//           },
-//           {
-//             label: "Document Details",
-//             key: "documentDetails",
-//             options: ["Licence", "Pancard", "Gst", "Address Proof", "Passport"],
-//           },
-//         ].map((field) => (
-//           <div key={field.key}>
-//             <label className="block font-medium">{field.label}</label>
-//             <select
-//               value={formData.document[field.key]}
-//               onChange={(e) => handleChange(e, "document", field.key)}
-//               className="border p-2 w-full rounded"
-//             >
-//               {field.options.map((opt) => (
-//                 <option key={opt} value={opt}>
-//                   {opt}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//         ))}
-
-//         <div>
-//           <label className="block font-medium">Document Image</label>
-//           <input
-//             type="file"
-//             onChange={(e) => handleChange(e, "document", "documentImage")}
-//             className="border p-2 w-full rounded"
-//           />
-//           {formData.document.documentImage && (
-//             <p className="text-sm text-gray-500 mt-1">
-//               Current Image: {formData.document.documentImage}
-//             </p>
-//           )}
-//         </div>
-
-//         {/* Status */}
-//         <div>
-//           <label className="block font-medium">Status</label>
-//           <select
-//             value={formData.status ? "true" : "false"}
-//             onChange={(e) =>
-//               setFormData((prev) => ({
-//                 ...prev,
-//                 status: e.target.value === "true",
-//               }))
-//             }
-//             className="border p-2 w-full rounded"
-//           >
-//             <option value="true">Active</option>
-//             <option value="false">Inactive</option>
-//           </select>
-//         </div>
-
-//         {/* Buttons */}
-//         <div className="col-span-2 flex justify-end gap-3 mt-4">
-//           <button
-//             type="button"
-//             onClick={() => navigate("/user/list")}
-//             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-//           >
-//             Back
-//           </button>
-//           <button
-//             type="submit"
-//             disabled={loading}
-//             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-//           >
-//             {loading ? "Updating..." : "Update"}
-//           </button>
-//           <button
-//             type="button"
-//             onClick={handleClear}
-//             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-//           >
-//             Clear
-//           </button>
-//         </div>
-//       </form>
-//     </div>
-//   );
-// }
-
+// src/pages/users/CustomerUpdate.jsx
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  getUserDetails,
+  updateUser,
+  getAllZoneList,
+  // getAllPackageList,
+} from "../../service/user";
+import { getAllPackageList } from "../../service/package";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
+import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
-import { getUserDetails, updateUser } from "../../service/user";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // Reference Data
   const [roles, setRoles] = useState([]);
   const [retailers, setRetailers] = useState([]);
   const [lcos, setLcos] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
+  const [packageList, setPackageList] = useState([]);
+  const [areas, setAreas] = useState([""]);
 
-  const categoryOptions = ["Category1", "Category2", "Category3"];
-  const stateOptions = ["Maharashtra", "Delhi", "Haryana", "Uttar Pradesh"];
+  const connectionTypes = ["ILL", "FTTH", "Wireless", "Other"];
+  const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
+  const networkTypes = ["PPPOE", "IP-Pass", "MAC_TAL"];
+  const ipTypes = ["Static IP", "Dynamic IP Pool"];
+  const documentTypes = [
+    "Aadhar Card",
+    "Pan Card",
+    "Address Proof",
+    "Passport",
+    "Photo",
+    "Other",
+  ];
 
-  const initialFormData = {
-    generalInformation: {
+  const initialForm = {
+    customer: {
       title: "Mr",
       name: "",
+      billingName: "",
+      differentBillingName: false,
       username: "",
       password: "",
       email: "",
-      phone: "",
+      mobile: "",
+      alternateMobile: "",
+      gender: "Male",
+      aadharNo: "",
+      panCard: "",
+      accountId: "",
+      registrationDate: "",
       roleId: "",
-      telephone: "",
-      cafNo: "",
-      gst: "",
-      adharNo: "",
-      address: "",
-      pincode: "",
-      state: "",
-      country: "India",
-      district: "",
       retailerId: "",
       lcoId: "",
-      paymentMethod: "Online",
-    },
-    networkInformation: {
-      networkType: "PPPOE",
+      salesExecutiveId: "",
+      installationBy: [],
+      installationByManual: "",
+      serialNo: "",
+      macId: "",
+      serviceOpted: "",
+      connectionType: "ILL",
+      ipAddress: "",
       ipType: "Static IP",
-      statisIp: { category: "" },
       dynamicIpPool: "",
+      nas: [],
+      stbNo: "",
+      vcNo: "",
+      circuitId: "",
+      networkType: "",
+      packageDetails: { packageName: "", packageAmount: "", packageStart: "", packageEnd: "" },
     },
-    additionalInformation: {
-      dob: "",
-      description: "",
-      notification: false,
-      addPlan: false,
-      addCharges: true,
+    addresses: {
+      billing: { addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
+      permanent: { addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
+      installation: { sameAsBilling: true, addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
     },
-    document: {
-      documentType: "Other",
-      documentDetails: "Pancard",
-      documentImage: "",
-    },
-    status: "Inactive",
+    payment: { paymentMode: "Online", invoiceNo: "", paymentRef: "", amount: "", paymentDate: "", rechargeThresholdLimit: 0 },
+    documents: [],
+    additional: { dob: "", description: "", aadharPermanentAddress: "", ekYC: false, status: true },
   };
 
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState(initialForm);
 
-  // ------------------- Fetch User + Supporting Data ------------------- //
+  // Fetch User + All Reference Data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAll = async () => {
       try {
-        const customerRes = await getUserDetails(id);
-        if (customerRes.status && customerRes.data && customerRes.data.user) {
-          const customer = customerRes.data.user;
+        const [
+          userRes,
+          roleRes,
+          retailerRes,
+          lcoRes,
+          staffRes,
+          zoneRes,
+          pkgRes,
+        ] = await Promise.all([
+          getUserDetails(id),
+          getRoles(),
+          getRetailer(),
+          getAllLco(),
+          getStaffList(),
+          getAllZoneList(),
+          getAllPackageList(),
+        ]);
+
+        setRoles(roleRes?.data || []);
+        setRetailers(retailerRes?.data || []);
+        setLcos(lcoRes?.data || []);
+        setStaff(staffRes?.data || []);
+        setZoneList(zoneRes?.data || []);
+        setPackageList(pkgRes?.data || []);
+
+        if (userRes?.status && userRes?.data?.user) {
+          const u = userRes.data.user;
 
           setFormData({
-            generalInformation: {
-              title: customer.generalInformation?.title || "Mr",
-              name: customer.generalInformation?.name || "",
-              username: customer.generalInformation?.username || "",
+            customer: {
+              title: u.customer?.title || "Mr",
+              name: u.customer?.name || "",
+              billingName: u.customer?.billingName || "",
+              differentBillingName: u.customer?.differentBillingName || false,
+              username: u.customer?.username || "",
               password: "",
-              email: customer.generalInformation?.email || "",
-              phone: customer.generalInformation?.phone || "",
-              roleId: customer.generalInformation?.roleId?._id || "",
-              telephone: customer.generalInformation?.telephone || "",
-              cafNo: customer.generalInformation?.cafNo || "",
-              gst: customer.generalInformation?.gst || "",
-              adharNo: customer.generalInformation?.adharNo || "",
-              address: customer.generalInformation?.address || "",
-              pincode: customer.generalInformation?.pincode || "",
-              state: customer.generalInformation?.state || "",
-              country: customer.generalInformation?.country || "India",
-              district: customer.generalInformation?.district || "",
-              retailerId:
-                customer.generalInformation?.createdFor?.id?._id || "",
-              lcoId: "",
-              paymentMethod:
-                customer.generalInformation?.paymentMethod || "Online",
-            },
-            networkInformation: {
-              networkType: customer.networkInformation?.networkType || "PPPOE",
-              ipType: customer.networkInformation?.ipType || "Static IP",
-              statisIp: {
-                category: customer.networkInformation?.statisIp?.category || "",
+              email: u.customer?.email || "",
+              mobile: u.customer?.mobile || "",
+              alternateMobile: u.customer?.alternateMobile || "",
+              gender: u.customer?.gender || "Male",
+              aadharNo: u.customer?.aadharNo || "",
+              panCard: u.customer?.panCard || "",
+              accountId: u.customer?.accountId || "",
+              registrationDate: u.customer?.registrationDate?.slice(0, 10) || "",
+              roleId: u.customer?.roleId?._id || "",
+              retailerId: u.customer?.retailerId?._id || "",
+              lcoId: u.customer?.lcoId?._id || "",
+              salesExecutiveId: u.customer?.salesExecutiveId?._id || "",
+              installationBy: u.customer?.installationBy || [],
+              installationByManual: u.customer?.installationByManual || "",
+              serialNo: u.customer?.serialNo || "",
+              macId: u.customer?.macId || "",
+              serviceOpted: u.customer?.serviceOpted || "",
+              connectionType: u.customer?.connectionType || "ILL",
+              ipAddress: u.customer?.ipAddress || "",
+              ipType: u.customer?.ipType || "Static IP",
+              dynamicIpPool: u.customer?.dynamicIpPool || "",
+              nas: u.customer?.nas || [],
+              stbNo: u.customer?.stbNo || "",
+              vcNo: u.customer?.vcNo || "",
+              circuitId: u.customer?.circuitId || "",
+              networkType: u.customer?.networkType || "",
+              packageDetails: {
+                packageName: u.customer?.packageDetails?.packageName || "",
+                packageAmount: u.customer?.packageDetails?.packageAmount || "",
+                packageStart: u.customer?.packageDetails?.packageStart?.slice(0, 10) || "",
+                packageEnd: u.customer?.packageDetails?.packageEnd?.slice(0, 10) || "",
               },
-              dynamicIpPool: customer.networkInformation?.dynamicIpPool || "",
             },
-            additionalInformation: {
-              dob: customer.additionalInformation?.dob || "",
-              description: customer.additionalInformation?.description || "",
-              notification:
-                customer.additionalInformation?.notification || false,
-              addPlan: customer.additionalInformation?.addPlan || false,
-              addCharges:
-                customer.additionalInformation?.addCharges !== undefined
-                  ? customer.additionalInformation.addCharges
-                  : true,
+            addresses: {
+              billing: { ...initialForm.addresses.billing, ...u.addresses?.billing },
+              permanent: { ...initialForm.addresses.permanent, ...u.addresses?.permanent },
+              installation: {
+                sameAsBilling: u.addresses?.installation?.sameAsBilling ?? true,
+                ...u.addresses?.installation,
+              },
             },
-            document: {
-              documentType: customer.document?.documentType || "Other",
-              documentDetails: customer.document?.documentDetails || "Pancard",
-              documentImage: customer.document?.documentImage || "",
+            payment: { ...initialForm.payment, ...u.payment },
+            documents: (u.documents || []).map((doc) => ({
+              type: doc.type || "",
+              file: null,
+              existingUrl: doc.file || doc.url || "",
+            })),
+            additional: {
+              dob: u.additional?.dob?.slice(0, 10) || "",
+              description: u.additional?.description || "",
+              aadharPermanentAddress: u.additional?.aadharPermanentAddress || "",
+              ekYC: u.additional?.ekYC || false,
+              status: u.additional?.status ?? true,
             },
-            status: customer.status || "Inactive",
           });
+
+          setAreas(u.areas || [""]);
         } else {
-          toast.error("User data not found ❌");
+          toast.error("Customer not found");
+          navigate("/user/list");
         }
       } catch (err) {
-        console.error("Failed to load customer details:", err);
-        toast.error("Failed to load customer details ❌");
+        console.error(err);
+        toast.error("Failed to load customer data");
       }
     };
+    fetchAll();
+  }, [id, navigate]);
 
-    const fetchRoles = async () => {
-      try {
-        const res = await getRoles();
-        if (res.status && res.data) setRoles(res.data);
-      } catch (err) {
-        console.error("Failed to load roles:", err);
-      }
-    };
-
-    const fetchRetailers = async () => {
-      try {
-        const res = await getRetailer();
-        if (res.status && res.data) setRetailers(res.data);
-      } catch (err) {
-        console.error("Failed to load retailers:", err);
-      }
-    };
-
-    const fetchLcos = async () => {
-      try {
-        const res = await getAllLco();
-        if (res.status && res.data) setLcos(res.data);
-      } catch (err) {
-        console.error("Failed to load LCOs:", err);
-      }
-    };
-
-    fetchData();
-    fetchRoles();
-    fetchRetailers();
-    fetchLcos();
-  }, [id]);
-
-  // ------------------- Handle Change ------------------- //
-  const handleChange = (e, section, key, nestedKey) => {
-    const { value, type, checked, files } = e.target;
-    if (nestedKey) {
+  // Auto-sync billing → installation address
+  useEffect(() => {
+    if (formData.addresses.installation.sameAsBilling) {
       setFormData((prev) => ({
         ...prev,
-        [section]: {
-          ...prev[section],
-          [key]: {
-            ...prev[section][key],
-            [nestedKey]:
-              type === "checkbox"
-                ? checked
-                : type === "file"
-                ? files[0]
-                : value,
+        addresses: {
+          ...prev.addresses,
+          installation: {
+            sameAsBilling: true,
+            addressLine1: prev.addresses.billing.addressLine1,
+            addressLine2: prev.addresses.billing.addressLine2,
+            state: prev.addresses.billing.state,
+            city: prev.addresses.billing.city,
+            pincode: prev.addresses.billing.pincode,
+            area: prev.addresses.billing.area,
           },
         },
       }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [key]:
-            type === "checkbox" ? checked : type === "file" ? files[0] : value,
-        },
-      }));
+    }
+  }, [formData.addresses.billing, formData.addresses.installation.sameAsBilling]);
+
+  const setFieldValue = (path, value) => {
+    const keys = path.split(".");
+    setFormData((prev) => {
+      const next = JSON.parse(JSON.stringify(prev));
+      let cur = next;
+      for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
+      cur[keys[keys.length - 1]] = value;
+      return next;
+    });
+  };
+
+  const handlePackageChange = (packageId) => {
+    const pkg = packageList.find((p) => p._id === packageId);
+    if (pkg) {
+      setFieldValue("customer.packageDetails.packageName", pkg.packageName || pkg.name || "");
+      setFieldValue("customer.packageDetails.packageAmount", pkg.basePrice || pkg.price || "");
     }
   };
 
-  // ------------------- Handle Submit ------------------- //
+  const addDocumentRow = () => setFormData((prev) => ({ ...prev, documents: [...prev.documents, { type: "", file: null, existingUrl: "" }] }));
+  const updateDocumentType = (i, v) => { const d = [...formData.documents]; d[i].type = v; setFormData((prev) => ({ ...prev, documents: d })); };
+  const updateDocumentFile = (i, f) => { const d = [...formData.documents]; d[i].file = f; setFormData((prev) => ({ ...prev, documents: d })); };
+  const removeDocumentRow = (i) => setFormData((prev) => ({ ...prev, documents: prev.documents.filter((_, idx) => idx !== i) }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateUser(id, formData);
-      toast.success("Customer updated successfully ✅");
+      const payload = new FormData();
+      payload.append("customer", JSON.stringify(formData.customer));
+      payload.append("addresses", JSON.stringify(formData.addresses));
+      payload.append("payment", JSON.stringify(formData.payment));
+      payload.append("additional", JSON.stringify(formData.additional));
+      payload.append("areas", JSON.stringify(areas));
+
+      formData.documents.forEach((doc) => {
+        if (doc.file) payload.append("documents", doc.file);
+        if (doc.type) payload.append("documentTypes[]", doc.type);
+        if (doc.existingUrl && !doc.file) payload.append("existingDocuments[]", doc.existingUrl);
+      });
+
+      await updateUser(id, payload);
+      toast.success("Customer updated successfully");
       navigate("/user/list");
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Failed to update customer ❌");
+      toast.error(err?.response?.data?.message || "Update failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClear = () => setFormData(initialFormData);
-
-  // ------------------- UI ------------------- //
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold mb-6">Update Customer</h2>
+    <div className="max-w-[1400px] mx-auto p-6 bg-white shadow-lg rounded-lg">
+      <h1 className="text-2xl font-bold mb-6 text-blue-800">Update Customer</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        {/* General Information */}
-        {[
-          {
-            label: "Title",
-            key: "title",
-            type: "select",
-            options: ["M/s", "Mr", "Ms", "Mrs", "Miss"],
-          },
-          { label: "Name", key: "name" },
-          { label: "Username", key: "username" },
-          { label: "Password", key: "password", type: "password" },
-          { label: "Email", key: "email", type: "email" },
-          { label: "Phone", key: "phone" },
-          { label: "Telephone", key: "telephone" },
-          { label: "CAF No", key: "cafNo" },
-          { label: "GST", key: "gst" },
-          { label: "Adhar No", key: "adharNo" },
-          { label: "Address", key: "address" },
-          { label: "Pincode", key: "pincode" },
-          {
-            label: "State",
-            key: "state",
-            type: "select",
-            options: stateOptions,
-          },
-          { label: "Country", key: "country" },
-          { label: "District", key: "district" },
-          {
-            label: "Payment Method",
-            key: "paymentMethod",
-            type: "select",
-            options: ["Cash", "Online"],
-          },
-          {
-            label: "Role",
-            key: "roleId",
-            type: "select",
-            options: roles.map((r) => ({ id: r._id, name: r.roleName })),
-          },
-          {
-            label: "Retailer",
-            key: "retailerId",
-            type: "select",
-            options: retailers.map((r) => ({
-              id: r._id,
-              name: r.resellerName,
-            })),
-          },
-          {
-            label: "LCO",
-            key: "lcoId",
-            type: "select",
-            options: lcos.map((l) => ({ id: l._id, name: l.lcoName })),
-          },
-        ].map((field) => (
-          <div key={field.key}>
-            <label className="block font-medium">{field.label}</label>
-            {field.type === "select" ? (
-              <select
-                value={formData.generalInformation[field.key] || ""}
-                onChange={(e) =>
-                  handleChange(e, "generalInformation", field.key)
-                }
-                className="border p-2 w-full rounded"
-              >
-                <option value="">Select {field.label}</option>
-                {field.options.map((opt, idx) =>
-                  typeof opt === "object" ? (
-                    <option key={idx} value={opt.id}>
-                      {opt.name}
-                    </option>
-                  ) : (
-                    <option key={idx} value={opt}>
-                      {opt}
-                    </option>
-                  )
-                )}
-              </select>
-            ) : (
-              <input
-                type={field.type || "text"}
-                value={formData.generalInformation[field.key] || ""}
-                onChange={(e) =>
-                  handleChange(e, "generalInformation", field.key)
-                }
-                className="border p-2 w-full rounded"
-              />
-            )}
+      <form onSubmit={handleSubmit} className="space-y-8">
+
+        {/* Customer Details */}
+        <section className="border rounded-lg">
+          <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Customer Details</div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-5">
+            {/* All fields exactly like CreateUser */}
+            <div><label>Title</label><select value={formData.customer.title} onChange={(e) => setFieldValue("customer.title", e.target.value)} className="mt-1 p-2 border rounded w-full"><option>Mr</option><option>Mrs</option><option>Ms</option><option>M/s</option></select></div>
+            <div><label>Name *</label><input value={formData.customer.name} onChange={(e) => setFieldValue("customer.name", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Billing Name</label><input value={formData.customer.billingName} onChange={(e) => setFieldValue("customer.billingName", e.target.value)} className="mt-1 p-2 border rounded w-full bg-gray-50" /><label className="inline-flex items-center mt-2 text-sm"><input type="checkbox" checked={formData.customer.differentBillingName} onChange={(e) => setFieldValue("customer.differentBillingName", e.target.checked)} className="mr-2" /> Different From Name</label></div>
+            <div><label>Email *</label><input type="email" value={formData.customer.email} onChange={(e) => setFieldValue("customer.email", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Mobile *</label><input value={formData.customer.mobile} onChange={(e) => setFieldValue("customer.mobile", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Alternate Mobile</label><input value={formData.customer.alternateMobile} onChange={(e) => setFieldValue("customer.alternateMobile", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Account ID</label><input value={formData.customer.accountId} onChange={(e) => setFieldValue("customer.accountId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Connection Type</label><select value={formData.customer.connectionType} onChange={(e) => setFieldValue("customer.connectionType", e.target.value)} className="mt-1 p-2 border rounded w-full">{connectionTypes.map(t => <option key={t}>{t}</option>)}</select></div>
+            <div><label>Sales Executive</label><select value={formData.customer.salesExecutiveId} onChange={(e) => setFieldValue("customer.salesExecutiveId", e.target.value)} className="mt-1 p-2 border rounded w-full"><option value="">Select</option>{staff.map(s => <option key={s._id} value={s._id}>{s.name || s.roleName}</option>)}</select></div>
+            <div className="md:col-span-2"><label>Installation By</label><select value={formData.customer.installationBy[0] || ""} onChange={(e) => setFieldValue("customer.installationBy", [e.target.value])} className="mt-1 p-2 border rounded w-full"><option>Select Staff</option>{staff.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}</select><input placeholder="Or Manual" value={formData.customer.installationByManual} onChange={(e) => setFieldValue("customer.installationByManual", e.target.value)} className="mt-2 p-2 border rounded w-full" /></div>
+            <div><label>IP Address</label><input value={formData.customer.ipAddress} onChange={(e) => setFieldValue("customer.ipAddress", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>IP Type</label><select value={formData.customer.ipType} onChange={(e) => setFieldValue("customer.ipType", e.target.value)} className="mt-1 p-2 border rounded w-full">{ipTypes.map(t => <option key={t}>{t}</option>)}</select></div>
+            {formData.customer.ipType === "Dynamic IP Pool" && <div><label>Dynamic IP Pool</label><input value={formData.customer.dynamicIpPool} onChange={(e) => setFieldValue("customer.dynamicIpPool", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>}
+            <div><label>Serial No</label><input value={formData.customer.serialNo} onChange={(e) => setFieldValue("customer.serialNo", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>MAC ID</label><input value={formData.customer.macId} onChange={(e) => setFieldValue("customer.macId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Service Opted</label><input value={formData.customer.serviceOpted} onChange={(e) => setFieldValue("customer.serviceOpted", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>STB No.</label><input value={formData.customer.stbNo} onChange={(e) => setFieldValue("customer.stbNo", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>VC No.</label><input value={formData.customer.vcNo} onChange={(e) => setFieldValue("customer.vcNo", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+            <div><label>Circuit ID</label><input value={formData.customer.circuitId} onChange={(e) => setFieldValue("customer.circuitId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
           </div>
-        ))}
+        </section>
 
-        {/* Network Info */}
-        <div>
-          <label className="block font-medium">Network Type</label>
-          <select
-            value={formData.networkInformation.networkType}
-            onChange={(e) =>
-              handleChange(e, "networkInformation", "networkType")
-            }
-            className="border p-2 w-full rounded"
-          >
-            <option>PPPOE</option>
-            <option>PPOE</option>
-            <option>IP-Pass throw</option>
-            <option>MAC_TAL</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block font-medium">IP Type</label>
-          <select
-            value={formData.networkInformation.ipType}
-            onChange={(e) => handleChange(e, "networkInformation", "ipType")}
-            className="border p-2 w-full rounded"
-          >
-            <option>Static IP</option>
-            <option>Dynamic IP Pool</option>
-          </select>
-        </div>
-
-        {formData.networkInformation.ipType === "Static IP" && (
-          <div>
-            <label className="block font-medium">Category</label>
-            <select
-              value={formData.networkInformation.statisIp.category}
-              onChange={(e) =>
-                handleChange(e, "networkInformation", "statisIp", "category")
-              }
-              className="border p-2 w-full rounded"
-            >
-              <option value="">Select Category</option>
-              {categoryOptions.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Additional Info */}
-        <div>
-          <label className="block font-medium">DOB</label>
-          <input
-            type="date"
-            value={formData.additionalInformation.dob}
-            onChange={(e) => handleChange(e, "additionalInformation", "dob")}
-            className="border p-2 w-full rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium">Description</label>
-          <input
-            type="text"
-            value={formData.additionalInformation.description}
-            onChange={(e) =>
-              handleChange(e, "additionalInformation", "description")
-            }
-            className="border p-2 w-full rounded"
-          />
-        </div>
-
-        {["notification", "addPlan", "addCharges"].map((key) => (
-          <div key={key} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={formData.additionalInformation[key]}
-              onChange={(e) => handleChange(e, "additionalInformation", key)}
-            />
-            <label>{key}</label>
-          </div>
-        ))}
-
-        {/* Document */}
-        <div>
-          <label className="block font-medium">Document Type</label>
-          <select
-            value={formData.document.documentType}
-            onChange={(e) => handleChange(e, "document", "documentType")}
-            className="border p-2 w-full rounded"
-          >
-            {[
-              "ID proof",
-              "Profile Id",
-              "Adhar Card",
-              "Insurance Paper",
-              "Signature",
-              "Other",
-            ].map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block font-medium">Document Details</label>
-          <select
-            value={formData.document.documentDetails}
-            onChange={(e) => handleChange(e, "document", "documentDetails")}
-            className="border p-2 w-full rounded"
-          >
-            {["Licence", "Pancard", "Gst", "Address Proof", "Passport"].map(
-              (opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              )
-            )}
-          </select>
-        </div>
-
-        <div>
-          <label className="block font-medium">Document Image</label>
-          <input
-            type="file"
-            onChange={(e) => handleChange(e, "document", "documentImage")}
-            className="border p-2 w-full rounded"
-          />
-          {formData.document.documentImage && (
-            <div className="mt-2">
-              <img
-                src={`http://localhost:5004/${formData.document.documentImage}`}
-                alt="Document"
-                className="w-32 h-32 object-cover border rounded"
-              />
+        {/* Address Details */}
+        <section className="border rounded-lg">
+          <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Address Details</div>
+          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="border p-5 rounded"><h3 className="font-bold text-blue-700 mb-3">Billing Address</h3>
+              <input placeholder="Address Line 1 *" value={formData.addresses.billing.addressLine1} onChange={(e) => setFieldValue("addresses.billing.addressLine1", e.target.value)} className="w-full p-2 border rounded mb-3" />
+              <input placeholder="Address Line 2" value={formData.addresses.billing.addressLine2} onChange={(e) => setFieldValue("addresses.billing.addressLine2", e.target.value)} className="w-full p-2 border rounded mb-3" />
+              <div className="grid grid-cols-2 gap-3"><input placeholder="City *" value={formData.addresses.billing.city} onChange={(e) => setFieldValue("addresses.billing.city", e.target.value)} className="p-2 border rounded" /><input placeholder="State *" value={formData.addresses.billing.state} onChange={(e) => setFieldValue("addresses.billing.state", e.target.value)} className="p-2 border rounded" /></div>
+              <input placeholder="Pincode *" value={formData.addresses.billing.pincode} onChange={(e) => setFieldValue("addresses.billing.pincode", e.target.value)} className="w-full p-2 border rounded mt-3" />
             </div>
-          )}
-        </div>
+            <div className="border p-5 rounded"><h3 className="font-bold text-blue-700 mb-3">Permanent Address (Aadhar)</h3>
+              <input placeholder="Address Line 1" value={formData.addresses.permanent.addressLine1} onChange={(e) => setFieldValue("addresses.permanent.addressLine1", e.target.value)} className="w-full p-2 border rounded mb-3" />
+              <input placeholder="Address Line 2" value={formData.addresses.permanent.addressLine2} onChange={(e) => setFieldValue("addresses.permanent.addressLine2", e.target.value)} className="w-full p-2 border rounded mb-3" />
+              <div className="grid grid-cols-2 gap-3"><input placeholder="City" value={formData.addresses.permanent.city} onChange={(e) => setFieldValue("addresses.permanent.city", e.target.value)} className="p-2 border rounded" /><input placeholder="State" value={formData.addresses.permanent.state} onChange={(e) => setFieldValue("addresses.permanent.state", e.target.value)} className="p-2 border rounded" /></div>
+              <input placeholder="Pincode" value={formData.addresses.permanent.pincode} onChange={(e) => setFieldValue("addresses.permanent.pincode", e.target.value)} className="w-full p-2 border rounded mt-3" />
+            </div>
+            <div className="border p-5 rounded"><h3 className="font-bold text-blue-700 mb-3">Installation Address</h3>
+              <label className="inline-flex items-center"><input type="checkbox" checked={!formData.addresses.installation.sameAsBilling} onChange={(e) => setFieldValue("addresses.installation.sameAsBilling", !e.target.checked)} className="mr-2" /> Different from Billing</label>
+              {!formData.addresses.installation.sameAsBilling && (
+                <>
+                  <input placeholder="Address Line 1" value={formData.addresses.installation.addressLine1} onChange={(e) => setFieldValue("addresses.installation.addressLine1", e.target.value)} className="w-full p-2 border rounded mt-3" />
+                  <input placeholder="Address Line 2" value={formData.addresses.installation.addressLine2} onChange={(e) => setFieldValue("addresses.installation.addressLine2", e.target.value)} className="w-full p-2 border rounded mt-3" />
+                  <div className="grid grid-cols-2 gap-3 mt-3"><input placeholder="City" value={formData.addresses.installation.city} onChange={(e) => setFieldValue("addresses.installation.city", e.target.value)} className="p-2 border rounded" /><input placeholder="State" value={formData.addresses.installation.state} onChange={(e) => setFieldValue("addresses.installation.state", e.target.value)} className="p-2 border rounded" /></div>
+                  <input placeholder="Pincode" value={formData.addresses.installation.pincode} onChange={(e) => setFieldValue("addresses.installation.pincode", e.target.value)} className="w-full p-2 border rounded mt-3" />
+                </>
+              )}
+            </div>
+          </div>
+          <div className="p-6 border-t"><h4 className="font-semibold mb-3">Areas</h4>{areas.map((a, i) => (
+            <select key={i} value={a} onChange={(e) => setAreas(prev => prev.map((x, idx) => idx === i ? e.target.value : x))} className="w-full p-2 border rounded mb-3">
+              <option>Select Area</option>
+              {zoneList.map(z => <option key={z._id} value={z.zoneName}>{z.zoneName}</option>)}
+            </select>
+          ))}</div>
+        </section>
 
-        {/* Status */}
-        <div>
-          <label className="block font-medium">Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, status: e.target.value }))
-            }
-            className="border p-2 w-full rounded"
-          >
-            <option value="active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="Suspend">Suspend</option>
-            <option value="Terminated">Terminated</option>
-          </select>
-        </div>
+        {/* Network & Package */}
+        <section className="border rounded-lg">
+          <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Network & Package</div>
+          <div className="p-6 grid md:grid-cols-2 gap-8">
+            <div>
+              <label className="font-semibold">Select Package</label>
+              <select onChange={(e) => handlePackageChange(e.target.value)} className="w-full p-2 border rounded mt-2">
+                <option value="">-- Select Package --</option>
+                {packageList.map(p => <option key={p._id} value={p._id}>{p.packageName} {p.basePrice && `₹${p.basePrice}`}</option>)}
+              </select>
+              <input readOnly value={formData.customer.packageDetails.packageAmount} className="w-full p-2 border rounded mt-4 bg-gray-100 font-bold text-green-700" placeholder="Package Amount" />
+            </div>
+            <div>
+              <label>Network Type</label>
+              <select value={formData.customer.networkType} onChange={(e) => setFieldValue("customer.networkType", e.target.value)} className="w-full p-2 border rounded mt-2">
+                <option value="">Select</option>
+                {networkTypes.map(n => <option key={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+        </section>
 
-        {/* Buttons */}
-        <div className="col-span-2 flex justify-end gap-3 mt-4">
-          <button
-            type="button"
-            onClick={() => navigate("/user/list")}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-          >
-            Back
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-          >
-            {loading ? "Updating..." : "Update"}
-          </button>
-          <button
-            type="button"
-            onClick={handleClear}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-          >
-            Clear
-          </button>
-        </div>
+        {/* Documents */}
+        <section className="border rounded-lg">
+          <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Documents</div>
+          <div className="p-6">
+            {formData.documents.map((doc, i) => (
+              <div key={i} className="grid md:grid-cols-3 gap-4 p-4 border rounded mb-4">
+                <div>
+                  <label>Type</label>
+                  <select value={doc.type} onChange={(e) => updateDocumentType(i, e.target.value)} className="w-full p-2 border rounded mt-1">
+                    <option>Select</option>
+                    {documentTypes.map(t => <option key={t} value={t} disabled={formData.documents.some((d, j) => d.type === t && j !== i)}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label>New File</label>
+                  <input type="file" onChange={(e) => updateDocumentFile(i, e.target.files[0])} className="w-full p-2 border rounded mt-1" />
+                  {doc.existingUrl && !doc.file && <img src={`http://localhost:5004/${doc.existingUrl}`} alt="doc" className="w-32 mt-3 border rounded" />}
+                  {doc.file && <p className="text-green-600 text-sm mt-2">New: {doc.file.name}</p>}
+                </div>
+                <div className="flex items-end"><button type="button" onClick={() => removeDocumentRow(i)} className="px-4 py-2 bg-red-600 text-white rounded">Remove</button></div>
+              </div>
+            ))}
+            <button type="button" onClick={addDocumentRow} className="px-5 py-2 bg-blue-700 text-white rounded">+ Add Document</button>
+          </div>
+        </section>
+
+        {/* Additional */}
+        <section className="border rounded-lg">
+          <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Additional Information</div>
+          <div className="p-6 grid md:grid-cols-3 gap-6">
+            <div><label>DOB</label><input type="date" value={formData.additional.dob} onChange={(e) => setFieldValue("additional.dob", e.target.value)} className="w-full p-2 border rounded mt-1" /></div>
+            <div><label>eKYC</label><div className="mt-2 flex gap-6"><label><input type="radio" checked={formData.additional.ekYC} onChange={() => setFieldValue("additional.ekYC", true)} /> Yes</label><label><input type="radio" checked={!formData.additional.ekYC} onChange={() => setFieldValue("additional.ekYC", false)} /> No</label></div></div>
+            <div><label>Status</label><select value={formData.additional.status ? "Active" : "Inactive"} onChange={(e) => setFieldValue("additional.status", e.target.value === "Active")} className="w-full p-2 border rounded mt-1"><option>Active</option><option>Inactive</option></select></div>
+            <div className="md:col-span-3"><label>Description</label><textarea value={formData.additional.description} onChange={(e) => setFieldValue("additional.description", e.target.value)} className="w-full p-3 border rounded h-32 mt-1" /></div>
+          </div>
+          <div className="p-6 bg-gray-50 flex justify-end gap-4">
+            <button type="button" onClick={() => navigate("/user/list")} className="px-6 py-3 bg-gray-600 text-white rounded">Back</button>
+            <button type="submit" disabled={loading} className="px-8 py-3 bg-blue-600 text-white rounded disabled:opacity-60">
+              {loading ? "Updating..." : "Update Customer"}
+            </button>
+          </div>
+        </section>
       </form>
     </div>
   );

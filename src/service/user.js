@@ -67,7 +67,7 @@ export const getUserDetails = async (id) => {
 
 // update the users
 export const updateUser = async (id, userData) => {
-  const res = await fetch(`${BASE_URL}/api/admin/customer/update/${id}`, {
+  const res = await fetch(`${BASE_URL}/user/update/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
