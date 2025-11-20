@@ -1,5 +1,4 @@
 
-// src/pages/users/CreateUser.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser, getAllZoneList } from "../../service/user";
@@ -26,10 +25,11 @@ export default function CreateUser() {
   // const [areas, setAreas] = useState(["Main Area"]);
   const [areas, setAreas] = useState([""]);
 
-  const connectionTypes = ["ILL", "FTTH", "Wireless", "Other"];
+  const connectionTypes = ["IIL", "FTTH", "Wireless", "Other"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
-  const networkTypes = ["PPPOE", "IP-Pass", "MAC_TAL"];
+  const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
+  const CustomeripTypes = ["static", "dynamic"];
 
   const initialForm = {
     customer: {
@@ -221,6 +221,10 @@ export default function CreateUser() {
     const selected = packageList.find((p) => p._id === packageId);
     if (selected) {
       setFieldValue(
+        "customer.packageDetails.packageId",
+        selected.packageId || ""
+      );
+      setFieldValue(
         "customer.packageDetails.packageName",
         selected.packageName || selected.name || ""
       );
@@ -283,6 +287,49 @@ export default function CreateUser() {
     return errors;
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+
+  //   const errors = validateForm();
+  //   if (Object.keys(errors).length) {
+  //     setFormErrors(errors);
+  //     console.log("errors", errors);
+  //     toast.error("Please fix form errors");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     // Build payload appropriate for your backend; here we create a FormData if documents exist
+  //     const payload = new FormData();
+  //     // simple flattening - adjust as backend expects
+  //     payload.append("customer", JSON.stringify(formData.customer));
+  //     payload.append("addresses", JSON.stringify(formData.addresses));
+  //     payload.append("payment", JSON.stringify(formData.payment));
+  //     payload.append("additional", JSON.stringify(formData.additional));
+  //     payload.append("areas", JSON.stringify(areas));
+  //     formData.documents.forEach((doc) => {
+  //       if (doc.file) {
+  //         payload.append("documents", doc.file);
+  //       }
+  //       if (doc.type) {
+  //         payload.append("documentTypes", doc.type);
+  //       }
+  //     });
+
+  //     // call API that accepts formdata
+  //     await createUser(payload);
+  //     toast.success("User created successfully");
+  //     navigate("/user/list");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error(err?.message || "Failed to create user");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -290,43 +337,32 @@ export default function CreateUser() {
     const errors = validateForm();
     if (Object.keys(errors).length) {
       setFormErrors(errors);
-      console.log("errors", errors);
       toast.error("Please fix form errors");
       setLoading(false);
       return;
     }
 
     try {
-      // Build payload appropriate for your backend; here we create a FormData if documents exist
       const payload = new FormData();
-      // simple flattening - adjust as backend expects
+
       payload.append("customer", JSON.stringify(formData.customer));
       payload.append("addresses", JSON.stringify(formData.addresses));
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
       payload.append("areas", JSON.stringify(areas));
-      // add documents (object: {type, file})
-      // formData.documents.forEach((doc, idx) => {
-      //   if (doc.file instanceof File || doc.file instanceof Blob) {
-      //     payload.append(`documents[${idx}][file]`, doc.file, doc.file.name);
-      //   }
-      //   if (doc.type) {
-      //     payload.append(`documents[${idx}][type]`, doc.type);
-      //   }
-      // });
+
+      // FIXED — Only append type when file exists, and use documentTypes[]
       formData.documents.forEach((doc) => {
-        if (doc.file) {
+        if (doc.file && doc.type) {
           payload.append("documents", doc.file);
-        }
-        if (doc.type) {
           payload.append("documentTypes[]", doc.type);
         }
       });
 
-      // call API that accepts formdata
       await createUser(payload);
       toast.success("User created successfully");
       navigate("/user/list");
+
     } catch (err) {
       console.error(err);
       toast.error(err?.message || "Failed to create user");
@@ -334,6 +370,7 @@ export default function CreateUser() {
       setLoading(false);
     }
   };
+
 
   const handleClear = () => {
     setFormData(initialForm);
@@ -587,7 +624,7 @@ export default function CreateUser() {
                 onChange={(e) => handleChange(e, "customer.ipType")}
                 className="mt-1 p-2 border rounded w-full"
               >
-                {ipTypes.map((it) => (
+                {CustomeripTypes.map((it) => (
                   <option key={it} value={it}>
                     {it}
                   </option>
@@ -732,9 +769,9 @@ export default function CreateUser() {
               <h3 className="font-semibold mb-2">Permanent Address (Aadhar)</h3>
               <label className="text-sm">Address Line 1 *</label>
               <input
-                value={formData.addresses.billing.addressLine1}
+                value={formData.addresses.permanent.addressLine1}
                 onChange={(e) =>
-                  handleChange(e, "addresses.billing.addressLine1")
+                  handleChange(e, "addresses.permanent.addressLine1")
                 }
                 className={`mt-1 p-2 border rounded w-full ${
                   formErrors["addresses.billing.addressLine1"]
@@ -744,27 +781,27 @@ export default function CreateUser() {
               />
               <label className="text-sm mt-2">Address Line 2</label>
               <input
-                value={formData.addresses.billing.addressLine2}
+                value={formData.addresses.permanent.addressLine2}
                 onChange={(e) =>
-                  handleChange(e, "addresses.billing.addressLine2")
+                  handleChange(e, "addresses.permanent.addressLine2")
                 }
                 className="mt-1 p-2 border rounded w-full"
               />
               <div className="flex gap-2 mt-2">
                 <input
-                  value={formData.addresses.billing.city}
-                  onChange={(e) => handleChange(e, "addresses.billing.city")}
+                  value={formData.addresses.permanent.city}
+                  onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
                   className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.city"] ? "border-red-500" : ""
+                    formErrors["addresses.permanent.city"] ? "border-red-500" : ""
                   }`}
                 />
                 <input
-                  value={formData.addresses.billing.state}
-                  onChange={(e) => handleChange(e, "addresses.billing.state")}
+                  value={formData.addresses.permanent.state}
+                  onChange={(e) => handleChange(e, "addresses.permanent.state")}
                   placeholder="State *"
                   className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.state"]
+                    formErrors["addresses.permanent.state"]
                       ? "border-red-500"
                       : ""
                   }`}
@@ -772,11 +809,11 @@ export default function CreateUser() {
               </div>
               <div className="flex gap-2 mt-2">
                 <input
-                  value={formData.addresses.billing.pincode}
-                  onChange={(e) => handleChange(e, "addresses.billing.pincode")}
+                  value={formData.addresses.permanent.pincode}
+                  onChange={(e) => handleChange(e, "addresses.permanent.pincode")}
                   placeholder="Pincode *"
                   className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.pincode"]
+                    formErrors["addresses.permanent.pincode"]
                       ? "border-red-500"
                       : ""
                   }`}
@@ -857,14 +894,13 @@ export default function CreateUser() {
                 {areas.map((a, i) => (
                   <div key={i} className="flex gap-2 items-center">
                     <select
-                      value={a}
+                      value={formData.addresses.area}
                       onChange={(e) => updateArea(i, e.target.value)}
                       className="p-2 border rounded w-full"
                     >
                       <option value="">Select Area</option>
-
                       {zoneList.map((zone) => (
-                        <option key={zone._id} value={zone.zoneName}>
+                        <option key={zone._id} value={zone._id}>
                           {zone.zoneName}
                         </option>
                       ))}
@@ -875,53 +911,6 @@ export default function CreateUser() {
             </div>
           </div>
         </section>
-
-        {/* ---------------- Network / Device / Package ---------------- */}
-        {/* <section className="border rounded">
-          <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
-            Network & Package
-          </div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold">Package Details</h4>
-              <input
-                placeholder="Package Name"
-                value={formData.customer.packageDetails.packageName}
-                onChange={(e) =>
-                  setFieldValue(
-                    "customer.packageDetails.packageName",
-                    e.target.value
-                  )
-                }
-                className="mt-1 p-2 border rounded w-full"
-              />
-              <input
-                placeholder="Amount"
-                value={formData.customer.packageDetails.packageAmount}
-                onChange={(e) =>
-                  setFieldValue(
-                    "customer.packageDetails.packageAmount",
-                    e.target.value
-                  )
-                }
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm">Network Type</label>
-              <select
-                value={formData.customer.networkType}
-                onChange={(e) => handleChange(e, "customer.networkType")}
-                className="mt-1 p-2 border rounded w-full"
-              >
-                {networkTypes.map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </section> */}
-
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
         <section className="border rounded">
           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
@@ -983,123 +972,6 @@ export default function CreateUser() {
           </div>
         </section>
 
-        {/* ---------------- Payment Details (All required) ---------------- */}
-        {/* <section className="border rounded">
-          <div className="bg-blue-800 text-white px-4 py-2 font-semibold">Payment Details (Required)</div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm">Payment Mode *</label>
-              <select
-                value={formData.payment.paymentMode}
-                onChange={(e) => handleChange(e, "payment.paymentMode")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["payment.paymentMode"] ? "border-red-500" : ""}`}
-              >
-                {paymentModes.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-              {formErrors["payment.paymentMode"] && <p className="text-red-500 text-sm">{formErrors["payment.paymentMode"]}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm">Invoice No *</label>
-              <input
-                value={formData.payment.invoiceNo}
-                onChange={(e) => handleChange(e, "payment.invoiceNo")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["payment.invoiceNo"] ? "border-red-500" : ""}`}
-              />
-              {formErrors["payment.invoiceNo"] && <p className="text-red-500 text-sm">{formErrors["payment.invoiceNo"]}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm">Payment Ref *</label>
-              <input
-                value={formData.payment.paymentRef}
-                onChange={(e) => handleChange(e, "payment.paymentRef")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["payment.paymentRef"] ? "border-red-500" : ""}`}
-              />
-              {formErrors["payment.paymentRef"] && <p className="text-red-500 text-sm">{formErrors["payment.paymentRef"]}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm">Amount *</label>
-              <input
-                value={formData.payment.amount}
-                onChange={(e) => handleChange(e, "payment.amount")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["payment.amount"] ? "border-red-500" : ""}`}
-                type="number"
-                min="0"
-              />
-              {formErrors["payment.amount"] && <p className="text-red-500 text-sm">{formErrors["payment.amount"]}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm">Payment Date</label>
-              <input
-                type="date"
-                value={formData.payment.paymentDate}
-                onChange={(e) => handleChange(e, "payment.paymentDate")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm">Recharge Threshold Limit</label>
-              <input
-                type="number"
-                value={formData.payment.rechargeThresholdLimit}
-                onChange={(e) => handleChange(e, "payment.rechargeThresholdLimit")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div>
-          </div>
-        </section> */}
-
-        {/* ---------------- Documents (multiple) ---------------- */}
-        {/* <section className="border rounded">
-          <div className="bg-blue-800 text-white px-4 py-2 font-semibold">Documents</div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm">Upload Documents (multiple)</label>
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleChange(e, "documents")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-              <div className="mt-2">
-                {formData.documents.length === 0 && <p className="text-sm text-gray-500">No files uploaded</p>}
-                {formData.documents.map((f, i) => (
-                  <div key={i} className="flex items-center justify-between border p-2 rounded mb-1">
-                    <div className="text-sm">{f.name}</div>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => removeDocumentAt(i)} className="text-sm text-red-600">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm">Document Type</label>
-              <select
-                onChange={(e) => handleChange(e, "customer.documentType")}
-                className="mt-1 p-2 border rounded w-full"
-                value={formData.customer.documentType || "Other"}
-              >
-                <option>Adhar Card</option>
-                <option>Pancard</option>
-                <option>Address Proof</option>
-                <option>Passport</option>
-                <option>Other</option>
-              </select>
-            </div>
-          </div>
-        </section> */}
         <section className="border rounded">
           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
             Documents
