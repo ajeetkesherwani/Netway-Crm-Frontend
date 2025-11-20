@@ -19,6 +19,7 @@ export const getAllUserList = async () => {
 
 // Create package
 export const createUser = async (payload) => {
+  console.log("payload",payload);
   let options = {
     method: "POST",
     headers: {
