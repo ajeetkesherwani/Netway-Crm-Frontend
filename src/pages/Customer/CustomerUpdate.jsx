@@ -27,6 +27,7 @@ export default function CustomerUpdate() {
   const [staff, setStaff] = useState([]);
   const [zoneList, setZoneList] = useState([]);
   const [packageList, setPackageList] = useState([]);
+  
   const [areas, setAreas] = useState([""]);
 
   const connectionTypes = ["ILL", "FTTH", "Wireless", "Other"];
@@ -93,7 +94,7 @@ export default function CustomerUpdate() {
   // Fetch User + All Reference Data
   useEffect(() => {
     const fetchAll = async () => {
-      try {
+      // try {
         const [
           userRes,
           roleRes,
@@ -119,81 +120,78 @@ export default function CustomerUpdate() {
         setZoneList(zoneRes?.data || []);
         setPackageList(pkgRes?.data || []);
 
-        if (userRes?.status && userRes?.data?.user) {
-          const u = userRes.data.user;
+      if (userRes?.status && userRes?.data?.user) {
+        const u = userRes.data.user;
 
-          setFormData({
-            customer: {
-              title: u.customer?.title || "Mr",
-              name: u.customer?.name || "",
-              billingName: u.customer?.billingName || "",
-              differentBillingName: u.customer?.differentBillingName || false,
-              username: u.customer?.username || "",
-              password: "",
-              email: u.customer?.email || "",
-              mobile: u.customer?.mobile || "",
-              alternateMobile: u.customer?.alternateMobile || "",
-              gender: u.customer?.gender || "Male",
-              aadharNo: u.customer?.aadharNo || "",
-              panCard: u.customer?.panCard || "",
-              accountId: u.customer?.accountId || "",
-              registrationDate: u.customer?.registrationDate?.slice(0, 10) || "",
-              roleId: u.customer?.roleId?._id || "",
-              retailerId: u.customer?.retailerId?._id || "",
-              lcoId: u.customer?.lcoId?._id || "",
-              salesExecutiveId: u.customer?.salesExecutiveId?._id || "",
-              installationBy: u.customer?.installationBy || [],
-              installationByManual: u.customer?.installationByManual || "",
-              serialNo: u.customer?.serialNo || "",
-              macId: u.customer?.macId || "",
-              serviceOpted: u.customer?.serviceOpted || "",
-              connectionType: u.customer?.connectionType || "ILL",
-              ipAddress: u.customer?.ipAddress || "",
-              ipType: u.customer?.ipType || "Static IP",
-              dynamicIpPool: u.customer?.dynamicIpPool || "",
-              nas: u.customer?.nas || [],
-              stbNo: u.customer?.stbNo || "",
-              vcNo: u.customer?.vcNo || "",
-              circuitId: u.customer?.circuitId || "",
-              networkType: u.customer?.networkType || "",
-              packageDetails: {
-                packageName: u.customer?.packageDetails?.packageName || "",
-                packageAmount: u.customer?.packageDetails?.packageAmount || "",
-                packageStart: u.customer?.packageDetails?.packageStart?.slice(0, 10) || "",
-                packageEnd: u.customer?.packageDetails?.packageEnd?.slice(0, 10) || "",
-              },
-            },
-            addresses: {
-              billing: { ...initialForm.addresses.billing, ...u.addresses?.billing },
-              permanent: { ...initialForm.addresses.permanent, ...u.addresses?.permanent },
-              installation: {
-                sameAsBilling: u.addresses?.installation?.sameAsBilling ?? true,
-                ...u.addresses?.installation,
-              },
-            },
-            payment: { ...initialForm.payment, ...u.payment },
-            documents: (u.documents || []).map((doc) => ({
-              type: doc.type || "",
-              file: null,
-              existingUrl: doc.file || doc.url || "",
-            })),
-            additional: {
-              dob: u.additional?.dob?.slice(0, 10) || "",
-              description: u.additional?.description || "",
-              aadharPermanentAddress: u.additional?.aadharPermanentAddress || "",
-              ekYC: u.additional?.ekYC || false,
-              status: u.additional?.status ?? true,
-            },
-          });
+        setFormData({
+          customer: {
+            title: u.generalInformation?.title || "Mr",
+            name: u.generalInformation?.name || "",
+            billingName: u.generalInformation?.billingName || "",
+            differentBillingName: false,
+            username: u.generalInformation?.username || "",
+            password: "",
+            email: u.generalInformation?.email || "",
+            mobile: u.generalInformation?.phone || "",
+            alternateMobile: u.generalInformation?.alternatePhone || "",
+            gender: u.generalInformation?.gender || "Male",
+            aadharNo: u.generalInformation?.adharNo || "",
+            accountId: u.generalInformation?.ipactId || "",
+            serialNo: u.generalInformation?.serialNo || "",
+            macId: u.generalInformation?.macId || "",
+            stbNo: u.generalInformation?.stbNo || "",
+            vcNo: u.generalInformation?.vcNo || "",
+            circuitId: u.generalInformation?.circuitId || "",
+            serviceOpted: u.generalInformation?.serviceOpted || "",
+            connectionType: u.generalInformation?.connectionType || "",
+            ipAddress: u.generalInformation?.ipAdress || "",
+            ipType: u.generalInformation?.ipType || "",
+            networkType: u.networkInformation?.networkType || "",
+            dynamicIpPool: u.networkInformation?.dynamicIpPool || "",
 
-          setAreas(u.areas || [""]);
-        } else {
-          toast.error("Customer not found");
-          navigate("/user/list");
-        }
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load customer data");
+            packageDetails: {
+              packageId: u.packageInfomation?.packageId || "",
+              packageName: u.packageInfomation?.packageName || "",
+              packageAmount: u.packageInfomation?.price || "",
+            },
+          },
+
+          addresses: {
+            billing: {
+              addressLine1: u.addressDetails?.billingAddress?.addressine1 || "",
+              addressLine2: u.addressDetails?.billingAddress?.addressine2 || "",
+              city: u.addressDetails?.billingAddress?.city || "",
+              area: u.addressDetails?.area || "",
+            },
+            permanent: {
+              addressLine1: u.addressDetails?.permanentAddress?.addressine1 || "",
+              addressLine2: u.addressDetails?.permanentAddress?.addressine2 || "",
+              city: u.addressDetails?.permanentAddress?.city || "",
+            },
+            installation: {
+              sameAsBilling: false,
+              addressLine1: u.addressDetails?.installationAddress?.addressine1 || "",
+              addressLine2: u.addressDetails?.installationAddress?.addressine2 || "",
+              city: u.addressDetails?.installationAddress?.city || "",
+            },
+            area:u.addressDetails?.area,
+          },
+
+          additional: {
+            dob: u.additionalInformation?.dob || "",
+            description: u.additionalInformation?.description || "",
+            ekYC: u.additionalInformation?.ekyc === "yes",
+            status: u.status === "active",
+          },
+
+          documents: (u.document || []).map(doc => ({
+            type: doc.documentType,
+            file: null,
+            existingUrl: doc.documentImage ? `/uploads/${doc.documentImage}` : "",
+          })),
+        });
+
+        setAreas([u.addressDetails?.area]);
       }
     };
     fetchAll();
@@ -271,6 +269,7 @@ export default function CustomerUpdate() {
     }
   };
 
+  console.log("formData.customer.installationBy",formData.customer);
   return (
     <div className="max-w-[1400px] mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h1 className="text-2xl font-bold mb-6 text-blue-800">Update Customer</h1>
@@ -291,7 +290,7 @@ export default function CustomerUpdate() {
             <div><label>Account ID</label><input value={formData.customer.accountId} onChange={(e) => setFieldValue("customer.accountId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>Connection Type</label><select value={formData.customer.connectionType} onChange={(e) => setFieldValue("customer.connectionType", e.target.value)} className="mt-1 p-2 border rounded w-full">{connectionTypes.map(t => <option key={t}>{t}</option>)}</select></div>
             <div><label>Sales Executive</label><select value={formData.customer.salesExecutiveId} onChange={(e) => setFieldValue("customer.salesExecutiveId", e.target.value)} className="mt-1 p-2 border rounded w-full"><option value="">Select</option>{staff.map(s => <option key={s._id} value={s._id}>{s.name || s.roleName}</option>)}</select></div>
-            <div className="md:col-span-2"><label>Installation By</label><select value={formData.customer.installationBy[0] || ""} onChange={(e) => setFieldValue("customer.installationBy", [e.target.value])} className="mt-1 p-2 border rounded w-full"><option>Select Staff</option>{staff.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}</select><input placeholder="Or Manual" value={formData.customer.installationByManual} onChange={(e) => setFieldValue("customer.installationByManual", e.target.value)} className="mt-2 p-2 border rounded w-full" /></div>
+            <div className="md:col-span-2"><label>Installation By</label><select value={formData.customer.installationBy ? formData.customer.installationBy[0] : ""} onChange={(e) => setFieldValue("customer.installationBy", [e.target.value])} className="mt-1 p-2 border rounded w-full"><option>Select Staff</option>{staff.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}</select><input placeholder="Or Manual" value={formData.customer.installationByManual} onChange={(e) => setFieldValue("customer.installationByManual", e.target.value)} className="mt-2 p-2 border rounded w-full" /></div>
             <div><label>IP Address</label><input value={formData.customer.ipAddress} onChange={(e) => setFieldValue("customer.ipAddress", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>IP Type</label><select value={formData.customer.ipType} onChange={(e) => setFieldValue("customer.ipType", e.target.value)} className="mt-1 p-2 border rounded w-full">{ipTypes.map(t => <option key={t}>{t}</option>)}</select></div>
             {formData.customer.ipType === "Dynamic IP Pool" && <div><label>Dynamic IP Pool</label><input value={formData.customer.dynamicIpPool} onChange={(e) => setFieldValue("customer.dynamicIpPool", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>}
