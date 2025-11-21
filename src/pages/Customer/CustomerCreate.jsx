@@ -50,9 +50,9 @@ export default function CreateUser() {
       roleId: "",
       retailerId: "",
       lcoId: "",
-      salesExecutiveId: "",
+      selsExecutive: "",
       installationBy: [],
-      installationByManual: "",
+      installationByName: "",
       serialNo: "",
       macId: "",
       serviceOpted: "",
@@ -561,8 +561,8 @@ export default function CreateUser() {
                 Sales Executive
               </label>
               <select
-                value={formData.customer.salesExecutiveId}
-                onChange={(e) => handleChange(e, "customer.salesExecutiveId")}
+                value={formData.customer.selsExecutive}
+                onChange={(e) => handleChange(e, "customer.selsExecutive")}
                 className="mt-1 p-2 border rounded w-full"
               >
                 <option value="">Select Staff</option>
@@ -580,7 +580,7 @@ export default function CreateUser() {
               </label>
               {/* multi select */}
               <select
-                value={formData.customer.salesExecutiveId}
+                value={formData.customer.selsExecutive}
                 onChange={(e) => handleChange(e, "customer.installationBy")}
                 className="mt-1 p-2 border rounded w-full"
               >
@@ -597,9 +597,9 @@ export default function CreateUser() {
                   Or Enter Manual Installer
                 </label>
                 <input
-                  value={formData.customer.installationByManual}
+                  value={formData.customer.installationByName}
                   onChange={(e) =>
-                    handleChange(e, "customer.installationByManual")
+                    handleChange(e, "customer.installationByName")
                   }
                   className="mt-1 p-2 border rounded w-full"
                   placeholder="Enter installer name manually"
