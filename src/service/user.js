@@ -126,10 +126,32 @@ export const getPurchasedPlanList = async (userId, page, limit, search) => {
 
 
 // Global user search
-export const searchUsersGlobally = async (query) => {
+// export const searchUsersGlobaly = async (query) => {
+//   try {
+//     const res = await fetch(
+//       `${BASE_URL}/common/user/Global/details/${query}`,
+//       {
+//         method: "GET",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${getToken()}`,
+//         },
+//       }
+//     );
+//     return await res.json();
+//   } catch (error) {
+//     console.error("Global user search error:", error);
+//     return { status: false, data: [] };
+//   }
+// };
+
+//serach users globally 
+export const searchUsers = async (query) => {
+  if (!query?.trim()) return [];
+
   try {
-    const res = await fetch(
-      `${BASE_URL}/api/admin/common/user/Global/details/${query}`,
+    const response = await fetch(
+      `${BASE_URL}/common/user/details?query=${(query.trim())}`,
       {
         method: "GET",
         headers: {
@@ -138,12 +160,35 @@ export const searchUsersGlobally = async (query) => {
         },
       }
     );
-    return await res.json();
+
+    const result = await response.json();
+    return result.data || [];
   } catch (error) {
-    console.error("Global user search error:", error);
-    return { status: false, data: [] };
+    console.error("searchUsers error:", error);
+    return [];
   }
 };
+
+// export const searchUsers = async (query) => {
+//   try {
+//     const res = await fetch(
+//       `${BASE_URL}/common/user/details?query=${query}`,
+//       {
+//         method: "GET",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${getToken()}`,
+//         },
+//       }
+//     );
+
+//     return await res.json();
+//   } catch (error) {
+//     console.error("User search error:", error);
+//     return { status: false, data: [] };
+//   }
+// };
+
 
 //zone listing
 export const getAllZoneList = async () => {

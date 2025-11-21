@@ -305,18 +305,35 @@ export const createRetailer = async (formData) => {
 
 
 // Update Retailer
-export const updateRetailer = async (id, retailer) => {
+export const updateRetailer = async (id, formData) => {
   const res = await fetch(`${BASE_URL}/retailer/update/${id}`, {
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      // ❌ DO NOT set Content-Type for FormData
     },
-    body: JSON.stringify(retailer),
+    body: formData
   });
-  if (!res.ok) throw new Error("Failed to update retailer");
-  return res.json();
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.message || "Failed to update retailer");
+
+  return data;
 };
+
+// export const updateRetailer = async (id, retailer) => {
+//   const res = await fetch(`${BASE_URL}/retailer/update/${id}`, {
+//     method: "PATCH",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${getToken()}`,
+//     },
+//     body: JSON.stringify(retailer),
+//   });
+//   if (!res.ok) throw new Error("Failed to update retailer");
+//   return res.json();
+// };
 
 // Delete Retailer
 export const deleteRetailer = async (id) => {
