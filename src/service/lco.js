@@ -149,34 +149,38 @@ export const getLcoDetails = async (id) => {
 };
 
 // Create LCO
-export const createLco = async (lco) => {
+export const createLco = async (formData) => {
   const res = await fetch(`${BASE_URL}/lco/create`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(lco),
+    body: formData, // ✅ Send FormData directly
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to create LCO");
+  if (!res.ok) throw new Error(data.message || "Failed to create lco");
   return data;
 };
 
+
 // Update Lco
-export const updateLco = async (id, lco) => {
+export const updateLco = async (id, formData) => {
   const res = await fetch(`${BASE_URL}/lco/update/${id}`, {
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
+      // FormData ke saath Content-Type na lagana
     },
-    body: JSON.stringify(lco),
+    body: formData
   });
-  if (!res.ok) throw new Error("Failed to update retailer");
-  return res.json();
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update LCO");
+
+  return data;
 };
+
 // Delete Lco
 export const deleteLco = async (id) => {
   const res = await fetch(`${BASE_URL}/lco/delete/${id}`, {

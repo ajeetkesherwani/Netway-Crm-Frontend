@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Link } from "react-router";
+// import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom"; 
 import { useSidebar } from "../context/SidebarContext";
 // import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 // import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+import UserSearch from "../components/header/UserSearch";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -117,7 +119,8 @@ const AppHeader: React.FC = () => {
           </button>
           {/* search box in the header */}
           <div className="hidden lg:block">
-            <form>
+             <UserSearch />
+            {/* <form>
               <div className="relative">
                 <span className="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
                   <svg
@@ -148,7 +151,7 @@ const AppHeader: React.FC = () => {
                   <span> K </span>
                 </button>
               </div>
-            </form>
+            </form> */}
           </div>
         </div>
         <div

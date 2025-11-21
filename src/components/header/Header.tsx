@@ -4,6 +4,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import UserDropdown from "./UserDropdown";
 import { Link } from "react-router";
 
+
 // Define the interface for the props
 interface HeaderProps {
   onClick?: () => void; // Optional function that takes no arguments and returns void
@@ -111,6 +112,7 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
           </button>
 
           <div className="hidden lg:block">
+          
             <form action="https://formbold.com/s/unique_form_id" method="POST">
               <div className="relative">
                 <button className="absolute -translate-y-1/2 left-4 top-1/2">
@@ -121,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
                     viewBox="0 0 20 20"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
-                  >
+                  > 
                     <path
                       fillRule="evenodd"
                       clipRule="evenodd"
