@@ -122,7 +122,11 @@ export default function UserList() {
                 {users.map((user, index) => (
                   <tr key={user._id} className="hover:bg-gray-50 relative">
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
-                    <td className="px-[2px] py-[2px] hover:cursor-pointer hover:underline" onClick={() => handleView(user._id)}>{user.generalInformation?.name}</td>
+                    <td className="px-[2px] py-[2px] hover:cursor-pointer hover:underline"
+                    //  onClick={() => handleView(user._id)}
+                   onClick={() => navigate(`/user/profile/${user._id}`)}
+                     >
+                      {user.generalInformation?.name}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.email}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.phone}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.address}</td>

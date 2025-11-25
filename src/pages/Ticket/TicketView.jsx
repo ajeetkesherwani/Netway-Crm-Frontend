@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   getAdminTicketDetails,
-  createTicketReply,
+  // createTicketReply,
+
   getStaffList,
   getCategoryList,
   updateTicket,
   updateTicketDetails,
   getTicketResolutionOptions,
   getTicketReplyOptions,
+  createTicketReply,        
+  getTicketReplies,
 } from "../../service/ticket";
 import { FaUserCircle, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 
@@ -167,86 +170,91 @@ export default function TicketDetails() {
   // Create reply (option or text)
   // ✅ Create reply (select or new text)
   const handleSubmitReply = async () => {
-    // user must either select or type
-    if (!replyText.trim() && !replyType) {
-      alert("Please select a reply type or enter a reply message.");
-      return;
+  const message = replyText.trim() || replyType;
+  if (!message) {
+    alert("Please select a reply or type something!");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // User ID nikal lo ticket se
+    const userId = ticketDetails?.userId?._id || ticketDetails?.userId;
+
+    const result = await createTicketReply(ticketId, userId, message);
+
+    if (result.status) {
+      alert("Reply sent successfully!");
+      setReplyText("");
+      setReplyType("");
+
+      // Replies refresh karo
+      const repliesData = await getTicketReplies(ticketId);
+      setReplies(repliesData);
+    } else {
+      alert(result.message || "Failed to send reply");
     }
-
-    setLoading(true);
-    try {
-      // final reply message
-      const replyMessage = replyText.trim() ? replyText.trim() : replyType;
-
-      // ✅ Check if user typed new text (not from dropdown)
-      const isNewReply =
-        replyText.trim() &&
-        !replyOptions.some(
-          (opt) =>
-            opt.optionText?.toLowerCase() === replyText.trim().toLowerCase() ||
-            opt.name?.toLowerCase() === replyText.trim().toLowerCase() ||
-            opt.option?.toLowerCase() === replyText.trim().toLowerCase()
-        );
-
-      // ✅ Step 1: If new reply, create the reply option first
-      if (isNewReply) {
-        const createRes = await createTicketReplyOption({
-          optionText: replyText.trim(),
-        });
-
-        if (createRes?.status) {
-          console.log("✅ New reply option created successfully");
-          // Refresh dropdown options
-          const replyOptRes = await getTicketReplyOptions();
-          const replyData = normalizeData(replyOptRes);
-          setReplyOptions(Array.isArray(replyData) ? replyData : []);
-        } else {
-          console.warn("⚠️ Failed to create reply option:", createRes?.message);
-        }
-      }
-
-      // ✅ Step 2: Create the actual reply
-      const res = await createTicketReply(ticketId, {
-        description: replyMessage,
-      });
-
-      if (res?.status) {
-        alert("✅ Reply added successfully!");
-        setReplyText("");
-        setReplyType("");
-        await loadAll(); // refresh replies & details
-      } else {
-        alert(res?.message || "Failed to add reply");
-      }
-    } catch (err) {
-      console.error("Error creating reply:", err);
-      alert("Error creating reply - see console");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  } catch (err) {
+    console.error(err);
+    alert("Error sending reply");
+  } finally {
+    setLoading(false);
+  }
+};
   // const handleSubmitReply = async () => {
+  //   // user must either select or type
   //   if (!replyText.trim() && !replyType) {
   //     alert("Please select a reply type or enter a reply message.");
   //     return;
   //   }
+
   //   setLoading(true);
   //   try {
-  //     const payload = {
-  //       description: replyText?.trim() ? replyText : replyType,
-  //     };
-  //     const res = await createTicketReply(ticketId, payload);
+  //     // final reply message
+  //     const replyMessage = replyText.trim() ? replyText.trim() : replyType;
+
+  //     // ✅ Check if user typed new text (not from dropdown)
+  //     const isNewReply =
+  //       replyText.trim() &&
+  //       !replyOptions.some(
+  //         (opt) =>
+  //           opt.optionText?.toLowerCase() === replyText.trim().toLowerCase() ||
+  //           opt.name?.toLowerCase() === replyText.trim().toLowerCase() ||
+  //           opt.option?.toLowerCase() === replyText.trim().toLowerCase()
+  //       );
+
+  //     // ✅ Step 1: If new reply, create the reply option first
+  //     if (isNewReply) {
+  //       const createRes = await createTicketReply({
+  //         optionText: replyText.trim(),
+  //       });
+
+  //       if (createRes?.status) {
+  //         console.log("✅ New reply option created successfully");
+  //         // Refresh dropdown options
+  //         const replyOptRes = await getTicketReplyOptions();
+  //         const replyData = normalizeData(replyOptRes);
+  //         setReplyOptions(Array.isArray(replyData) ? replyData : []);
+  //       } else {
+  //         console.warn("⚠️ Failed to create reply option:", createRes?.message);
+  //       }
+  //     }
+
+  //     // ✅ Step 2: Create the actual reply
+  //     const res = await createTicketReply(ticketId, {
+  //       description: replyMessage,
+  //     });
+
   //     if (res?.status) {
   //       alert("✅ Reply added successfully!");
   //       setReplyText("");
   //       setReplyType("");
-  //       await loadAll();
+  //       await loadAll(); // refresh replies & details
   //     } else {
   //       alert(res?.message || "Failed to add reply");
   //     }
   //   } catch (err) {
-  //     console.error("Error submitting reply:", err);
+  //     console.error("Error creating reply:", err);
   //     alert("Error creating reply - see console");
   //   } finally {
   //     setLoading(false);

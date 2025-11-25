@@ -221,3 +221,13 @@ export const getAllZoneList = async () => {
   return res.json();
 
 };
+
+export const getUserFullDetails = async (userId) => {
+  const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
+  const res = await fetch(`${BASE_URL}/user/fullDetails/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return await res.json();
+};
