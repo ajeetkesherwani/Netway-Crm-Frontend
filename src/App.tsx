@@ -357,7 +357,7 @@ export default function App() {
             <Route path="/ticket/close" element={<CloseTicket />} />
             <Route path="/ticket/manage" element={<ManageTicket />} />
             <Route path="/ticket/all" element={<AllTicket />} />
-            <Route path="/ticket/approvel" element={<ApprovelTicket />} />
+            <Route path="/ticket/approval" element={<ApprovelTicket />} />
             <Route path="/ticket/create" element={<TicketCreate />} />
             <Route path="/ticket/view/:id" element={<TicketDetails />} />
 

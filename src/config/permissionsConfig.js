@@ -99,7 +99,8 @@ export const permissionsConfig = [
             "view",
             "manage",
             "approval",
-            "assign"
+            "assign",
+            "all"
         ],
     },
     {

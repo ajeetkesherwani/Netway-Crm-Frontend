@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createUser, getAllZoneList } from "../../service/user";
@@ -20,10 +19,15 @@ export default function CreateUser() {
   const [staff, setStaff] = useState([]);
   const [zoneList, setZoneList] = useState([]);
   const [packageList, setPackageList] = useState([]); // ← PACKAGE LIST STATE
+  const [installationBy, setInstallationBy] = useState("");
+
 
   const [formErrors, setFormErrors] = useState({});
   // const [areas, setAreas] = useState(["Main Area"]);
-  const [areas, setAreas] = useState([""]);
+  // const [areas, setAreas] = useState([""]);
+  const [selectedArea, setSelectedArea] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
 
   const connectionTypes = ["IIL", "FTTH", "Wireless", "Other"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
@@ -349,7 +353,9 @@ export default function CreateUser() {
       payload.append("addresses", JSON.stringify(formData.addresses));
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
-      payload.append("areas", JSON.stringify(areas));
+      // payload.append("areas", JSON.stringify(areas));
+      // payload.append("area", area);
+      payload.append("area", selectedArea);
 
       // FIXED — Only append type when file exists, and use documentTypes[]
       formData.documents.forEach((doc) => {
@@ -375,16 +381,18 @@ export default function CreateUser() {
   const handleClear = () => {
     setFormData(initialForm);
     setFormErrors({});
-    setAreas(["Main Area"]);
+    // setAreas(["Main Area"]);
+    setSelectedArea("");
   };
 
   const documentTypes = [
+    "ID proof",
+    "Profile Id",
     "Aadhar Card",
+    "Insurence Paper",
+    "Signature",
     "Pan Card",
-    "Address Proof",
-    "Passport",
-    "Photo",
-    "Other",
+    "Other"
   ];
   const addDocumentRow = () =>
     setFormData((prev) => ({
@@ -440,9 +448,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.name}
                 onChange={(e) => handleChange(e, "customer.name")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.name"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.name"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Name"
               />
               {formErrors["customer.name"] && (
@@ -479,9 +486,8 @@ export default function CreateUser() {
                 type="email"
                 value={formData.customer.email}
                 onChange={(e) => handleChange(e, "customer.email")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.email"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.email"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Email"
               />
               {formErrors["customer.email"] && (
@@ -496,9 +502,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.mobile}
                 onChange={(e) => handleChange(e, "customer.mobile")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.mobile"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Mobile Number"
               />
               {formErrors["customer.mobile"] && (
@@ -515,9 +520,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.alternateMobile}
                 onChange={(e) => handleChange(e, "customer.alternateMobile")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.alternateMobile"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Alternate Mobile"
               />
               {formErrors["customer.alternateMobile"] && (
@@ -575,11 +579,144 @@ export default function CreateUser() {
             </div>
 
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Installation By <span className="text-red-500">*</span>
+              </label>
+
+              {/* CLEAN & MINIMAL MULTI-SELECT DROPDOWN */}
+              <div className="relative">
+                <div
+                  onClick={() => setShowDropdown(prev => !prev)}
+                  className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {formData.customer.installationBy?.length > 0 ? (
+                      formData.customer.installationBy.map((id) => {
+                        const person = staff.find(s => s._id === id);
+                        return person ? (
+                          <span
+                            key={id}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md"
+                          >
+                            {person.roleName || person.name}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const updated = formData.customer.installationBy.filter(x => x !== id);
+                                setFieldValue("customer.installationBy", updated);
+                              }}
+                              className="ml-1 hover:text-blue-900"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ) : null;
+                      })
+                    ) : (
+                      <span className="text-gray-500 text-sm">Select installer(s)</span>
+                    )}
+                  </div>
+                  <svg className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                {/* Dropdown Options */}
+                {showDropdown && (
+                  <>
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {staff.length > 0 ? (
+                        staff.map((s) => {
+                          const isChecked = formData.customer.installationBy?.includes(s._id);
+                          return (
+                            <label
+                              key={s._id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition"
+                              onMouseDown={(e) => e.preventDefault()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked || false}
+                                onChange={() => {
+                                  let updated = [...(formData.customer.installationBy || [])];
+                                  if (isChecked) {
+                                    updated = updated.filter(id => id !== s._id);
+                                  } else {
+                                    updated.push(s._id);
+                                    setFieldValue("customer.installationByName", ""); // Clear manual
+                                  }
+                                  setFieldValue("customer.installationBy", updated);
+                                }}
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                              />
+                              <span className="font-medium text-sm">{s.roleName || s.name}</span>
+                            </label>
+                          );
+                        })
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500">No staff available</div>
+                      )}
+                    </div>
+
+                    {/* Click outside to close */}
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowDropdown(false)}
+                    />
+                  </>
+                )}
+              </div>
+
+              {/* Manual Input (Without OR Divider) */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Manual Installer Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.customer.installationByName || ""}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setFieldValue("customer.installationByName", name);
+                    if (name.trim()) {
+                      setFieldValue("customer.installationBy", []);
+                    }
+                  }}
+                  placeholder="e.g. Ramu Kaka, Local Technician"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              {/* Show Manual Name */}
+              {formData.customer.installationByName && (
+                <p className="mt-2 text-sm font-medium text-green-700">
+                  Manual Installer: {formData.customer.installationByName}
+                </p>
+              )}
+
+              {/* Error */}
+              {formErrors.installationBy && (
+                <p className="mt-2 text-red-600 text-sm">{formErrors.installationBy}</p>
+              )}
+            </div>
+
+            {/* <div className="md:col-span-2">
               <label className="block text-sm font-medium">
                 Installation By
-              </label>
-              {/* multi select */}
-              <select
+              </label> */}
+            {/* multi select */}
+            {/* <select
+                value={installationBy}
+                onChange={(e) => setInstallationBy(e.target.value)}
+              >
+                <option value="">Select Installation By</option>
+                {staff.map((s) => (
+                  <option key={s._id} value={s._id}>{s.roleName}</option>
+                ))}
+              </select> */}
+
+            {/* <select
                 value={formData.customer.selsExecutive}
                 onChange={(e) => handleChange(e, "customer.installationBy")}
                 className="mt-1 p-2 border rounded w-full"
@@ -590,8 +727,8 @@ export default function CreateUser() {
                     {s.roleName}
                   </option>
                 ))}
-              </select>
-
+              </select> */}
+            {/* 
               <div className="mt-2">
                 <label className="block text-sm font-medium">
                   Or Enter Manual Installer
@@ -605,7 +742,7 @@ export default function CreateUser() {
                   placeholder="Enter installer name manually"
                 />
               </div>
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium">IP Address</label>
@@ -717,11 +854,10 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.billing.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["addresses.billing.addressLine1"]
-                    ? "border-red-500"
-                    : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
+                  ? "border-red-500"
+                  : ""
+                  }`}
               />
               <label className="text-sm mt-2">Address Line 2</label>
               <input
@@ -736,19 +872,17 @@ export default function CreateUser() {
                   value={formData.addresses.billing.city}
                   onChange={(e) => handleChange(e, "addresses.billing.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.city"] ? "border-red-500" : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
+                    }`}
                 />
                 <input
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
               </div>
               <div className="flex gap-2 mt-2">
@@ -756,11 +890,10 @@ export default function CreateUser() {
                   value={formData.addresses.billing.pincode}
                   onChange={(e) => handleChange(e, "addresses.billing.pincode")}
                   placeholder="Pincode *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.pincode"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
               </div>
             </div>
@@ -773,11 +906,10 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.permanent.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["addresses.billing.addressLine1"]
-                    ? "border-red-500"
-                    : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
+                  ? "border-red-500"
+                  : ""
+                  }`}
               />
               <label className="text-sm mt-2">Address Line 2</label>
               <input
@@ -792,19 +924,17 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.city}
                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.city"] ? "border-red-500" : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"] ? "border-red-500" : ""
+                    }`}
                 />
                 <input
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
               </div>
               <div className="flex gap-2 mt-2">
@@ -812,11 +942,10 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.pincode}
                   onChange={(e) => handleChange(e, "addresses.permanent.pincode")}
                   placeholder="Pincode *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.pincode"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
               </div>
             </div>
@@ -888,7 +1017,31 @@ export default function CreateUser() {
 
             {/* dynamic area editor (bottom row across grid) */}
 
-            <div className="md:col-span-3 mt-2 border rounded p-3">
+            {/* ====== SINGLE AREA (ZONE) DROPDOWN – YE DAAL DO ====== */}
+            <div className="md:col-span-3 mt-6 p-5 rounded-xl border-2 ">
+              <label className="block text-lg font-bold text-blue-900 mb-3">
+                Select Area (Zone) <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedArea}
+                onChange={(e) => setSelectedArea(e.target.value)}
+                className="w-full p-4 text-lg border-2  outline-none transition"
+              >
+                <option value="">-- Select Area / Zone --</option>
+                {zoneList.map((zone) => (
+                  <option key={zone._id} value={zone._id}>
+                    {zone.zoneName}
+                  </option>
+                ))}
+              </select>
+
+              {/* Error show */}
+              {formErrors.area && (
+                <p className="text-red-600 font-medium mt-2">{formErrors.area}</p>
+              )}
+            </div>
+
+            {/* <div className="md:col-span-3 mt-2 border rounded p-3">
               <h4 className="font-medium">Areas (Dynamic)</h4>
               <div className="space-y-2 mt-2">
                 {areas.map((a, i) => (
@@ -908,7 +1061,7 @@ export default function CreateUser() {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
         </section>
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
