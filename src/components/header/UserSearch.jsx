@@ -42,9 +42,9 @@ const UserSearch = () => {
   const handleSelectUser = (user) => {
     setShowDropdown(false);
     setQuery("");
-    navigate(`/user/${user._id}`);
+    navigate(`/user/profile/${user._id}`);
   };
-
+   
   return (
     <div className="relative w-[430px]" ref={dropdownRef}>
       <input

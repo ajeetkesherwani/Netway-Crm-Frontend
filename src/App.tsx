@@ -129,8 +129,17 @@ import TicketReplyOptionCreate from "./pages/Setting/TicketReplyOptionCreate";
 import TicketResolutionOptionList from "./pages/Setting/TicketResolutionOptionList";
 import TicketResolutionOptionCreate from "./pages/Setting/TicketResolutionOptionCreate";
 import TicketResolutionOptionUpdate from "./pages/Setting/TicketResolutionOptionUpdate";
-import TicketDetails from "./pages/Ticket/TicketView";
 // import TicketDetails from "./pages/Ticket/TicketView";
+import TicketDetails from "./pages/Ticket/TicketView";
+import ProfileHeader from "./layout/ProfileHeader";
+import Profile from "./pages/UserProfile/UserProfileDetails";
+import UserInvoices from "./pages/UserProfile/Invoice";
+import UserTickets from "./pages/UserProfile/Ticket";
+import UserPayment from "./pages/UserProfile/Payment";
+import UserRechargePackage from "./pages/UserProfile/Recharge";
+import UserPackageDetails from "./pages/UserProfile/PackageDetails";
+import UserLogs from "./pages/UserProfile/AcitivityLog";
+import UserProfile from "./pages/UserProfile/UserProfileDetails";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -193,6 +202,21 @@ export default function App() {
             <Route path="bar-chart" element={<BarChart />} />
             {/* New Routes */}
             <Route path="user-list" element={<FormElements />} />
+
+   {/*-------------------------------------------------------------------------User Profile Details ------------------------------------------------------------------------- */}
+
+
+          <Route path="user/profile/:id" element={<ProfileHeader />}>
+            <Route index element={<Profile />} />
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="invoice" element={<UserInvoices />} />
+            <Route path="tickets" element={<UserTickets />} />
+            <Route path="payment" element={<UserPayment />} />
+            <Route path="recharge-package" element={<UserRechargePackage />} />
+            <Route path="package-details" element={<UserPackageDetails />} />
+            <Route path="activity-log" element={<UserLogs />} />
+          </Route>
+
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
             <Route path="staff/list" element={<StaffList />} />
             <Route path="staff/create" element={<StaffCreate />} />

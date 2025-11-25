@@ -171,17 +171,17 @@ export const getReassignTicketList = async (page = 1, limit = 10) => {
 };
 
 // ✅ Fetch Ticket Replies
-export const getTicketReplies = async (ticketId) => {
-  const res = await fetch(`${BASE_URL}/ticketReply/list/${ticketId}`, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch replies");
-  return data;
-};
+// export const getTicketReplies = async (ticketId) => {
+//   const res = await fetch(`${BASE_URL}/ticketReply/list/${ticketId}`, {
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${getToken()}`,
+//     },
+//   });
+//   const data = await res.json();
+//   if (!res.ok) throw new Error(data.message || "Failed to fetch replies");
+//   return data;
+// };
 
 
 // // ✅ Create Ticket Reply
@@ -325,19 +325,19 @@ export const getTicketResolutionOptions = async () => {
 };
 
 // ✅ Get Ticket Reply Dropdown Options
-export const getTicketReplyOptions = async () => {
-  const res = await fetch(`${BASE_URL}/ticketReplyOption/list`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+// export const getTicketReplyOptions = async () => {
+//   const res = await fetch(`${BASE_URL}/ticketReplyOption/list`, {
+//     method: "GET",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${getToken()}`,
+//     },
+//   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch reply options");
-  return data; // { status, data: [{ _id, name }, ...] }
-};
+//   const data = await res.json();
+//   if (!res.ok) throw new Error(data.message || "Failed to fetch reply options");
+//   return data; // { status, data: [{ _id, name }, ...] }
+// };
 
 // ✅ UPDATED: send all editable fields using FormData
 export const updateTicketDetails = async (ticketId, data) => {
@@ -348,8 +348,12 @@ export const updateTicketDetails = async (ticketId, data) => {
         formData.append(key, data[key]);
     }
 
-    const res = await fetch(`${process.env.REACT_APP_API}/ticket/update/${ticketId}`, {
+    const res = await fetch(`${BASE_URL}/ticket/update/${ticketId}`, {
       method: "PATCH",
+       headers: {
+        // "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // agar token chahiye
+      },
       body: formData,
     });
 
@@ -362,21 +366,93 @@ export const updateTicketDetails = async (ticketId, data) => {
 
 
 // ✅ Create a new ticket reply option
-export const createTicketReply = async (data) => {
+// service/ticket.js
+
+export const createTicketReplyOption = async (data) => {
   try {
-    const res = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/admin/ticketReplyOption/create`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data), // <-- this sends { optionText: "..." }
-      }
-    );
-    return await res.json();
+    const res = await fetch(`${BASE_URL}/ticketReplyOption/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // "Authorization": `Bearer ${token}` // agar token chahiye
+      },
+      body: JSON.stringify(data),
+    });
+
+    // Agar backend sirf ID return karta hai (string), to handle karo
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { status: false, message: errorText || "Failed to create reply option" };
+    }
+
+    const text = await res.text();
+    if (!text) return { status: true, data: null };
+
+    try {
+      return { status: true, data: JSON.parse(text) };
+    } catch (e) {
+      // Agar sirf ID aaya (string), to bhi success maan lo
+      return { status: true, data: { _id: text.replace(/"/g, "") } };
+    }
   } catch (err) {
-    console.error("Error creating ticket reply option:", err);
-    return { status: false, message: "Request failed" };
+    console.error("Error creating reply option:", err);
+    return { status: false, message: "Network error" };
   }
+};
+// export const createTicketReply = async (data) => {
+//   try {
+//     const res = await fetch(`${BASE_URL}/ticketReplyOption/create`,
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(data), // <-- this sends { optionText: "..." }
+//       }
+//     );
+//     return await res.json();
+//   } catch (err) {
+//     console.error("Error creating ticket reply option:", err);
+//     return { status: false, message: "Request failed" };
+//   }
+// };
+
+
+// Dropdown ke liye quick reply options
+export const getTicketReplyOptions = async () => {
+  const res = await fetch(`${BASE_URL}/ticketReplyOption/list`);
+  const data = await res.json();
+  return data?.data || data || [];
+};
+// TICKET REPLY CREATE — YEHI CHAHIE THA TUMHE!
+export const createTicketReply = async (ticketId, userId, description) => {
+  try {
+    const res = await fetch(`${BASE_URL}/ticketReply/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json",
+         "Authorization": `Bearer ${token}`,
+       },
+     
+      body: JSON.stringify({
+        ticket: ticketId,
+        user: userId,
+        description: description.trim(),
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      return { status: false, message: err || "Failed" };
+    }
+    return { status: true };
+  } catch (err) {
+    return { status: false, message: "Network error" };
+  }
+};
+
+// REPLIES FETCH KARNE KE LIYE
+export const getTicketReplies = async (ticketId) => {
+  const res = await fetch(`${BASE_URL}/ticketReply/list?ticketId=${ticketId}`);
+  const data = await res.json();
+  return data?.data || data || [];
 };
