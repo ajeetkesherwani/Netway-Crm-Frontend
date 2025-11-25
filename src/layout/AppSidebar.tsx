@@ -1351,6 +1351,7 @@ const AppSidebar: React.FC = () => {
       });
 
     // 🎫 Tickets (fixed naming and all keys)
+  
     const ticketsSubItems = [];
     if (permissions.tickets?.listing)
       ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
@@ -1373,6 +1374,7 @@ const AppSidebar: React.FC = () => {
         icon: <ListIcon />,
         subItems: ticketsSubItems,
       });
+      
 
     // 💰 Invoice
     const invoiceSubItems = [];

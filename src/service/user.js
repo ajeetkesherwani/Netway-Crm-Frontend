@@ -66,19 +66,36 @@ export const getUserDetails = async (id) => {
 // };
 
 // update the users
-export const updateUser = async (id, userData) => {
+export const updateUser = async (id, formData) => {
   const res = await fetch(`${BASE_URL}/user/update/${id}`, {
     method: "PATCH",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
-    body: JSON.stringify(userData),
+    body: formData,
   });
+
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to update customer");
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to update customer");
+  }
+
   return data;
 };
+// export const updateUser = async (id, userData) => {
+//   const res = await fetch(`${BASE_URL}/user/update/${id}`, {
+//     method: "PATCH",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${getToken()}`,
+//     },
+//     body: JSON.stringify(userData),
+//   });
+//   const data = await res.json();
+//   if (!res.ok) throw new Error(data.message || "Failed to update customer");
+//   return data;
+// };
 
 // In ../../service/user.js
 export const deleteUser = async (id) => {
