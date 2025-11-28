@@ -348,11 +348,12 @@ export const updateTicketDetails = async (ticketId, data) => {
         formData.append(key, data[key]);
     }
 
+    console.log("Updating ticket with data:", formData);
     const res = await fetch(`${BASE_URL}/ticket/update/${ticketId}`, {
       method: "PATCH",
        headers: {
         // "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` // agar token chahiye
+        "Authorization": `Bearer ${getToken()}` // agar token chahiye
       },
       body: formData,
     });
