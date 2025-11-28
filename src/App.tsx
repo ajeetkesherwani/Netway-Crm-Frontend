@@ -140,6 +140,7 @@ import UserRechargePackage from "./pages/UserProfile/Recharge";
 import UserPackageDetails from "./pages/UserProfile/PackageDetails";
 import UserLogs from "./pages/UserProfile/AcitivityLog";
 import UserProfile from "./pages/UserProfile/UserProfileDetails";
+import ConnectionRequestList from "./pages/connectionRequest/connectionRequestList";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -415,6 +416,12 @@ export default function App() {
             <Route path="/config/update/:id" element={<RoleConfigUpdate />} />
             {/*-------------------------------------------------------------------------Report list ------------------------------------------------------------------------- */}
             <Route path="/report/list" element={<ReportList />} />
+
+             {/*-----------------------------connectionRequest---------------------------- */}
+
+          <Route path="/connection-request" element={<ConnectionRequestList/>}/>
+
+        
             {/*-------------------------------------------------------------------------Subscriber Report list ------------------------------------------------------------------------- */}
             <Route
               path="/report/account-wise-profile-report/list"
