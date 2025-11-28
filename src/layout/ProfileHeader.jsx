@@ -18,7 +18,7 @@ const ProfileHeader = () => {
     { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice` },
     { id: "payment", label: "Payments", path: `/user/profile/${id}/payment` },
     { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets` },
-    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package` },
+    // { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package` },
     { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log` },
   ];
 
@@ -105,7 +105,6 @@ const ProfileHeader = () => {
               <p><strong>Remaining:</strong> <span className="font-bold text-green-600">{remainingDays} Days</span></p>
               <p><strong>Dues:</strong> ₹{user.walletBalance < 0 ? Math.abs(user.walletBalance) : 0}</p>
               <p><strong>Last Recharge:</strong> {formatDate(latestPlan.purchaseDate)}</p>
-              <p><strong>Last Ticket:</strong> –</p>
             </div>
             <div className="space-y-3">
               <p><strong>Auto Renew:</strong> {latestPlan.isRenewed ? "Yes" : "No"}</p>
