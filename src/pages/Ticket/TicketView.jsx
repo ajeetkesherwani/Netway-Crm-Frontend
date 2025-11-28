@@ -133,27 +133,57 @@ export default function TicketDetails() {
 
   // Update ticket (FormData)
   const handleUpdateTicket = async () => {
+    console.log("Updating ticket with details:", editableDetails, files);
+
     try {
       const formData = new FormData();
-      // append editableDetails keys
-      for (const key in editableDetails) {
+      formData.append("ticketId", ticketId);
+      // Log editableDetails to ensure it's populated correctly
+      console.log("Editable Details before appending:", editableDetails);
+
+      // Improved: specifically handle known fields to avoid issues
+      const fieldsToAppend = [
+        "category",
+        "assignToId",
+        "severity",
+        "callDescription",
+        "price",
+        "isChargeable",
+      ];
+
+      // Loop over the fields and append them to formData
+      fieldsToAppend.forEach((key) => {
         const value = editableDetails[key];
-        // If it's an object with _id (e.g., category), send id string
-        if (value && typeof value === "object" && value._id) {
-          formData.append(key, value._id);
-        } else {
-          // handle booleans & numbers correctly by converting to string (FormData required)
-          if (typeof value === "boolean" || typeof value === "number")
+        console.log(`Appending ${key}:`, value);  // Log each key and its value
+        if (value !== undefined && value !== null) {
+          // Convert booleans & numbers to string
+          if (typeof value === "boolean" || typeof value === "number") {
+            console.log(`Appending non-string value for ${key}:`, value);
             formData.append(key, String(value));
-          else if (value !== undefined && value !== null)
+          } else {
+            console.log(`Appending string value for ${key}:`, value);
             formData.append(key, value);
+          }
+        }
+      });
+
+      // Check if formData is populated correctly before sending it
+      // for (let pair of formData.entries()) {
+      //   console.log(`${pair[0]}: ${pair[1]}`);  // Log formData entries
+      // }
+
+      // Append files if any
+      for (const key in files) {
+        if (files[key]) {
+          console.log(`Appending file ${key}:`, files[key]);  // Log files before appending
+          formData.append(key, files[key]);
         }
       }
-      // append files
-      for (const key in files) {
-        if (files[key]) formData.append(key, files[key]);
-      }
 
+      // Log the final formData object (it won't show the data directly in console.log)
+      console.log("FormData content:", formData);
+
+      // Now send the data using the API
       const res = await updateTicketDetails(ticketId, formData);
       if (res?.status) {
         alert("✅ Ticket updated successfully!");
@@ -168,6 +198,8 @@ export default function TicketDetails() {
       alert("Error updating ticket - see console");
     }
   };
+
+
 
   // Create reply (option or text)
   // ✅ Create reply (select or new text)
