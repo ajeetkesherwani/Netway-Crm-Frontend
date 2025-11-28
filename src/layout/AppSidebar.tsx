@@ -825,76 +825,76 @@
 //       });
 
 
- // 🎫 Tickets (fixed naming and all keys)
-    // const ticketsSubItems = [];
-    // if (permissions.tickets?.listing)
-    //   ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
-    // if (permissions.tickets?.create)
-    //   ticketsSubItems.push({ name: "Create Ticket", path: "/ticket/create" });
-    // if (permissions.tickets?.close)
-    //   ticketsSubItems.push({ name: "Close Ticket", path: "/ticket/close" });
-    // if (permissions.tickets?.manage)
-    //   ticketsSubItems.push({ name: "Manage Ticket", path: "/ticket/manage" });
-    // if (permissions.tickets?.all)
-    //   ticketsSubItems.push({ name: "All Ticket", path: "/ticket/all" });
-    // if (permissions.tickets?.approval)
-    //   ticketsSubItems.push({
-    //     name: "Approval Ticket",
-    //     path: "/ticket/approval",
-    //   });
-    // if (ticketsSubItems.length > 0)
-    //   generatedNavItems.push({
-    //     name: "Tickets",
-    //     icon: <ListIcon />,
-    //     subItems: ticketsSubItems,
-    //   });
+// 🎫 Tickets (fixed naming and all keys)
+// const ticketsSubItems = [];
+// if (permissions.tickets?.listing)
+//   ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
+// if (permissions.tickets?.create)
+//   ticketsSubItems.push({ name: "Create Ticket", path: "/ticket/create" });
+// if (permissions.tickets?.close)
+//   ticketsSubItems.push({ name: "Close Ticket", path: "/ticket/close" });
+// if (permissions.tickets?.manage)
+//   ticketsSubItems.push({ name: "Manage Ticket", path: "/ticket/manage" });
+// if (permissions.tickets?.all)
+//   ticketsSubItems.push({ name: "All Ticket", path: "/ticket/all" });
+// if (permissions.tickets?.approval)
+//   ticketsSubItems.push({
+//     name: "Approval Ticket",
+//     path: "/ticket/approval",
+//   });
+// if (ticketsSubItems.length > 0)
+//   generatedNavItems.push({
+//     name: "Tickets",
+//     icon: <ListIcon />,
+//     subItems: ticketsSubItems,
+//   });
 
-    // // 💰 Invoice
-    // const invoiceSubItems = [];
-    // if (hasTruePermission(permissions.invoice)) {
-    //   if (permissions.invoice?.packageRecharge)
-    //     invoiceSubItems.push({
-    //       name: "Package Recharge",
-    //       path: "/invoice/package-recharge",
-    //     });
-    //   if (permissions.invoice?.ottRecharge)
-    //     invoiceSubItems.push({
-    //       name: "OTT Recharge",
-    //       path: "/invoice/ott-recharge",
-    //     });
-    //   if (permissions.invoice?.iptvRecharge)
-    //     invoiceSubItems.push({
-    //       name: "IPTV Recharge",
-    //       path: "/invoice/iptv-recharge",
-    //     });
-    // }
-    // if (invoiceSubItems.length > 0)
-    //   generatedNavItems.push({
-    //     name: "Invoice",
-    //     icon: <ListIcon />,
-    //     subItems: invoiceSubItems,
-    //   });
+// // 💰 Invoice
+// const invoiceSubItems = [];
+// if (hasTruePermission(permissions.invoice)) {
+//   if (permissions.invoice?.packageRecharge)
+//     invoiceSubItems.push({
+//       name: "Package Recharge",
+//       path: "/invoice/package-recharge",
+//     });
+//   if (permissions.invoice?.ottRecharge)
+//     invoiceSubItems.push({
+//       name: "OTT Recharge",
+//       path: "/invoice/ott-recharge",
+//     });
+//   if (permissions.invoice?.iptvRecharge)
+//     invoiceSubItems.push({
+//       name: "IPTV Recharge",
+//       path: "/invoice/iptv-recharge",
+//     });
+// }
+// if (invoiceSubItems.length > 0)
+//   generatedNavItems.push({
+//     name: "Invoice",
+//     icon: <ListIcon />,
+//     subItems: invoiceSubItems,
+//   });
 
-    // // 💳 Payment
-    // const paymentSubItems = [];
-    // if (hasTruePermission(permissions.payment)) {
-    //   if (permissions.payment?.success)
-    //     paymentSubItems.push({
-    //       name: "Received Payment",
-    //       path: "/received/payment",
-    //     });
-    //   if (permissions.payment?.failed)
-    //     paymentSubItems.push({
-    //       name: "Pending Payment",
-    //       path: "/pending/payment",
-    //     });
-    // }
-    // if (paymentSubItems.length > 0)
-    //   generatedNavItems.push({
-    //     name: "Payment",
-    //     icon: <ListIcon />,
-    //     subItems: paymentSubItems,
-    //   });
+// // 💳 Payment
+// const paymentSubItems = [];
+// if (hasTruePermission(permissions.payment)) {
+//   if (permissions.payment?.success)
+//     paymentSubItems.push({
+//       name: "Received Payment",
+//       path: "/received/payment",
+//     });
+//   if (permissions.payment?.failed)
+//     paymentSubItems.push({
+//       name: "Pending Payment",
+//       path: "/pending/payment",
+//     });
+// }
+// if (paymentSubItems.length > 0)
+//   generatedNavItems.push({
+//     name: "Payment",
+//     icon: <ListIcon />,
+//     subItems: paymentSubItems,
+//   });
 
 
 
@@ -1351,7 +1351,7 @@ const AppSidebar: React.FC = () => {
       });
 
     // 🎫 Tickets (fixed naming and all keys)
-  
+
     const ticketsSubItems = [];
     if (permissions.tickets?.listing)
       ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
@@ -1374,7 +1374,7 @@ const AppSidebar: React.FC = () => {
         icon: <ListIcon />,
         subItems: ticketsSubItems,
       });
-      
+
 
     // 💰 Invoice
     const invoiceSubItems = [];
@@ -1488,6 +1488,13 @@ const AppSidebar: React.FC = () => {
         name: "CMS",
         subItems: [{ name: "User CMS", path: "/signin" }],
       },
+
+      {
+        icon: <FileIcon />,
+        name: "Connection Request",
+        subItems: [{ name: "Connection Request", path: "/connection-request" }],
+      },
+
     ]);
   }, [permissions, loading]);
 
@@ -1546,22 +1553,19 @@ const AppSidebar: React.FC = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
+              className={`menu-item group ${openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
+                } cursor-pointer ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "lg:justify-start"
-              }`}
+                }`}
             >
               <span
-                className={`menu-item-icon-size ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                className={`menu-item-icon-size ${openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
-                }`}
+                  }`}
               >
                 {nav.icon}
               </span>
@@ -1570,12 +1574,11 @@ const AppSidebar: React.FC = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
+                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType &&
+                      openSubmenu?.index === index
                       ? "rotate-180 text-brand-500"
                       : ""
-                  }`}
+                    }`}
                 />
               )}
             </button>
@@ -1583,16 +1586,14 @@ const AppSidebar: React.FC = () => {
             nav.path && (
               <Link
                 to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  }`}
               >
                 <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
+                  className={`menu-item-icon-size ${isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  }`}
+                    }`}
                 >
                   {nav.icon}
                 </span>
@@ -1622,11 +1623,10 @@ const AppSidebar: React.FC = () => {
                   <li key={subItem.name}>
                     <Link
                       to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
+                      className={`menu-dropdown-item ${isActive(subItem.path)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
-                      }`}
+                        }`}
                     >
                       {subItem.name}
                     </Link>
@@ -1650,10 +1650,9 @@ const AppSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
+        ${isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
             ? "w-[290px]"
             : "w-[90px]"
         }
@@ -1664,9 +1663,8 @@ const AppSidebar: React.FC = () => {
     >
       {/* Logo */}
       <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+          }`}
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
@@ -1704,11 +1702,10 @@ const AppSidebar: React.FC = () => {
             {/* Main */}
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
@@ -1722,11 +1719,10 @@ const AppSidebar: React.FC = () => {
             {/* Others */}
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
-                }`}
+                  }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"
