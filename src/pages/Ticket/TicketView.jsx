@@ -67,6 +67,7 @@ export default function TicketDetails() {
           getTicketReplyOptions(),
         ]);
 
+        console.log("replyOptRes:", replyOptRes);
       // Ticket details (getAdminTicketDetails returns { status, data: { ticket, replies, timeline } })
       if (ticketRes?.status) {
         const ticketData = ticketRes.data.ticket;
@@ -85,6 +86,7 @@ export default function TicketDetails() {
           callDescription: ticketData.callDescription ?? "",
         });
         setReplies(ticketRes.data.replies || []);
+        console.log("Replies timeline data:", ticketRes.data.timeline);
         setTimeline(ticketRes.data.timeline?.[0]?.activities || []);
       } else {
         // fallback: maybe API returned details in another shape
@@ -170,96 +172,53 @@ export default function TicketDetails() {
   // Create reply (option or text)
   // ✅ Create reply (select or new text)
   const handleSubmitReply = async () => {
-  const message = replyText.trim() || replyType;
-  if (!message) {
-    alert("Please select a reply or type something!");
-    return;
-  }
+    console.log("Submitting reply:", { replyText, replyType });
+    const message = replyText.trim() || replyType;
 
-  setLoading(true);
-  try {
-    // User ID nikal lo ticket se
-    const userId = ticketDetails?.userId?._id || ticketDetails?.userId;
-
-    const result = await createTicketReply(ticketId, userId, message);
-
-    if (result.status) {
-      alert("Reply sent successfully!");
-      setReplyText("");
-      setReplyType("");
-
-      // Replies refresh karo
-      const repliesData = await getTicketReplies(ticketId);
-      setReplies(repliesData);
-    } else {
-      alert(result.message || "Failed to send reply");
+    if (!message) {
+      alert("Please select a reply or type something!");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    alert("Error sending reply");
-  } finally {
-    setLoading(false);
-  }
-};
-  // const handleSubmitReply = async () => {
-  //   // user must either select or type
-  //   if (!replyText.trim() && !replyType) {
-  //     alert("Please select a reply type or enter a reply message.");
-  //     return;
-  //   }
 
-  //   setLoading(true);
-  //   try {
-  //     // final reply message
-  //     const replyMessage = replyText.trim() ? replyText.trim() : replyType;
+    setLoading(true);
+    try {
+      // Get userId and ticketId
+      const userId = ticketDetails?.userId?._id || ticketDetails?.userId;
+      console.log("Creating reply for ticket:", ticketId, "user:", userId);
+      console.log("Reply message:", message);
 
-  //     // ✅ Check if user typed new text (not from dropdown)
-  //     const isNewReply =
-  //       replyText.trim() &&
-  //       !replyOptions.some(
-  //         (opt) =>
-  //           opt.optionText?.toLowerCase() === replyText.trim().toLowerCase() ||
-  //           opt.name?.toLowerCase() === replyText.trim().toLowerCase() ||
-  //           opt.option?.toLowerCase() === replyText.trim().toLowerCase()
-  //       );
+      // Call the backend to create the reply
+      const result = await createTicketReply(ticketId, userId, message);
+      console.log("Reply creation result:", result);
 
-  //     // ✅ Step 1: If new reply, create the reply option first
-  //     if (isNewReply) {
-  //       const createRes = await createTicketReply({
-  //         optionText: replyText.trim(),
-  //       });
+      if (result?.status) {
+        alert("Reply sent successfully!");
 
-  //       if (createRes?.status) {
-  //         console.log("✅ New reply option created successfully");
-  //         // Refresh dropdown options
-  //         const replyOptRes = await getTicketReplyOptions();
-  //         const replyData = normalizeData(replyOptRes);
-  //         setReplyOptions(Array.isArray(replyData) ? replyData : []);
-  //       } else {
-  //         console.warn("⚠️ Failed to create reply option:", createRes?.message);
-  //       }
-  //     }
+        // Clear inputs
+        setReplyText("");
+        setReplyType("");
 
-  //     // ✅ Step 2: Create the actual reply
-  //     const res = await createTicketReply(ticketId, {
-  //       description: replyMessage,
-  //     });
+        // Try to fetch the replies again
+        const repliesData = await getTicketReplies(ticketId);
+        console.log("Fetched replies after submission:", repliesData);
+        if (repliesData?.data) {
+          setReplies(repliesData.data);
+        } else {
+          console.error("Failed to fetch replies:", repliesData?.message);
+          alert("Error fetching replies after reply submission.");
+        }
+      } else {
+        alert(result?.message || "Failed to send reply");
+      }
+    } catch (err) {
+      console.error("Error sending reply:", err);
+      alert("Error sending reply. Check the console for details.");
+    } finally {
+      setLoading(false); // Set loading to false after the process ends
+    }
+  };
 
-  //     if (res?.status) {
-  //       alert("✅ Reply added successfully!");
-  //       setReplyText("");
-  //       setReplyType("");
-  //       await loadAll(); // refresh replies & details
-  //     } else {
-  //       alert(res?.message || "Failed to add reply");
-  //     }
-  //   } catch (err) {
-  //     console.error("Error creating reply:", err);
-  //     alert("Error creating reply - see console");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+
 
   // Fix ticket
   const handleFixTicketClick = () => setShowFixModal(true);
@@ -287,6 +246,7 @@ export default function TicketDetails() {
       alert("Error fixing ticket - see console");
     }
   };
+  console.log("replyOptions:", replyOptions);
 
   if (!ticketDetails)
     return <div className="p-10 text-center text-gray-600">Loading...</div>;
@@ -553,7 +513,6 @@ export default function TicketDetails() {
               <h2 className="text-md font-semibold text-[#004c70] mb-2">
                 Replies for Ticket #{ticketDetails.ticketNumber}
               </h2>
-
               <select
                 value={replyType}
                 onChange={(e) => setReplyType(e.target.value)}
@@ -627,7 +586,8 @@ export default function TicketDetails() {
                     className="border-l-4 border-[#004c70] pl-3 pb-2 ml-2 mb-2"
                   >
                     <p className="text-gray-800 text-sm">
-                      <strong>Action Type:</strong> {a.activityType} —{" "}
+                      <strong>Action Type:</strong> {a.activityType == "1"? "Status Change": a.activityType == "0" ? "Assign":"Reassign"} 
+                      {/* —{" "} */}
                       {a.performedBy?.name}
                     </p>
                     <p className="text-xs text-gray-500">
