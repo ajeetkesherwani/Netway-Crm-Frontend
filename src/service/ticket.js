@@ -420,17 +420,42 @@ export const createTicketReplyOption = async (data) => {
 
 // Dropdown ke liye quick reply options
 export const getTicketReplyOptions = async () => {
-  const res = await fetch(`${BASE_URL}/ticketReplyOption/list`);
+  console.log("getTicketReplyOptions", `${getToken()}`);
+
+  const res = await fetch(`${BASE_URL}/ticketReplyOption/list`, {
+    method: "GET",
+    headers: { 
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getToken()}`,
+    },
+  });
+
+  // console.log("Fetched ticket reply options:", res);
+  if (!res.ok) {
+    const err = await res.text();
+    return { status: false, message: err || "Failed" };
+  }
+
+  // Parse the JSON response
   const data = await res.json();
-  return data?.data || data || [];
+
+  console.log("Ticket reply options data:", data);
+
+  // Return the data correctly
+  if (data.status) {
+    return { data: data.data };  // Assuming 'data' contains the actual reply options
+  } else {
+    return { status: false, message: data.message || "Failed" };
+  }
 };
+
 // TICKET REPLY CREATE — YEHI CHAHIE THA TUMHE!
 export const createTicketReply = async (ticketId, userId, description) => {
   try {
     const res = await fetch(`${BASE_URL}/ticketReply/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json",
-         "Authorization": `Bearer ${token}`,
+         "Authorization": `Bearer ${getToken()}`,
        },
      
       body: JSON.stringify({
@@ -452,7 +477,34 @@ export const createTicketReply = async (ticketId, userId, description) => {
 
 // REPLIES FETCH KARNE KE LIYE
 export const getTicketReplies = async (ticketId) => {
-  const res = await fetch(`${BASE_URL}/ticketReply/list?ticketId=${ticketId}`);
-  const data = await res.json();
-  return data?.data || data || [];
+  try {
+    // Construct the URL dynamically
+    const res = await fetch(`${BASE_URL}/ticketReply/list/${ticketId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${getToken()}`,
+      },
+    });
+
+    // Check if the response is OK (2xx status code)
+    if (!res.ok) {
+      throw new Error(`HTTP error! Status: ${res.status}`);
+    }
+
+    // Parse the JSON response
+    const data = await res.json();
+
+    console.log("Ticket reply options data:", data);
+
+    // Handle the response data
+    if (data.status) {
+      return { data: data.data };  // Assuming 'data' contains the actual reply options
+    } else {
+      return { status: false, message: data.message || "Failed" };
+    }
+  } catch (err) {
+    console.error("Error fetching ticket replies:", err);
+    return { status: false, message: err.message || "Network error" };
+  }
 };
