@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+// import.meta.env.VITE_IMAGE_URL
 import {
   getAdminTicketDetails,
   // createTicketReply,
@@ -67,7 +68,7 @@ export default function TicketDetails() {
           getTicketReplyOptions(),
         ]);
 
-        console.log("replyOptRes:", replyOptRes);
+        // console.log("replyOptRes:", replyOptRes);
       // Ticket details (getAdminTicketDetails returns { status, data: { ticket, replies, timeline } })
       if (ticketRes?.status) {
         const ticketData = ticketRes.data.ticket;
@@ -86,7 +87,7 @@ export default function TicketDetails() {
           callDescription: ticketData.callDescription ?? "",
         });
         setReplies(ticketRes.data.replies || []);
-        console.log("Replies timeline data:", ticketRes.data.timeline);
+        // console.log("Replies timeline data:", ticketRes.data.timeline);
         setTimeline(ticketRes.data.timeline?.[0]?.activities || []);
       } else {
         // fallback: maybe API returned details in another shape
@@ -133,56 +134,55 @@ export default function TicketDetails() {
 
   // Update ticket (FormData)
   const handleUpdateTicket = async () => {
-    console.log("Updating ticket with details:", editableDetails, files);
+    // console.log("Updating ticket with details:", editableDetails, files);
 
     try {
       const formData = new FormData();
-      formData.append("ticketId", ticketId);
-      console.log("Ticket ID appended to FormData:", ticketId);
+      // formData.append("ticketId", "yyuyuyuyuyiu");
+      // console.log("Ticket ID appended to FormData:", ticketId);
       // Log editableDetails to ensure it's populated correctly
-      console.log("Editable Details before appending:", editableDetails);
+      // console.log("Editable Details before appending:", editableDetails);
 
       // Improved: specifically handle known fields to avoid issues
       const fieldsToAppend = [
         "category",
-        "assignToId",
+        // "assignToId",
         "severity",
         "callDescription",
         "price",
         "isChargeable",
       ];
 
+      
+
       // Loop over the fields and append them to formData
       fieldsToAppend.forEach((key) => {
         const value = editableDetails[key];
-        console.log(`Appending ${key}:`, value);  // Log each key and its value
+        // console.log(`Appending ${key}:`, value);  // Log each key and its value
         if (value !== undefined && value !== null) {
           // Convert booleans & numbers to string
           if (typeof value === "boolean" || typeof value === "number") {
-            console.log(`Appending non-string value for ${key}:`, value);
+            // console.log(`Appending non-string value for ${key}:`, value);
             formData.append(key, String(value));
           } else {
-            console.log(`Appending string value for ${key}:`, value);
+            // console.log(`Appending string value for ${key}:`, value);
             formData.append(key, value);
           }
         }
       });
 
-      // Check if formData is populated correctly before sending it
-      // for (let pair of formData.entries()) {
-      //   console.log(`${pair[0]}: ${pair[1]}`);  // Log formData entries
-      // }
+      formData.append("assignToId", editableDetails.assignToId || "");
 
       // Append files if any
       for (const key in files) {
         if (files[key]) {
-          console.log(`Appending file ${key}:`, files[key]);  // Log files before appending
+          // console.log(`Appending file ${key}:`, files[key]);  // Log files before appending
           formData.append(key, files[key]);
         }
       }
 
       // Log the final formData object (it won't show the data directly in console.log)
-      console.log("FormData content:", formData);
+      // console.log("FormData content:", formData);
 
       // Now send the data using the API
       const res = await updateTicketDetails(ticketId, formData);
@@ -205,7 +205,7 @@ export default function TicketDetails() {
   // Create reply (option or text)
   // ✅ Create reply (select or new text)
   const handleSubmitReply = async () => {
-    console.log("Submitting reply:", { replyText, replyType });
+    // console.log("Submitting reply:", { replyText, replyType });
     const message = replyText.trim() || replyType;
 
     if (!message) {
@@ -217,12 +217,12 @@ export default function TicketDetails() {
     try {
       // Get userId and ticketId
       const userId = ticketDetails?.userId?._id || ticketDetails?.userId;
-      console.log("Creating reply for ticket:", ticketId, "user:", userId);
-      console.log("Reply message:", message);
+      // console.log("Creating reply for ticket:", ticketId, "user:", userId);
+      // console.log("Reply message:", message);
 
       // Call the backend to create the reply
       const result = await createTicketReply(ticketId, userId, message);
-      console.log("Reply creation result:", result);
+      // console.log("Reply creation result:", result);
 
       if (result?.status) {
         alert("Reply sent successfully!");
@@ -233,7 +233,7 @@ export default function TicketDetails() {
 
         // Try to fetch the replies again
         const repliesData = await getTicketReplies(ticketId);
-        console.log("Fetched replies after submission:", repliesData);
+        // console.log("Fetched replies after submission:", repliesData);
         if (repliesData?.data) {
           setReplies(repliesData.data);
         } else {
@@ -279,7 +279,7 @@ export default function TicketDetails() {
       alert("Error fixing ticket - see console");
     }
   };
-  console.log("replyOptions:", replyOptions);
+  // console.log("replyOptions:", replyOptions);
 
   if (!ticketDetails)
     return <div className="p-10 text-center text-gray-600">Loading...</div>;
@@ -469,7 +469,7 @@ export default function TicketDetails() {
                       ticketDetails[key] && (
                         <img
                           key={key}
-                          src={`${process.env.REACT_APP_IMAGE_URL}/${ticketDetails[key]}`}
+                          src={`${import.meta.env.VITE_IMAGE_URL}/${ticketDetails[key]}`}
                           alt={key}
                           className="w-16 h-16 object-cover rounded border"
                         />
