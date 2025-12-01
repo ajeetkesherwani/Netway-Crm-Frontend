@@ -183,4 +183,9 @@ export const permissionsConfig = [
             "resolvedTicket",
         ],
     },
+    {
+        category: "setting",
+        label: "Setting",
+        permissions: ["listing", "create", "edit", "delete", "view", "approve"],
+    },
 ];

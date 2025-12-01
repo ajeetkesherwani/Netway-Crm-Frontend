@@ -231,3 +231,17 @@ export const getUserFullDetails = async (userId) => {
   });
   return await res.json();
 };
+
+
+//lco list by resllesr
+export const getLcoByRetailer = async (retailerId) => {
+  const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
+
+  const res = await fetch(`${BASE_URL}/retailer/lcoList?resellerId=${retailerId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return await res.json();
+};

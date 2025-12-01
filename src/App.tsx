@@ -216,6 +216,7 @@ export default function App() {
             <Route path="recharge-package" element={<UserRechargePackage />} />
             <Route path="package-details" element={<UserPackageDetails />} />
             <Route path="activity-log" element={<UserLogs />} />
+            <Route path="recharge-package" element={<UserRechargePackage />} />
           </Route>
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
