@@ -138,6 +138,7 @@ export default function TicketDetails() {
     try {
       const formData = new FormData();
       formData.append("ticketId", ticketId);
+      console.log("Ticket ID appended to FormData:", ticketId);
       // Log editableDetails to ensure it's populated correctly
       console.log("Editable Details before appending:", editableDetails);
 
