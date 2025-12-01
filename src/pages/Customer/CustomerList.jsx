@@ -118,6 +118,7 @@ export default function UserList() {
                   <th className="px-[2px] py-[2px] text-left">Action</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-gray-200">
                 {users.map((user, index) => (
                   <tr key={user._id} className="hover:bg-gray-50 relative">
@@ -129,7 +130,7 @@ export default function UserList() {
                       {user.generalInformation?.name}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.email}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.phone}</td>
-                    <td className="px-[2px] py-[2px]">{user.generalInformation?.address}</td>
+                    <td className="px-[2px] py-[2px]">{user.addressDetails ? user.addressDetails.permanentAddress.addressine1 : "--"}</td>
                     <td className="px-[2px] py-[2px]">
                       {user.status || "inActive"}
                       <button

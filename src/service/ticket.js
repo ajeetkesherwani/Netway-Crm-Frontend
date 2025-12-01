@@ -342,20 +342,13 @@ export const getTicketResolutionOptions = async () => {
 // ✅ UPDATED: send all editable fields using FormData
 export const updateTicketDetails = async (ticketId, data) => {
   try {
-    const formData = new FormData();
-    for (const key in data) {
-      if (data[key] !== undefined && data[key] !== null)
-        formData.append(key, data[key]);
-    }
-
-    console.log("Updating ticket with data:", formData);
+    console.log("Updating ticket with data:", data);
     const res = await fetch(`${BASE_URL}/ticket/update/${ticketId}`, {
       method: "PATCH",
        headers: {
-        // "Content-Type": "application/json",
         "Authorization": `Bearer ${getToken()}` // agar token chahiye
       },
-      body: formData,
+      body: data,
     });
 
     return await res.json();
@@ -421,8 +414,6 @@ export const createTicketReplyOption = async (data) => {
 
 // Dropdown ke liye quick reply options
 export const getTicketReplyOptions = async () => {
-  console.log("getTicketReplyOptions", `${getToken()}`);
-
   const res = await fetch(`${BASE_URL}/ticketReplyOption/list`, {
     method: "GET",
     headers: { 
@@ -440,7 +431,7 @@ export const getTicketReplyOptions = async () => {
   // Parse the JSON response
   const data = await res.json();
 
-  console.log("Ticket reply options data:", data);
+  // console.log("Ticket reply options data:", data);
 
   // Return the data correctly
   if (data.status) {
