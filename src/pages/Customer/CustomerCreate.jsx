@@ -6,7 +6,8 @@ import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
 import { toast } from "react-toastify";
 import { getStaffList } from "../../service/ticket";
-import { getAllPackageList } from "../../service/package"; // ← YE ADD KIYA (PACKAGE API)
+import { getAllPackageList } from "../../service/package";
+
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ export default function CreateUser() {
   const [zoneList, setZoneList] = useState([]);
   const [packageList, setPackageList] = useState([]); // ← PACKAGE LIST STATE
   const [installationBy, setInstallationBy] = useState("");
+
+  // Inhe existing states ke saath add karein
+  const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
+  const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
+  const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
+  const [selectedLco, setSelectedLco] = useState("");
 
 
   const [formErrors, setFormErrors] = useState({});
@@ -68,6 +75,10 @@ export default function CreateUser() {
       stbNo: "",
       vcNo: "",
       circuitId: "",
+      createdFor: {
+      id: "",
+      type: "Self"
+    },
       packageDetails: {
         packageName: "",
         packageAmount: "",
@@ -219,6 +230,43 @@ export default function CreateUser() {
       } else setFieldValue(path, files[0]);
     } else setFieldValue(path, value);
   };
+
+
+    // Handle Created For change
+  const handleCreatedForChange = (type) => {
+    setSelectedCreatedFor(type);
+    setFieldValue("customer.createdFor.type", type);
+    setFieldValue("customer.createdFor.id", "");
+    setSelectedRetailerForLco("");
+    setSelectedLco("");
+    setLcosForSelectedRetailer([]);
+  };
+
+  // Handle Retailer selection for LCO
+  const handleRetailerForLcoChange = async (retailerId) => {
+    if (selectedRetailerForLco === retailerId) {
+      setSelectedRetailerForLco("");
+      setLcosForSelectedRetailer([]);
+      setSelectedLco("");
+      return;
+    }
+    setSelectedRetailerForLco(retailerId);
+    try {
+      const res = await getLcoByRetailer(retailerId);
+      setLcosForSelectedRetailer(res.data || []);
+    } catch (err) {
+      console.error("Error fetching LCOs:", err);
+      setLcosForSelectedRetailer([]);
+    }
+  };
+
+  // Handle LCO selection
+  const handleLcoChange = (lcoId) => {
+    setSelectedLco(lcoId);
+    setFieldValue("customer.createdFor.id", lcoId);
+  };
+
+
 
   // PACKAGE SELECT → AUTO FILL NAME & PRICE
   const handlePackageChange = (packageId) => {
@@ -837,8 +885,6 @@ export default function CreateUser() {
               />
             </div>
           </div>
-
-
 
         </section>
 
