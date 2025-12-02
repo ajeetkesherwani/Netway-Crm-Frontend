@@ -11,7 +11,7 @@ import React, { useState, useEffect } from "react";
 //   getCurrentPlan,
 // } from "../../service/planService"; // You will create these later
 
-const PlanPurchaseScreen = ({ userId }) => {
+const UserRechargePackage = ({ }) => {
   const [loading, setLoading] = useState(true);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [planHistory, setPlanHistory] = useState([]);
@@ -154,52 +154,126 @@ const PlanPurchaseScreen = ({ userId }) => {
       )}
 
       {/* ---------------------- PURCHASE POPUP ------------------------ */}
-      {popupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-[400px] shadow-lg">
-            <h3 className="text-xl font-bold mb-4">Purchase / Renew Plan</h3>
+    {popupOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-white p-6 rounded-lg w-[500px] shadow-lg">
 
-            <label>Select Package</label>
-            <select
-              className="w-full border p-2 mt-1 mb-4 rounded"
-              value={selectedPkg.packageId}
-              onChange={(e) => handleSelectPackage(e.target.value)}
-            >
-              <option value="">Select Package</option>
-              {packages.map((pkg) => (
-                <option key={pkg._id} value={pkg._id}>
-                  {pkg.name}
-                </option>
-              ))}
-            </select>
+      {/* Title */}
+      <h3 className="text-xl font-bold mb-4">Purchase / Renew Plan</h3>
 
-            <label>Price</label>
+      {/* Plan Dropdown */}
+      <label className="font-semibold">Select Package</label>
+      <select
+        className="w-full border border-gray-400 p-2 rounded bg-gray-100 text-black mt-1 mb-4"
+        value={selectedPkg.packageId}
+        onChange={(e) => handleSelectPackage(e.target.value)}
+      >
+        <option value="">Select Package</option>
+        {packages.map((pkg) => (
+          <option key={pkg._id} value={pkg._id}>
+            {pkg.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Price */}
+      <label className="font-semibold">Price</label>
+      <input
+        value={selectedPkg.price}
+        readOnly
+        className="w-full border border-gray-400 p-2 bg-gray-200 rounded"
+      />
+
+      {/* PAYMENT RECEIVED TOGGLE */}
+      <div className="mt-5">
+        <p className="font-bold mb-2">Payment Received</p>
+
+        <div className="flex gap-8 items-center">
+          <label className="flex items-center gap-2">
             <input
-              value={selectedPkg.price}
-              readOnly
-              className="w-full border p-2 bg-gray-100 rounded"
+              type="radio"
+              value="yes"
+              checked={paymentReceived === "yes"}
+              onChange={() => setPaymentReceived("yes")}
             />
+            Yes
+          </label>
 
-            <div className="mt-5 flex justify-between">
-              <button
-                onClick={() => setPopupOpen(false)}
-                className="px-4 py-2 bg-gray-400 text-white rounded"
-              >
-                Cancel
-              </button>
+          <label className="flex items-center gap-2">
+            <input
+              type="radio"
+              value="no"
+              checked={paymentReceived === "no"}
+              onChange={() => setPaymentReceived("no")}
+            />
+            No
+          </label>
+        </div>
+      </div>
 
-              <button
-                onClick={buyPlan}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Buy Plan
-              </button>
-            </div>
-          </div>
+      {/* PAYMENT FIELDS – Only If Yes */}
+      {paymentReceived === "yes" && (
+        <div className="mt-4">
+
+          <label className="font-semibold">Amount</label>
+          <input
+            type="number"
+            className="w-full border border-gray-400 p-2 rounded mb-3"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+
+          <label className="font-semibold">Payment Date</label>
+          <input
+            type="date"
+            className="w-full border border-gray-400 p-2 rounded mb-3"
+            value={paymentDate}
+            onChange={(e) => setPaymentDate(e.target.value)}
+          />
+
+          <label className="font-semibold">Payment Mode</label>
+          <select
+            className="w-full border border-gray-400 p-2 rounded mb-3 bg-white"
+            value={paymentMode}
+            onChange={(e) => setPaymentMode(e.target.value)}
+          >
+            <option>Cash</option>
+            <option>Online</option>
+            <option>Bank Transfer</option>
+            <option>Cheque</option>
+          </select>
+
+          <label className="font-semibold">Remark</label>
+          <textarea
+            className="w-full border border-gray-400 p-2 rounded"
+            rows={3}
+            value={remark}
+            onChange={(e) => setRemark(e.target.value)}
+          ></textarea>
         </div>
       )}
+
+      {/* BUTTONS */}
+      <div className="mt-6 flex justify-between">
+        <button
+          onClick={() => setPopupOpen(false)}
+          className="px-4 py-2 bg-gray-500 text-white rounded"
+        >
+          Close
+        </button>
+
+        <button
+          onClick={buyPlan}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
 
-export default PlanPurchaseScreen;
+export default UserRechargePackage;
