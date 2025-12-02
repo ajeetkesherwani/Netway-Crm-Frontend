@@ -1,277 +1,213 @@
-// const UserRechargePackage = () => {
-//   return <h1>Recharge Package Page Loaded</h1>;
-// };
-// export default UserRechargePackage;
+import React, { useState } from "react";
 
-import React, { useState, useEffect } from "react";
-// import { getAllPackages } from "../../service/userPackage"; // Replace with your API
-// import {
-//   purchasePlanForUser,
-//   getUserPlanHistory,
-//   getCurrentPlan,
-// } from "../../service/planService"; // You will create these later
+const UserRechargePackage = () => {
+  const [packages] = useState([
+    { _id: "1", name: "AN-NEW 100 Mbps - 1M", price: 100 },
+    { _id: "2", name: "AN-NEW 200 Mbps - 1M", price: 200 },
+    { _id: "3", name: "AN-NEW 300 Mbps - 1M", price: 300 },
+  ]);
 
-const UserRechargePackage = ({ }) => {
-  const [loading, setLoading] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState(null);
-  const [planHistory, setPlanHistory] = useState([]);
-  const [packages, setPackages] = useState([]);
-  const [popupOpen, setPopupOpen] = useState(false);
+  const [mode, setMode] = useState("renew");
+  const [selectedPkg, setSelectedPkg] = useState("");
+  const [mrp, setMrp] = useState("");
+  const [discount, setDiscount] = useState("0");
+  const [refund, setRefund] = useState("0");
+  const [wallet, setWallet] = useState("-100.00");
+  const [totalPay, setTotalPay] = useState("200.00");
 
-  const [selectedPkg, setSelectedPkg] = useState({
-    packageId: "",
-    name: "",
-    price: "",
-  });
+  const [advanceRenew, setAdvanceRenew] = useState(true);
+  const [renewDate, setRenewDate] = useState("2026-01-01");
 
-  useEffect(() => {
-    loadInitial();
-  }, []);
+  const [sales, setSales] = useState("");
+  const [remark, setRemark] = useState("");
 
-  const loadInitial = async () => {
-    try {
-      const pkg = await getAllPackages();
-      setPackages(pkg.data || []);
+  const [paymentReceived, setPaymentReceived] = useState("no");
+  const [amount, setAmount] = useState("0");
+  const [paymentDate, setPaymentDate] = useState("2025-12-02");
+  const [paymentMode, setPaymentMode] = useState("Cash");
 
-      const current = await getCurrentPlan(userId);
-      setCurrentPlan(current.data || null);
-
-      const history = await getUserPlanHistory(userId);
-      setPlanHistory(history.data || []);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
-    }
+  const handlePackage = (id) => {
+    setSelectedPkg(id);
+    const pkg = packages.find((p) => p._id === id);
+    setMrp(pkg?.price || "");
+    setTotalPay(pkg?.price || "");
   };
-
-  const openPurchasePopup = () => {
-    setSelectedPkg({ packageId: "", name: "", price: "" });
-    setPopupOpen(true);
-  };
-
-  const handleSelectPackage = (id) => {
-    const pkg = packages.find((x) => x._id === id);
-    if (!pkg) return;
-    setSelectedPkg({
-      packageId: id,
-      name: pkg.name,
-      price: pkg.basePrice,
-    });
-  };
-
-  const buyPlan = async () => {
-    if (!selectedPkg.packageId) {
-      alert("Select a plan!");
-      return;
-    }
-
-    try {
-      await purchasePlanForUser(userId, selectedPkg);
-
-      alert("Plan purchased successfully");
-
-      setPopupOpen(false);
-      loadInitial();
-    } catch (err) {
-      console.log(err);
-      alert("Failed to buy plan");
-    }
-  };
-
-  if (loading)
-    return (
-      <div className="p-10 text-center text-xl bg-gray-100 min-h-screen">
-        Loading...
-      </div>
-    );
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen font-sans">
-      <h2 className="text-2xl font-bold mb-6">User Plan Details</h2>
 
-      {/* ---------------------- NO PLAN PURCHASED ------------------------ */}
-      {!currentPlan && (
-        <div className="text-center mt-10">
-          <button
-            onClick={openPurchasePopup}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md text-lg"
-          >
-            Purchase Plan
-          </button>
-        </div>
-      )}
+      {/* HEADER */}
+      <h2 className="text-center text-xl font-bold mb-3">
+        Purchase / Renew Plan , User ID : <span className="font-bold">SACHINGX142036</span>
+      </h2>
 
-      {/* ---------------------- CURRENT PLAN CARD ------------------------ */}
-      {currentPlan && (
-        <div className="bg-white shadow-md p-5 rounded-lg border border-gray-300 mb-6">
-          <h3 className="text-xl font-bold mb-3">Current Plan</h3>
+      {/* MODES */}
+      <div className="flex justify-center gap-10 text-lg mb-2">
+        <label className="flex items-center gap-2">
+          <input type="radio" checked={mode === "renew"} onChange={() => setMode("renew")} />
+          Renew
+        </label>
 
-          <p className="text-lg">
-            <b>{currentPlan.packageName}</b>
-          </p>
-          <p>Price: ₹{currentPlan.price}</p>
-          <p>Status: {currentPlan.status}</p>
-          <p>Validity: {currentPlan.validity} days</p>
+        <label className="flex items-center gap-2">
+          <input type="radio" checked={mode === "upgrade"} onChange={() => setMode("upgrade")} />
+          Upgrade
+        </label>
+      </div>
 
-          <button
-            onClick={openPurchasePopup}
-            className="mt-4 bg-green-600 text-white px-5 py-2 rounded-md"
-          >
-            Renew Plan
-          </button>
-        </div>
-      )}
+      {/* MAIN BOX */}
+      <div className="bg-white border border-gray-300 rounded-md p-6 max-w-5xl mx-auto">
 
-      {/* ---------------------- PLAN HISTORY TABLE ------------------------ */}
-      {planHistory.length > 0 && (
-        <div className="bg-white shadow-md border border-gray-300 rounded-lg">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-200 text-gray-900">
-                <th className="py-3 px-3">Plan</th>
-                <th className="py-3 px-3">Price</th>
-                <th className="py-3 px-3">Start Date</th>
-                <th className="py-3 px-3">End Date</th>
-              </tr>
-            </thead>
+        <div className="grid grid-cols-2 gap-6">
 
-            <tbody>
-              {planHistory.map((p, index) => (
-                <tr
-                  key={p._id}
-                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="py-3 px-3">{p.packageName}</td>
-                  <td className="py-3 px-3">₹{p.price}</td>
-                  <td className="py-3 px-3">{p.startDate}</td>
-                  <td className="py-3 px-3">{p.endDate}</td>
-                </tr>
+          {/* LEFT SIDE */}
+          <div>
+            <label className="font-semibold">Current Plan *</label>
+            <select
+              className="w-full border p-2 rounded mt-1 bg-gray-100"
+              value={selectedPkg}
+              onChange={(e) => handlePackage(e.target.value)}
+            >
+              <option value="">Select Plan</option>
+              {packages.map((pkg) => (
+                <option key={pkg._id} value={pkg._id}>
+                  {pkg.name}
+                </option>
               ))}
-            </tbody>
-          </table>
+            </select>
+
+            <label className="mt-3 block font-semibold">MRP :</label>
+            <input className="w-full border p-2 rounded bg-gray-100" value={mrp} readOnly />
+
+            <label className="mt-3 block font-semibold">Discount :</label>
+            <input className="w-full border p-2 rounded" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+
+            <label className="mt-3 block font-semibold">Refund Charge :</label>
+            <input className="w-full border p-2 rounded" value={refund} onChange={(e) => setRefund(e.target.value)} />
+
+            <label className="mt-3 block font-semibold">Wallet Balance :</label>
+            <input className="w-full border p-2 rounded bg-gray-100" value={wallet} readOnly />
+
+            <label className="mt-3 block font-semibold">Total Pay Amount :</label>
+            <input className="w-full border p-2 rounded bg-gray-100 font-bold" value={totalPay} readOnly />
+
+            <label className="mt-3 block font-semibold">CAF No :</label>
+            <input className="w-full border p-2 rounded bg-gray-100" value="NIPL-0021001" readOnly />
+          </div>
+
+          {/* RIGHT SIDE */}
+          <div>
+            <div className="flex items-center gap-3 mt-2">
+              <input type="checkbox" checked={advanceRenew} onChange={() => setAdvanceRenew(!advanceRenew)} />
+              <label className="font-semibold">Advance Renewal</label>
+
+              <input
+                type="date"
+                className="border p-2 rounded ml-4"
+                value={renewDate}
+                onChange={(e) => setRenewDate(e.target.value)}
+              />
+            </div>
+
+            <p className="mt-3"><b>Validity :</b> 1 Month</p>
+            <p className="mt-1"><b>Volume Quota :</b> UNLIMITED</p>
+            <p className="mt-1"><b>Time Quota :</b> UNLIMITED</p>
+            <p className="mt-1"><b>Old Plan Used :</b> 0</p>
+
+            <label className="mt-4 block font-semibold">Select Sales Representative :</label>
+            <select className="w-full border p-2 rounded bg-gray-100">
+              <option>Select Sales Representative</option>
+              <option>Rahul Sharma</option>
+              <option>Amit Singh</option>
+            </select>
+
+            <label className="mt-3 block font-semibold">Remark :</label>
+            <textarea className="w-full border p-2 rounded h-20" value={remark} onChange={(e) => setRemark(e.target.value)} />
+          </div>
         </div>
-      )}
 
-      {/* ---------------------- PURCHASE POPUP ------------------------ */}
-    {popupOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-    <div className="bg-white p-6 rounded-lg w-[500px] shadow-lg">
+        {/* PAYMENT RECEIVED SECTION */}
+        <hr className="my-6 border-gray-400" />
 
-      {/* Title */}
-      <h3 className="text-xl font-bold mb-4">Purchase / Renew Plan</h3>
+        <h3 className="text-center text-lg font-bold">Payment Received</h3>
 
-      {/* Plan Dropdown */}
-      <label className="font-semibold">Select Package</label>
-      <select
-        className="w-full border border-gray-400 p-2 rounded bg-gray-100 text-black mt-1 mb-4"
-        value={selectedPkg.packageId}
-        onChange={(e) => handleSelectPackage(e.target.value)}
-      >
-        <option value="">Select Package</option>
-        {packages.map((pkg) => (
-          <option key={pkg._id} value={pkg._id}>
-            {pkg.name}
-          </option>
-        ))}
-      </select>
-
-      {/* Price */}
-      <label className="font-semibold">Price</label>
-      <input
-        value={selectedPkg.price}
-        readOnly
-        className="w-full border border-gray-400 p-2 bg-gray-200 rounded"
-      />
-
-      {/* PAYMENT RECEIVED TOGGLE */}
-      <div className="mt-5">
-        <p className="font-bold mb-2">Payment Received</p>
-
-        <div className="flex gap-8 items-center">
+        {/* RADIO BUTTONS */}
+        <div className="flex justify-center gap-10 mt-3">
           <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="yes"
-              checked={paymentReceived === "yes"}
-              onChange={() => setPaymentReceived("yes")}
-            />
-            Yes
+            <input type="radio" checked={paymentReceived === "yes"} onChange={() => setPaymentReceived("yes")} /> Yes
           </label>
 
           <label className="flex items-center gap-2">
-            <input
-              type="radio"
-              value="no"
-              checked={paymentReceived === "no"}
-              onChange={() => setPaymentReceived("no")}
-            />
-            No
+            <input type="radio" checked={paymentReceived === "no"} onChange={() => setPaymentReceived("no")} /> No
           </label>
         </div>
-      </div>
 
-      {/* PAYMENT FIELDS – Only If Yes */}
-      {paymentReceived === "yes" && (
-        <div className="mt-4">
+        {/* SINGLE COLUMN PAYMENT INPUTS */}
+        {paymentReceived === "yes" && (
+          <div className="mt-4 w-1/2 mx-auto">
 
-          <label className="font-semibold">Amount</label>
-          <input
-            type="number"
-            className="w-full border border-gray-400 p-2 rounded mb-3"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+            <label className="font-semibold">Amount</label>
+            <input
+              type="number"
+              className="w-full border p-2 rounded mb-3"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
 
-          <label className="font-semibold">Payment Date</label>
-          <input
-            type="date"
-            className="w-full border border-gray-400 p-2 rounded mb-3"
-            value={paymentDate}
-            onChange={(e) => setPaymentDate(e.target.value)}
-          />
+            <label className="font-semibold">Payment Date</label>
+            <input
+              type="date"
+              className="w-full border p-2 rounded mb-3"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+            />
 
-          <label className="font-semibold">Payment Mode</label>
-          <select
-            className="w-full border border-gray-400 p-2 rounded mb-3 bg-white"
-            value={paymentMode}
-            onChange={(e) => setPaymentMode(e.target.value)}
-          >
-            <option>Cash</option>
-            <option>Online</option>
-            <option>Bank Transfer</option>
-            <option>Cheque</option>
-          </select>
+            <label className="font-semibold">Payment Mode</label>
+            <select
+              className="w-full border p-2 rounded mb-3"
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value)}
+            >
+              <option>Cash</option>
+              <option>Online</option>
+              <option>Bank Transfer</option>
+              <option>Cheque</option>
+            </select>
 
-          <label className="font-semibold">Remark</label>
-          <textarea
-            className="w-full border border-gray-400 p-2 rounded"
-            rows={3}
-            value={remark}
-            onChange={(e) => setRemark(e.target.value)}
-          ></textarea>
+            <label className="font-semibold">Remark</label>
+            <textarea
+              className="w-full border p-2 rounded h-20"
+              value={remark}
+              onChange={(e) => setRemark(e.target.value)}
+            ></textarea>
+          </div>
+        )}
+
+        {/* SUMMARY SECTION */}
+        <div className="mt-6 text-sm">
+          <p className="flex justify-between border-b py-1"><span>Total Payable Amount</span><span>{totalPay}</span></p>
+          <p className="flex justify-between border-b py-1"><span>Payment Received</span><span>{paymentReceived === "yes" ? amount : "0"}</span></p>
+          <p className="flex justify-between border-b py-1 font-bold text-black">
+            <span>Remaining Payable Amount</span>
+            <span>{paymentReceived === "yes" ? totalPay - amount : totalPay}</span>
+          </p>
+          <p className="flex justify-between py-1">
+            <span>Wallet Balance After Purchase</span>
+            <span>-200.00</span>
+          </p>
         </div>
-      )}
 
-      {/* BUTTONS */}
-      <div className="mt-6 flex justify-between">
-        <button
-          onClick={() => setPopupOpen(false)}
-          className="px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          Close
-        </button>
+        {/* BUTTONS */}
+        <div className="flex justify-center gap-10 mt-6">
+          <button className="px-10 py-2 rounded-full border border-gray-700 bg-gray-200 hover:bg-gray-300">
+            Save
+          </button>
 
-        <button
-          onClick={buyPlan}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Save
-        </button>
+          <button className="px-10 py-2 rounded-full border border-gray-700 bg-gray-300 hover:bg-gray-400">
+            Close
+          </button>
+        </div>
+
       </div>
-    </div>
-  </div>
-)}
     </div>
   );
 };
