@@ -130,7 +130,11 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+// import { Link, useNavigate } from "react-router-dom";
+// import { Link, useNavigate } from "react-router-dom";
+
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
@@ -206,49 +210,6 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
       toast.error("Login failed");
     }
   };
-
-  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   try {
-  //     let dataToSend;
-
-  //     // 👇 Conditional login type detection based on heading
-  //     const type = heading?.toLowerCase();
-
-  //     if (type === "admin login") {
-  //       // ✅ Admin Login → email + password
-  //       dataToSend = { email: formData.email, password: formData.password };
-  //     } else if (type === "staff login") {
-  //       // ✅ Staff Login → userName + password
-  //       dataToSend = {
-  //         userName: formData.username,
-  //         password: formData.password,
-  //       };
-  //     } else {
-  //       // ✅ Reseller / LCO Login → employeeUserName + password
-  //       dataToSend = {
-  //         employeeUserName: formData.username,
-  //         password: formData.password,
-  //       };
-  //     }
-
-  //     const res = await loginApi(dataToSend);
-
-  //     if (res?.success) {
-  //       setAuth(res.token);
-  //       localStorage.setItem(
-  //         "rolePermission",
-  //         JSON.stringify(res?.data?.user?.role?.permissions)
-  //       );
-  //       navigate("/");
-  //     } else {
-  //       toast.error(res?.error || "Login failed");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Login failed");
-  //   }
-  // };
 
   return (
     <div className="flex flex-col flex-1">

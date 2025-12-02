@@ -213,10 +213,10 @@ export default function App() {
             <Route path="invoice" element={<UserInvoices />} />
             <Route path="tickets" element={<UserTickets />} />
             <Route path="payment" element={<UserPayment />} />
-            <Route path="recharge-package" element={<UserRechargePackage />} />
+            <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"}/>} />
             <Route path="package-details" element={<UserPackageDetails />} />
             <Route path="activity-log" element={<UserLogs />} />
-            <Route path="recharge-package" element={<UserRechargePackage />} />
+            <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"} />} />
           </Route>
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
