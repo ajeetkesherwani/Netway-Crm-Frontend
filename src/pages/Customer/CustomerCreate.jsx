@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUser, getAllZoneList } from "../../service/user";
+import { createUser, getAllZoneList, getLcoByRetailer } from "../../service/user";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
@@ -76,9 +76,9 @@ export default function CreateUser() {
       vcNo: "",
       circuitId: "",
       createdFor: {
-      id: "",
-      type: "Self"
-    },
+        id: "",
+        type: "Self"
+      },
       packageDetails: {
         packageName: "",
         packageAmount: "",
@@ -147,6 +147,7 @@ export default function CreateUser() {
             getAllPackageList(),
           ]);
 
+        console.log("resellerRes", resellerRes);
         if (rRes.status === "fulfilled" && rRes.value?.status)
           setRoles(rRes.value.data);
         if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
@@ -166,6 +167,8 @@ export default function CreateUser() {
     fetchAll();
   }, []);
 
+  console.log("retailers", retailers);
+  console.log("staff", staff);
   // AUTO COPY BILLING → INSTALLATION
   useEffect(() => {
     if (formData.addresses.installation.sameAsBilling) {
@@ -232,7 +235,7 @@ export default function CreateUser() {
   };
 
 
-    // Handle Created For change
+  // Handle Created For change
   const handleCreatedForChange = (type) => {
     setSelectedCreatedFor(type);
     setFieldValue("customer.createdFor.type", type);
@@ -322,65 +325,17 @@ export default function CreateUser() {
 
     // Payment - all required
     if (!p.paymentMode) errors["payment.paymentMode"] = "Payment mode required";
-    // if (!p.invoiceNo) errors["payment.invoiceNo"] = "Invoice No required";
-    // if (!p.paymentRef) errors["payment.paymentRef"] = "Payment reference required";
-    // if (!p.amount || Number(p.amount) <= 0) errors["payment.amount"] = "Valid amount required";
 
     // addresses: billing must have pincode & state & city & area
     const bill = formData.addresses.billing;
-    // if (!bill.addressLine1) errors["addresses.billing.addressLine1"] = "Billing address required";
     if (!bill.state)
       errors["addresses.billing.state"] = "Billing state required";
     if (!bill.city) errors["addresses.billing.city"] = "Billing city required";
     if (!bill.pincode)
       errors["addresses.billing.pincode"] = "Billing pincode required";
-    // if (!bill.area) errors["addresses.billing.area"] = "Billing area required";
 
     return errors;
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const errors = validateForm();
-  //   if (Object.keys(errors).length) {
-  //     setFormErrors(errors);
-  //     console.log("errors", errors);
-  //     toast.error("Please fix form errors");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     // Build payload appropriate for your backend; here we create a FormData if documents exist
-  //     const payload = new FormData();
-  //     // simple flattening - adjust as backend expects
-  //     payload.append("customer", JSON.stringify(formData.customer));
-  //     payload.append("addresses", JSON.stringify(formData.addresses));
-  //     payload.append("payment", JSON.stringify(formData.payment));
-  //     payload.append("additional", JSON.stringify(formData.additional));
-  //     payload.append("areas", JSON.stringify(areas));
-  //     formData.documents.forEach((doc) => {
-  //       if (doc.file) {
-  //         payload.append("documents", doc.file);
-  //       }
-  //       if (doc.type) {
-  //         payload.append("documentTypes", doc.type);
-  //       }
-  //     });
-
-  //     // call API that accepts formdata
-  //     await createUser(payload);
-  //     toast.success("User created successfully");
-  //     navigate("/user/list");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error(err?.message || "Failed to create user");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -401,8 +356,6 @@ export default function CreateUser() {
       payload.append("addresses", JSON.stringify(formData.addresses));
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
-      // payload.append("areas", JSON.stringify(areas));
-      // payload.append("area", area);
       payload.append("area", selectedArea);
 
       // FIXED — Only append type when file exists, and use documentTypes[]
@@ -429,7 +382,6 @@ export default function CreateUser() {
   const handleClear = () => {
     setFormData(initialForm);
     setFormErrors({});
-    // setAreas(["Main Area"]);
     setSelectedArea("");
   };
 
@@ -620,7 +572,7 @@ export default function CreateUser() {
                 <option value="">Select Staff</option>
                 {staff.map((s) => (
                   <option key={s._id} value={s._id}>
-                    {s.roleName}
+                    {s.staffName}
                   </option>
                 ))}
               </select>
@@ -646,7 +598,7 @@ export default function CreateUser() {
                             key={id}
                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md"
                           >
-                            {person.roleName || person.name}
+                            {person.staffName || person.name}
                             <button
                               type="button"
                               onClick={(e) => {
@@ -698,7 +650,7 @@ export default function CreateUser() {
                                 }}
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                               />
-                              <span className="font-medium text-sm">{s.roleName || s.name}</span>
+                              <span className="font-medium text-sm">{s.staffName || s.name}</span>
                             </label>
                           );
                         })
@@ -748,50 +700,6 @@ export default function CreateUser() {
                 <p className="mt-2 text-red-600 text-sm">{formErrors.installationBy}</p>
               )}
             </div>
-
-            {/* <div className="md:col-span-2">
-              <label className="block text-sm font-medium">
-                Installation By
-              </label> */}
-            {/* multi select */}
-            {/* <select
-                value={installationBy}
-                onChange={(e) => setInstallationBy(e.target.value)}
-              >
-                <option value="">Select Installation By</option>
-                {staff.map((s) => (
-                  <option key={s._id} value={s._id}>{s.roleName}</option>
-                ))}
-              </select> */}
-
-            {/* <select
-                value={formData.customer.selsExecutive}
-                onChange={(e) => handleChange(e, "customer.installationBy")}
-                className="mt-1 p-2 border rounded w-full"
-              >
-                <option value="">Select Staff</option>
-                {staff.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.roleName}
-                  </option>
-                ))}
-              </select> */}
-            {/* 
-              <div className="mt-2">
-                <label className="block text-sm font-medium">
-                  Or Enter Manual Installer
-                </label>
-                <input
-                  value={formData.customer.installationByName}
-                  onChange={(e) =>
-                    handleChange(e, "customer.installationByName")
-                  }
-                  className="mt-1 p-2 border rounded w-full"
-                  placeholder="Enter installer name manually"
-                />
-              </div>
-            </div> */}
-
             <div>
               <label className="block text-sm font-medium">IP Address</label>
               <input
@@ -884,8 +792,76 @@ export default function CreateUser() {
                 className="mt-1 p-2 border rounded w-full"
               />
             </div>
-          </div>
+            <div>
+              <label className="block text-sm font-medium">Created For</label>
+              <select
+                name="createdFor"
+                className="mt-1 p-2 border rounded w-full"
+                value={selectedCreatedFor}
+                onChange={(e) => handleCreatedForChange(e.target.value)}
+              >
+                <option value="" disabled selected>Select</option>
+                <option value="admin">Admin</option>
+                <option value="reseller">Reseller</option>
+                <option value="lco">Lco</option>
+              </select>
+            </div>
+            {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
+            {(selectedCreatedFor === "reseller" ||
+              selectedCreatedFor === "lco") && (
+                <div>
+                  <label className="block text-sm font-medium">Reseller</label>
+                  <select
+                    name="reseller"
+                    className="mt-1 p-2 border rounded w-full"
+                    value={
+                      selectedCreatedFor === "lco"
+                        ? selectedRetailerForLco
+                        : formData.customer.createdFor.id
+                    }
+                    onChange={(e) => {
+                      if (selectedCreatedFor === "lco") {
+                        handleRetailerForLcoChange(e.target.value);
+                      } else {
+                        // if just reseller, set ID directly
+                        setFieldValue("customer.createdFor.id", e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select Reseller
+                    </option>
+                    {retailers
+                      .filter((r) => r.resellerName)
+                      .map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.resellerName}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+            {/* LCO Dropdown - Show only if Created For is Lco */}
+            {selectedCreatedFor === "lco" && (
+              <div>
+                <label className="block text-sm font-medium">Lco</label>
+                <select
+                  className="mt-1 p-2 border rounded w-full"
+                  value={selectedLco} // or formData.customer.createdFor.id
+                  onChange={(e) => handleLcoChange(e.target.value)}
+                  disabled={!selectedRetailerForLco} // disable if no reseller selected
+                >
+                  <option value="">Select LCO</option>
+                  {lcosForSelectedRetailer.map((l) => (
+                    <option key={l._id} value={l._id}>
+                      {l.lcoName || l.lcoName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
+          </div>
         </section>
 
         {/* ---------------- Address Details ---------------- */}
