@@ -7,7 +7,9 @@ import {
   getUserDetails,
   updateUser,
   getAllZoneList,
+  getLcoByRetailer,
 } from "../../service/user";
+import { getRetailer } from "../../service/retailer";
 import { getAllPackageList } from "../../service/package";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
@@ -23,6 +25,13 @@ export default function CustomerUpdate() {
   const [zoneList, setZoneList] = useState([]);
   const [packageList, setPackageList] = useState([]);
   const [selectedArea, setSelectedArea] = useState(""); // For area dropdown
+
+  // Created For States
+  const [retailers, setRetailers] = useState([]);
+  const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
+  const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
+  const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
+  const [selectedLco, setSelectedLco] = useState("");
 
   const connectionTypes = ["ILL", "FTTH", "Wireless", "Other"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
@@ -82,18 +91,46 @@ export default function CustomerUpdate() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [userRes, staffRes, zoneRes, pkgRes] = await Promise.all([
+        const [userRes, staffRes, zoneRes, pkgRes, retailerRes] = await Promise.all([
           getUserDetails(id),
           getStaffList(),
           getAllZoneList(),
           getAllPackageList(),
+          getRetailer(),
         ]);
 
         setStaff(staffRes?.data || []);
         setZoneList(zoneRes?.data || []);
         setPackageList(pkgRes?.data || []);
+        if (retailerRes?.status) setRetailers(retailerRes.data);
 
         const u = userRes.data.user;
+
+        // Initialize Created For State
+        const createdForType = u.createdFor?.type || "Self";
+        setSelectedCreatedFor(createdForType);
+
+        if (createdForType === "reseller") {
+          // If reseller, ID is directly in createdFor.id
+          // We don't need to do anything special here as formData will hold it
+        } else if (createdForType === "lco") {
+          // If LCO, we need to find which reseller this LCO belongs to.
+          // Ideally backend sends this, but if not we might need to search or fetch.
+          // For now, let's assume we can set LCO ID. 
+          // If we have retailerId in user object (u.retailerId), use it.
+          const rId = u.retailerId || "";
+          if (rId) {
+            setSelectedRetailerForLco(rId);
+            // Fetch LCOs for this reseller
+            try {
+              const lcoRes = await getLcoByRetailer(rId);
+              setLcosForSelectedRetailer(lcoRes.data || []);
+            } catch (e) {
+              console.error("Failed to fetch LCOs for reseller", e);
+            }
+          }
+          setSelectedLco(u.createdFor?.id || "");
+        }
 
         const loadedData = {
           customer: {
@@ -119,6 +156,10 @@ export default function CustomerUpdate() {
             vcNo: u.generalInformation?.vcNo || "",
             circuitId: u.generalInformation?.circuitId || "",
             networkType: u.networkInformation?.networkType || "",
+            createdFor: {
+              type: u.createdFor?.type || "Self",
+              id: u.createdFor?.id || ""
+            },
             packageDetails: {
               packageId: u.packageInfomation?.packageId || "",
               packageName: u.packageInfomation?.name || "",
@@ -241,49 +282,83 @@ export default function CustomerUpdate() {
     documents: prev.documents.filter((_, idx) => idx !== i)
   }));
 
+  // Handle Created For change
+  const handleCreatedForChange = (type) => {
+    setSelectedCreatedFor(type);
+    setFieldValue("customer.createdFor.type", type);
+    setFieldValue("customer.createdFor.id", "");
+    setSelectedRetailerForLco("");
+    setSelectedLco("");
+    setLcosForSelectedRetailer([]);
+  };
+
+  // Handle Retailer selection for LCO
+  const handleRetailerForLcoChange = async (retailerId) => {
+    if (selectedRetailerForLco === retailerId) {
+      setSelectedRetailerForLco("");
+      setLcosForSelectedRetailer([]);
+      setSelectedLco("");
+      return;
+    }
+    setSelectedRetailerForLco(retailerId);
+    try {
+      const res = await getLcoByRetailer(retailerId);
+      setLcosForSelectedRetailer(res.data || []);
+    } catch (err) {
+      console.error("Error fetching LCOs:", err);
+      setLcosForSelectedRetailer([]);
+    }
+  };
+
+  // Handle LCO selection
+  const handleLcoChange = (lcoId) => {
+    setSelectedLco(lcoId);
+    setFieldValue("customer.createdFor.id", lcoId);
+  };
+
   // Submit
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (loading) return;
-  setLoading(true);
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
-  const payload = new FormData();
+    const payload = new FormData();
 
-  // Yeh sab JSON string bana ke daalo (backend me JSON.parse ho raha hai)
-  payload.append("customer", JSON.stringify(formData.customer));
-  payload.append("addresses", JSON.stringify(formData.addresses));
-  payload.append("additional", JSON.stringify(formData.additional));
-  payload.append("area", selectedArea || ""); // Zone ID
+    // Yeh sab JSON string bana ke daalo (backend me JSON.parse ho raha hai)
+    payload.append("customer", JSON.stringify(formData.customer));
+    payload.append("addresses", JSON.stringify(formData.addresses));
+    payload.append("additional", JSON.stringify(formData.additional));
+    payload.append("area", selectedArea || ""); // Zone ID
 
-  // Documents: New + Existing
-  formData.documents.forEach((doc, index) => {
-    if (doc.file) {
-      payload.append("documents", doc.file);
-      payload.append("documentTypes[]", doc.type);
+    // Documents: New + Existing
+    formData.documents.forEach((doc, index) => {
+      if (doc.file) {
+        payload.append("documents", doc.file);
+        payload.append("documentTypes[]", doc.type);
+      }
+      if (doc.existingUrl && !doc.file) {
+        // Sirf filename bhejo (backend me split("/").pop() kar raha hai)
+        const filename = doc.existingUrl.split("/").pop();
+        payload.append("existingDocuments[]", filename);
+      }
+    });
+
+    // Debug (optional - dekh lo kya ja raha hai)
+    // for (let [k, v] of payload.entries()) {
+    //   console.log(k, "=>", v);
+    // }
+
+    try {
+      await updateUser(id, payload);
+      toast.success("Customer updated successfully!");
+      navigate("/user/list");
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(err.message || "Update failed");
+    } finally {
+      setLoading(false);
     }
-    if (doc.existingUrl && !doc.file) {
-      // Sirf filename bhejo (backend me split("/").pop() kar raha hai)
-      const filename = doc.existingUrl.split("/").pop();
-      payload.append("existingDocuments[]", filename);
-    }
-  });
-
-  // Debug (optional - dekh lo kya ja raha hai)
-  // for (let [k, v] of payload.entries()) {
-  //   console.log(k, "=>", v);
-  // }
-
-  try {
-    await updateUser(id, payload);
-    toast.success("Customer updated successfully!");
-    navigate("/user/list");
-  } catch (err) {
-    console.error("Update error:", err);
-    toast.error(err.message || "Update failed");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
   //   if (loading) return;
@@ -333,7 +408,7 @@ export default function CustomerUpdate() {
             <div><label>Alternate Mobile</label><input value={formData.customer.alternateMobile} onChange={e => setFieldValue("customer.alternateMobile", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>Account ID</label><input value={formData.customer.accountId} onChange={e => setFieldValue("customer.accountId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>Connection Type</label><select value={formData.customer.connectionType} onChange={e => setFieldValue("customer.connectionType", e.target.value)} className="mt-1 p-2 border rounded w-full">{connectionTypes.map(t => <option key={t}>{t}</option>)}</select></div>
-            <div><label>Sales Executive</label><select value={formData.customer.selsExecutive} onChange={e => setFieldValue("customer.selsExecutive", e.target.value)} className="mt-1 p-2 border rounded w-full"><option value="">Select</option>{staff.map(s => <option key={s._id} value={s._id}>{s.roleName || s.name}</option>)}</select></div>
+            <div><label>Sales Executive</label><select value={formData.customer.selsExecutive} onChange={e => setFieldValue("customer.selsExecutive", e.target.value)} className="mt-1 p-2 border rounded w-full"><option value="">Select</option>{staff.map(s => <option key={s._id} value={s._id}>{s.staffName || s.name}</option>)}</select></div>
 
             {/* Installation By */}
             <div className="md:col-span-2">
@@ -344,7 +419,7 @@ export default function CustomerUpdate() {
                     {formData.customer.installationBy.length > 0 ? (
                       formData.customer.installationBy.map(id => {
                         const p = staff.find(s => s._id === id);
-                        return p ? <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">{p.roleName || p.name} <button type="button" onClick={(e) => { e.stopPropagation(); setFieldValue("customer.installationBy", formData.customer.installationBy.filter(x => x !== id)); }} className="ml-1 hover:text-red-600">×</button></span> : null;
+                        return p ? <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs rounded-md">{p.staffName || p.name} <button type="button" onClick={(e) => { e.stopPropagation(); setFieldValue("customer.installationBy", formData.customer.installationBy.filter(x => x !== id)); }} className="ml-1 hover:text-red-600">×</button></span> : null;
                       })
                     ) : <span className="text-gray-500 text-sm">Select installer(s)</span>}
                   </div>
@@ -364,7 +439,7 @@ export default function CustomerUpdate() {
                               setFieldValue("customer.installationBy", updated);
                               if (updated.length > 0) setFieldValue("customer.installationByName", "");
                             }} className="w-4 h-4 text-blue-600 rounded" />
-                            <span>{s.roleName || s.name}</span>
+                            <span>{s.staffName || s.name}</span>
                           </label>
                         );
                       })}
@@ -391,6 +466,74 @@ export default function CustomerUpdate() {
             <div><label>STB No.</label><input value={formData.customer.stbNo} onChange={e => setFieldValue("customer.stbNo", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>VC No.</label><input value={formData.customer.vcNo} onChange={e => setFieldValue("customer.vcNo", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
             <div><label>Circuit ID</label><input value={formData.customer.circuitId} onChange={e => setFieldValue("customer.circuitId", e.target.value)} className="mt-1 p-2 border rounded w-full" /></div>
+
+            {/* Created For Section */}
+            <div>
+              <label className="block text-sm font-medium">Created For</label>
+              <select
+                name="createdFor"
+                className="mt-1 p-2 border rounded w-full"
+                value={selectedCreatedFor}
+                onChange={(e) => handleCreatedForChange(e.target.value)}
+              >
+                <option value="Self">Self</option>
+                <option value="admin">Admin</option>
+                <option value="reseller">Reseller</option>
+                <option value="lco">Lco</option>
+              </select>
+            </div>
+
+            {/* Reseller Dropdown */}
+            {(selectedCreatedFor === "reseller" || selectedCreatedFor === "lco") && (
+              <div>
+                <label className="block text-sm font-medium">Reseller</label>
+                <select
+                  name="reseller"
+                  className="mt-1 p-2 border rounded w-full"
+                  value={
+                    selectedCreatedFor === "lco"
+                      ? selectedRetailerForLco
+                      : formData.customer.createdFor.id
+                  }
+                  onChange={(e) => {
+                    if (selectedCreatedFor === "lco") {
+                      handleRetailerForLcoChange(e.target.value);
+                    } else {
+                      setFieldValue("customer.createdFor.id", e.target.value);
+                    }
+                  }}
+                >
+                  <option value="" disabled>Select Reseller</option>
+                  {retailers
+                    .filter((r) => r.resellerName)
+                    .map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.resellerName}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* LCO Dropdown */}
+            {selectedCreatedFor === "lco" && (
+              <div>
+                <label className="block text-sm font-medium">Lco</label>
+                <select
+                  className="mt-1 p-2 border rounded w-full"
+                  value={selectedLco}
+                  onChange={(e) => handleLcoChange(e.target.value)}
+                  disabled={!selectedRetailerForLco}
+                >
+                  <option value="">Select LCO</option>
+                  {lcosForSelectedRetailer.map((l) => (
+                    <option key={l._id} value={l._id}>
+                      {l.lcoName || l.name || l.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </section>
 
@@ -508,38 +651,38 @@ export default function CustomerUpdate() {
           <div className="p-6 grid md:grid-cols-3 gap-6">
             {/* <div><label>DOB</label><input type="date" value={formData.additional.dob} onChange={e => setFieldValue("additional.dob", e.target.value)} className="w-full p-2 border rounded mt-1" /></div> */}
             <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Date of Birth
-  </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth
+              </label>
 
-  <div className="relative">
-    <DatePicker
-      selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
-      onChange={(date) => setFieldValue("additional.dob", date ? date.toISOString().split("T")[0] : "")}
-      dateFormat="dd/MM/yyyy"
-      placeholderText="dd/mm/yyyy"
-      className="w-full h-12 px-4 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition cursor-pointer text-base"
-      showMonthDropdown
-      showYearDropdown
-      dropdownMode="select"
-      maxDate={new Date()}
-      yearDropdownItemNumber={80}
-      scrollableYearDropdown
-      popperPlacement="bottom-start"
-    />
+              <div className="relative">
+                <DatePicker
+                  selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
+                  onChange={(date) => setFieldValue("additional.dob", date ? date.toISOString().split("T")[0] : "")}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="dd/mm/yyyy"
+                  className="w-full h-12 px-4 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition cursor-pointer text-base"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  maxDate={new Date()}
+                  yearDropdownItemNumber={80}
+                  scrollableYearDropdown
+                  popperPlacement="bottom-start"
+                />
 
-    {/* Calendar Icon - Ab 100% Andar aur Perfect Center */}
-    <div className="absolute inset-0 flex items-center justify-end pointer-events-none pr-3">
-      <div 
-        className="pointer-events-auto cursor-pointer p-2 -mr-2"
-        onClick={(e) => {
-          e.stopPropagation();
-          const input = e.currentTarget.closest('.relative').querySelector('input');
-          input?.focus();
-          input?.click();
-        }}
-      >
-        {/* <svg
+                {/* Calendar Icon - Ab 100% Andar aur Perfect Center */}
+                <div className="absolute inset-0 flex items-center justify-end pointer-events-none pr-3">
+                  <div
+                    className="pointer-events-auto cursor-pointer p-2 -mr-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const input = e.currentTarget.closest('.relative').querySelector('input');
+                      input?.focus();
+                      input?.click();
+                    }}
+                  >
+                    {/* <svg
           className="w-5 h-5 text-gray-500 hover:text-blue-600 transition"
           fill="none"
           stroke="currentColor"
@@ -552,10 +695,10 @@ export default function CustomerUpdate() {
             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg> */}
-      </div>
-    </div>
-  </div>
-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div><label>eKYC</label><div className="mt-2 flex gap-6"><label><input type="radio" checked={formData.additional.ekYC} onChange={() => setFieldValue("additional.ekYC", true)} /> Yes</label><label><input type="radio" checked={!formData.additional.ekYC} onChange={() => setFieldValue("additional.ekYC", false)} /> No</label></div></div>
             <div><label>Status</label><select value={formData.additional.status ? "Active" : "Inactive"} onChange={e => setFieldValue("additional.status", e.target.value === "Active")} className="w-full p-2 border rounded mt-1"><option>Active</option><option>Inactive</option></select></div>
             <div className="md:col-span-3"><label>Description</label><textarea value={formData.additional.description} onChange={e => setFieldValue("additional.description", e.target.value)} className="w-full p-3 border rounded h-32 mt-1" /></div>
