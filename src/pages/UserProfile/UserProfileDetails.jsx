@@ -151,6 +151,7 @@ const UserProfile = () => {
             <Field label="Connection Type" value={g.connectionType} />
             <Field label="IPACCT Id" value={g.ipactId} />
             {/* <Field label="Installation By" value={g.installationBy || "-"} /> */}
+            <Field label="InstallationByName" value={g.installationByName || "-"} />
             {g.installationBy?.length > 0 ? (
               g.installationBy.map((inst, i) => (
                 <div key={inst._id || i} style={{ marginBottom: "12px" }}>
@@ -164,7 +165,6 @@ const UserProfile = () => {
             ) : (
               <Field label="Installation By" value="-" />
             )}
-            <Field label="InstallationByName" value={g.installationByName || "-"} />
             <Field label="Serial No" value={g.serialNo} />
             <Field label="SBT No" value={g.stbNo} />
             <Field label="Mac Id" value={g.macId} />
