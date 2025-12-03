@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import { getRoles } from "../../service/role";
 import { toast } from "react-toastify";
 import { createStaff } from "../../service/staffService";
-import { getStaffList } from "../../service/ticket";
+import { getAllRolesList } from "../../service/ticket";
+import { getAllZoneList } from "../../service/staffService";
 
 export default function StaffCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
   const initialFormData = {
     name: "",
     email: "",
@@ -27,44 +28,44 @@ export default function StaffCreate() {
     resetOtpExpires: "",
   };
   const [formData, setFormData] = useState(initialFormData);
-  // Fetch roles and set default "Staff" role
+
   // useEffect(() => {
-  //     const fetchRoles = async () => {
-  //         try {
-  //             const res = await getRoles();
-  //             if (res.status && res.data) {
-  //                 const staffRole = res.data.find((role) => role.roleName === "Staff");
-  //                 console.log("Staff Role:", staffRole);
-  //                 setRoles(staffRole);
-  //                 if (staffRole) {
-  //                     setFormData((prev) => ({ ...prev, role: staffRole._id }));
-  //                 }
-  //             } else {
-  //                 setRoles([]);
-  //             }
-  //         } catch (err) {
-  //             console.error("Failed to load roles:", err);
-  //             toast.error("Failed to load roles ❌");
-  //         }
-  //     };
-  //     fetchRoles();
+  //   const fetchRoles = async () => {
+  //     const res = await getAllRolesList();
+  //     if (res.status && res.data?.length) {
+  //       setRoles(res.data);
+  //       const staffRole = res.data.find(
+  //         (r) => r.roleName?.toLowerCase() === "staff"
+  //       );
+  //       if (staffRole)
+  //         setFormData((prev) => ({ ...prev, role: staffRole._id }));
+  //     } else {
+  //       toast.error("Failed to load roles ❌");
+  //     }
+  //   };
+  //   fetchRoles();
   // }, []);
 
   useEffect(() => {
-    const fetchRoles = async () => {
-      const res = await getStaffList();
-      if (res.status && res.data?.length) {
-        setRoles(res.data);
-        const staffRole = res.data.find(
-          (r) => r.roleName?.toLowerCase() === "staff"
-        );
-        if (staffRole)
-          setFormData((prev) => ({ ...prev, role: staffRole._id }));
-      } else {
-        toast.error("Failed to load roles ❌");
+    const fetchAll = async () => {
+      try {
+        const [rolesData, zoneData] =
+          await Promise.allSettled([
+            getAllRolesList(),
+            getAllZoneList(),
+          ]);
+
+        console.log("rolesData", rolesData);
+        console.log("zoneData", zoneData);
+        if (rolesData.status === "fulfilled" && rolesData.value?.status)
+          setRoles(rolesData.value.data);
+        if (zoneData.status === "fulfilled" && zoneData.value?.status)
+          setZoneList(zoneData.value.data);
+      } catch (err) {
+        console.error("fetch error", err);
       }
     };
-    fetchRoles();
+    fetchAll();
   }, []);
 
   // Handle form input changes
@@ -105,6 +106,7 @@ export default function StaffCreate() {
       setLoading(false);
     }
   };
+  console.log("roles", roles);
 
   // Handle form clear
   const handleClear = () => {
@@ -230,7 +232,9 @@ export default function StaffCreate() {
             required
             className="border p-2 w-full rounded"
           >
-            <option value="">Select Role</option>
+            <option value="" disabled selected>
+              Select Role
+            </option>
             {roles.map((role) => (
               <option key={role._id} value={role._id}>
                 {role.roleName}
@@ -268,13 +272,29 @@ export default function StaffCreate() {
         {/* Area */}
         <div>
           <label className="block font-medium">Area</label>
-          <input
+          {/* <input
             type="text"
             name="area"
             value={formData.area}
             onChange={handleChange}
             className="border p-2 w-full rounded"
-          />
+          /> */}
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            required
+            className="border p-2 w-full rounded"
+          >
+            <option value="" disabled selected>
+              Select Role
+            </option>
+            {zoneList.map((zone) => (
+              <option key={zone._id} value={zone._id}>
+                {zone.zoneName}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Salary */}

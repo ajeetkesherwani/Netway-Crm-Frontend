@@ -59,6 +59,7 @@ import PriceBookCreate from "./pages/PriceBook/PriceBookCreate";
 import PriceBookView from "./pages/PriceBook/PriceBookView";
 import StaffCreate from "./pages/Staff/StaffCreate";
 import StaffView from "./pages/Staff/StaffView";
+import StaffUpdate from "./pages/Staff/StaffEdit";
 // import TicketView from "./pages/Ticket/TicketView";
 import CloseTicket from "./pages/Ticket/CloseTicket";
 import ManageTicket from "./pages/Ticket/ManageTicket";
@@ -205,25 +206,26 @@ export default function App() {
             {/* New Routes */}
             <Route path="user-list" element={<FormElements />} />
 
-   {/*-------------------------------------------------------------------------User Profile Details ------------------------------------------------------------------------- */}
+            {/*-------------------------------------------------------------------------User Profile Details ------------------------------------------------------------------------- */}
 
 
-          <Route path="user/profile/:id" element={<ProfileHeader />}>
-            <Route index element={<Profile />} />
-            <Route path="profile" element={<UserProfile />} />
-            <Route path="invoice" element={<UserInvoices />} />
-            <Route path="tickets" element={<UserTickets />} />
-            <Route path="payment" element={<UserPayment />} />
-            <Route path="recharge-package" element={<UserRechargePackage/>} />
-            <Route path="package-details" element={<UserPackageDetails />} />
-            <Route path="activity-log" element={<UserLogs />} />
-            {/* <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"} />} /> */}
-          </Route>
+            <Route path="user/profile/:id" element={<ProfileHeader />}>
+              <Route index element={<Profile />} />
+              <Route path="profile" element={<UserProfile />} />
+              <Route path="invoice" element={<UserInvoices />} />
+              <Route path="tickets" element={<UserTickets />} />
+              <Route path="payment" element={<UserPayment />} />
+              <Route path="recharge-package" element={<UserRechargePackage />} />
+              <Route path="package-details" element={<UserPackageDetails />} />
+              <Route path="activity-log" element={<UserLogs />} />
+              {/* <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"} />} /> */}
+            </Route>
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
             <Route path="staff/list" element={<StaffList />} />
             <Route path="staff/create" element={<StaffCreate />} />
             <Route path="staff/view/:id" element={<StaffView />} />
+            <Route path="staff/update/:id" element={<StaffUpdate />} />
             {/*---------------------------------------------------------RETAILER  --------------------------------------------------------- */}
             {/* retailer Routes */}
             <Route path="retailer/list" element={<RetailerList />} />
@@ -419,11 +421,11 @@ export default function App() {
             {/*-------------------------------------------------------------------------Report list ------------------------------------------------------------------------- */}
             <Route path="/report/list" element={<ReportList />} />
 
-             {/*-----------------------------connectionRequest---------------------------- */}
+            {/*-----------------------------connectionRequest---------------------------- */}
 
-          <Route path="/connection-request" element={<ConnectionRequestList/>}/>
+            <Route path="/connection-request" element={<ConnectionRequestList />} />
 
-        
+
             {/*-------------------------------------------------------------------------Subscriber Report list ------------------------------------------------------------------------- */}
             <Route
               path="/report/account-wise-profile-report/list"

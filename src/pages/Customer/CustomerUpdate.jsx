@@ -106,19 +106,19 @@ export default function CustomerUpdate() {
 
         const u = userRes.data.user;
 
+        // Helper to safely get ID
+        const getId = (obj) => (obj && typeof obj === "object" ? obj._id : obj) || "";
+        const getIds = (arr) => (Array.isArray(arr) ? arr.map(getId) : []);
+
         // Initialize Created For State
         const createdForType = u.createdFor?.type || "Self";
         setSelectedCreatedFor(createdForType);
 
         if (createdForType === "reseller") {
           // If reseller, ID is directly in createdFor.id
-          // We don't need to do anything special here as formData will hold it
         } else if (createdForType === "lco") {
           // If LCO, we need to find which reseller this LCO belongs to.
-          // Ideally backend sends this, but if not we might need to search or fetch.
-          // For now, let's assume we can set LCO ID. 
-          // If we have retailerId in user object (u.retailerId), use it.
-          const rId = u.retailerId || "";
+          const rId = getId(u.retailerId);
           if (rId) {
             setSelectedRetailerForLco(rId);
             // Fetch LCOs for this reseller
@@ -129,7 +129,7 @@ export default function CustomerUpdate() {
               console.error("Failed to fetch LCOs for reseller", e);
             }
           }
-          setSelectedLco(u.createdFor?.id || "");
+          setSelectedLco(getId(u.createdFor?.id));
         }
 
         const loadedData = {
@@ -143,9 +143,9 @@ export default function CustomerUpdate() {
             alternateMobile: u.generalInformation?.alternatePhone || "",
             accountId: u.generalInformation?.ipactId || "",
             connectionType: u.generalInformation?.connectionType || "ILL",
-            selsExecutive: u.generalInformation?.selsExecutive || "",
-            installationBy: u.generalInformation?.installationBy || [],
-            installationByName: u.generalInformation?.installationByName || "",
+            selsExecutive: getId(u.generalInformation?.selsExecutive),
+            installationBy: getIds(u.generalInformation?.installationBy),
+            installationByName: typeof u.generalInformation?.installationByName === "string" ? u.generalInformation.installationByName : "",
             ipAddress: u.generalInformation?.ipAdress || "",
             ipType: u.generalInformation?.ipType || "Static IP",
             dynamicIpPool: u.networkInformation?.dynamicIpPool || "",
@@ -158,7 +158,7 @@ export default function CustomerUpdate() {
             networkType: u.networkInformation?.networkType || "",
             createdFor: {
               type: u.createdFor?.type || "Self",
-              id: u.createdFor?.id || ""
+              id: getId(u.createdFor?.id)
             },
             packageDetails: {
               packageId: u.packageInfomation?.packageId || "",
@@ -210,7 +210,7 @@ export default function CustomerUpdate() {
         setFormData(loadedData);
 
         // Set selected area (Zone)
-        const areaId = u.addressDetails?.area?._id || u.addressDetails?.area || "";
+        const areaId = getId(u.addressDetails?.area);
         setSelectedArea(areaId);
 
         // Init billing ref
@@ -600,7 +600,7 @@ export default function CustomerUpdate() {
           <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Network & Package</div>
           <div className="p-6 grid md:grid-cols-2 gap-8">
             <div>
-              <label className="font-semibold">Select Package</label>
+              <label className="font-semibold">Select Package*</label>
               <select value={formData.customer.packageDetails.packageId} onChange={e => handlePackageChange(e.target.value)} className="w-full p-2 border rounded mt-2">
                 <option value="">-- Select Package --</option>
                 {packageList.map(p => <option key={p._id} value={p._id}>{p.name} {p.basePrice && `₹${p.basePrice}`}</option>)}

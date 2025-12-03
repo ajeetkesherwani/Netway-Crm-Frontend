@@ -46,12 +46,43 @@ export default function UserDetails() {
   if (error) return <p className="p-4 text-red-500">{error}</p>;
   if (!user) return <p className="p-4">User not found</p>;
 
-  const Row = ({ label, value }) => (
-    <div className="flex border-b last:border-b-0 md:border-r text-[14px]">
-      <div className="w-1/3 bg-gray-100 p-[2px] font-medium">{label}</div>
-      <div className="w-2/3 p-[2px]">{value !== undefined && value !== "" ? value.toString() : "—"}</div>
-    </div>
-  );
+  const Row = ({ label, value }) => {
+    let displayValue = "—";
+
+    // Check if the value is an object and not an array
+    if (value !== undefined && value !== null && value !== "") {
+      if (typeof value === "object" && !Array.isArray(value)) {
+        // Handle nested object properties more safely
+        // Assuming you want to display a specific key if it's an object
+        if (value.name) {
+          displayValue = value.name;
+        } else if (value.staffName) {
+          displayValue = value.staffName;
+        } else if (value.resellerName) {
+          displayValue = value.resellerName;
+        } else if (value.lcoName) {
+          displayValue = value.lcoName;
+        } else if (value.roleName) {
+          displayValue = value.roleName;
+        } else if (value.username) {
+          displayValue = value.username;
+        } else {
+          // For general case: Convert object to string if it's a deeply nested one
+          displayValue = JSON.stringify(value);
+        }
+      } else {
+        displayValue = value.toString();  // This should work for strings or numbers
+      }
+    }
+
+    return (
+      <div className="flex border-b last:border-b-0 md:border-r text-[14px]">
+        <div className="w-1/3 bg-gray-100 p-[2px] font-medium">{label}</div>
+        <div className="w-2/3 p-[2px]">{displayValue}</div>
+      </div>
+    );
+  };
+
 
   const { generalInformation, networkInformation, additionalInformation, document, _id, status, createdAt, updatedAt, walletBalance } = user;
 
@@ -88,8 +119,8 @@ export default function UserDetails() {
           <Row label="Country" value={generalInformation?.country} />
           <Row label="District" value={generalInformation?.district} />
           <Row label="Role" value={generalInformation?.roleId?.roleName} />
-          <Row label="Retailer" value={generalInformation?.retailerId?.resellerName || generalInformation?.retailerId} />
-          <Row label="LCO" value={generalInformation?.lcoId?.lcoName || generalInformation?.lcoId} />
+          <Row label="Retailer" value={generalInformation?.retailerId?.resellerName || (typeof generalInformation?.retailerId === 'string' ? generalInformation?.retailerId : "")} />
+          <Row label="LCO" value={generalInformation?.lcoId?.lcoName || (typeof generalInformation?.lcoId === 'string' ? generalInformation?.lcoId : "")} />
           <Row label="Payment Method" value={generalInformation?.paymentMethod} />
         </div>
       </div>
@@ -149,7 +180,7 @@ export default function UserDetails() {
           )}
         </div>
       </div>
-     {isPurchasePlansOpen && <CustomerPurchasePlanList/>}
+      {isPurchasePlansOpen && <CustomerPurchasePlanList />}
     </>
   );
 }
