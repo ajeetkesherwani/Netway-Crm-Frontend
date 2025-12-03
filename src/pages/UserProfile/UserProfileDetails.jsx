@@ -150,8 +150,21 @@ const UserProfile = () => {
             <Field label="Date Of Birth" value={add.dob ? formatDate(add.dob) : ""} />
             <Field label="Connection Type" value={g.connectionType} />
             <Field label="IPACCT Id" value={g.ipactId} />
-            <Field label="Installation By" value={g.installationBy || "-"} />
+            {/* <Field label="Installation By" value={g.installationBy || "-"} /> */}
             <Field label="InstallationByName" value={g.installationByName || "-"} />
+            {g.installationBy?.length > 0 ? (
+              g.installationBy.map((inst, i) => (
+                <div key={inst._id || i} style={{ marginBottom: "12px" }}>
+                  <Field label={`Installer Name (${i + 1})`} value={inst.name} />
+                  <Field label="Email" value={inst.email} />
+                  <Field label="Phone" value={inst.phoneNo} />
+                  <Field label="Area" value={inst.area} />
+                  <Field label="Staff Name" value={inst.staffName} />
+                </div>
+              ))
+            ) : (
+              <Field label="Installation By" value="-" />
+            )}
             <Field label="Serial No" value={g.serialNo} />
             <Field label="SBT No" value={g.stbNo} />
             <Field label="Mac Id" value={g.macId} />
