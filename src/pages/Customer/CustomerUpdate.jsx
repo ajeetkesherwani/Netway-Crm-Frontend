@@ -600,7 +600,7 @@ export default function CustomerUpdate() {
           <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">Network & Package</div>
           <div className="p-6 grid md:grid-cols-2 gap-8">
             <div>
-              <label className="font-semibold">Select Package</label>
+              <label className="font-semibold">Select Package*</label>
               <select value={formData.customer.packageDetails.packageId} onChange={e => handlePackageChange(e.target.value)} className="w-full p-2 border rounded mt-2">
                 <option value="">-- Select Package --</option>
                 {packageList.map(p => <option key={p._id} value={p._id}>{p.name} {p.basePrice && `₹${p.basePrice}`}</option>)}

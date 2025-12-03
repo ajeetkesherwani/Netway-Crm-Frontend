@@ -136,6 +136,18 @@ export const getStaffList = async () => {
   return data; // Expected: { data: [{ _id, fullName, email, role }, ...] }
 };
 
+export const getAllRolesList = async () => {
+  const res = await fetch(`${BASE_URL}/common/staff/allRoles`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch staff list");
+  return data; // Expected: { data: [{ _id, fullName, email, role }, ...] }
+};
+
 
 // this list for the get ticket category list
 export const getTicketCategories = async () => {

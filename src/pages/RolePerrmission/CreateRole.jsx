@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createRole } from "../../service/rolePermission";
 import { toast } from "react-toastify";
 import { IoMdArrowBack } from "react-icons/io";
+import { permissionsConfig } from "../../config/permissionsConfig";
 
 export default function CreateRole() {
   const navigate = useNavigate();
@@ -12,48 +13,22 @@ export default function CreateRole() {
   const [expandedGroups, setExpandedGroups] = useState([]);
   const [allExpanded, setAllExpanded] = useState(false);
 
-  const allCategories = [
-    "dashboard",
-    "users",
-    "staff",
-    "reseller",
-    "lco",
-    "package",
-    "customer",
-    "rolepermission",
-    "tickets",
-    "pricebook",
-    "setting",
-    "configlist",
-    "ticketCategory",
-    "zonelist"
-  ];
   useEffect(() => {
     initializeGroups();
   }, []);
+
   const initializeGroups = () => {
-    const basePermissions = ["listing","create", "edit", "delete", "view"]; // Common for most
+    const groups = permissionsConfig.map((item) => ({
+      category: item.category,
+      label: item.label,
+      permissions: item.permissions.map((perm) => ({
+        name: perm,
+        allowed: false,
+      })),
+    }));
 
-    const groups = allCategories.map((cat) => {
-      let perms = basePermissions.map((name) => ({ name, allowed : false }));
-
-      // Add alag alag (different) permissions per category
-      if (cat === "dashboard") {
-        perms.push({ name: "account", allowed : false }); // Extra for dashboard
-      }
-      if (cat === "users") {
-        perms.push({ name: "approve", allowed : false }); // Extra for users (example)
-      }
-      if(cat ==="tickets"){
-        perms.push({ name: "manage", allowed : false},{name : "all", allowed : false},{name : "approval", allowed : false});
-      }
-      return {
-        category: cat,
-        permissions: perms,
-      };
-    });
     setPermissionGroups(groups);
-    setExpandedGroups(Array(allCategories.length).fill(true));
+    setExpandedGroups(Array(groups.length).fill(true));
     setAllExpanded(true);
   };
 
@@ -68,11 +43,13 @@ export default function CreateRole() {
     newExpanded[groupIndex] = !newExpanded[groupIndex];
     setExpandedGroups(newExpanded);
   };
+
   const toggleAll = () => {
     const newExpanded = expandedGroups.map(() => !allExpanded);
     setExpandedGroups(newExpanded);
     setAllExpanded(!allExpanded);
   };
+
   const toggleAllInCategory = (groupIndex) => {
     const newGroups = [...permissionGroups];
     const group = newGroups[groupIndex];
@@ -83,20 +60,34 @@ export default function CreateRole() {
     }));
     setPermissionGroups(newGroups);
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const permissions = {};
       permissionGroups.forEach((group) => {
-        if (group.category.trim()) {
-          const permObj = {};
-          group.permissions.forEach((perm) => {
+        const configCategory = permissionsConfig.find(
+          (c) => c.category === group.category
+        );
+
+        // ✅ Skip if category doesn't exist in config
+        if (!configCategory) return;
+
+        const permObj = {};
+        group.permissions.forEach((perm) => {
+          // ✅ Only send valid permission names
+          if (configCategory.permissions.includes(perm.name)) {
             permObj[perm.name] = perm.allowed;
-          });
-          permissions[group.category.trim()] = permObj;
+          }
+        });
+
+        // ✅ Add category only if it has valid permissions
+        if (Object.keys(permObj).length > 0) {
+          permissions[group.category] = permObj;
         }
       });
+
       const roleData = {
         roleName,
         permissions,
@@ -118,7 +109,7 @@ export default function CreateRole() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
+    <div className="max-w-8xl mx-auto p-6 bg-white shadow rounded">
       <h2 className="text-2xl font-bold mb-6">Create Role</h2>
       <button
         onClick={() => navigate("/role/list")}
@@ -154,7 +145,9 @@ export default function CreateRole() {
                 className="flex justify-between items-center p-2 bg-gray-100 cursor-pointer"
                 onClick={() => toggleCategory(groupIndex)}
               >
-                <h4 className="text-sm font-semibold">{group.category.toUpperCase()}</h4>
+                <h4 className="text-sm font-semibold">
+                  {group.label.toUpperCase()}
+                </h4>
                 <span>{expandedGroups[groupIndex] ? "−" : "+"}</span>
               </div>
               {expandedGroups[groupIndex] && (
@@ -162,7 +155,9 @@ export default function CreateRole() {
                   <table className="w-full border-collapse text-xs">
                     <thead>
                       <tr className="bg-gray-200">
-                        <th className="border px-1 py-0.5 text-left">Permission</th>
+                        <th className="border px-1 py-0.5 text-left">
+                          Permission
+                        </th>
                         <th className="border px-1 py-0.5 text-center">
                           Allowed
                           <input
@@ -182,7 +177,13 @@ export default function CreateRole() {
                             <input
                               type="checkbox"
                               checked={perm.allowed}
-                              onChange={(e) => updatePerm(groupIndex, permIndex, e.target.checked)}
+                              onChange={(e) =>
+                                updatePerm(
+                                  groupIndex,
+                                  permIndex,
+                                  e.target.checked
+                                )
+                              }
                             />
                           </td>
                         </tr>

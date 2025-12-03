@@ -42,8 +42,8 @@ export const createStaff = async (staff) => {
 };
 // Update staff
 export const updateStaff = async (id, staff) => {
-  const res = await fetch(`${BASE_URL}/staff/${id}`, {
-    method: "PUT",
+  const res = await fetch(`${BASE_URL}/staff/update/${id}`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
@@ -67,4 +67,18 @@ export const deleteStaff = async (id) => {
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to delete staff");
   return data;
+};
+
+export const getAllZoneList = async () => {
+  const res = await fetch(`${BASE_URL}/zone/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch Area");
+  return res.json();
+
 };

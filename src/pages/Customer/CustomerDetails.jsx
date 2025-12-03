@@ -48,7 +48,7 @@ export default function UserDetails() {
 
   const Row = ({ label, value }) => {
     let displayValue = "—";
-    
+
     // Check if the value is an object and not an array
     if (value !== undefined && value !== null && value !== "") {
       if (typeof value === "object" && !Array.isArray(value)) {
