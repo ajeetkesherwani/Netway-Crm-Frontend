@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaSearch } from "react-icons/fa";
 import { getAllTicketList } from "../../service/ticket";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function ManageTicket() {
   const [tickets, setTickets] = useState({
@@ -105,29 +106,33 @@ export default function ManageTicket() {
 
       {/* Ticket Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TicketColumn
-          title="Open Ticket"
-          color="bg-[#0f3057]"
-          tickets={tickets.openTickets}
-          type="open"
-          page={pages.open}
-          limit={limit}
-          handleTicketClick={handleTicketClick}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-        />
+        <ProtectedAction module="tickets" action="manageOpenList">  
+          <TicketColumn
+            title="Open Ticket"
+            color="bg-[#0f3057]"
+            tickets={tickets.openTickets}
+            type="open"
+            page={pages.open}
+            limit={limit}
+            handleTicketClick={handleTicketClick}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+          />
+        </ProtectedAction>
 
-        <TicketColumn
-          title="Assign Ticket"
-          color="bg-[#003865]"
-          tickets={tickets.assignedTickets}
-          type="assigned"
-          page={pages.assigned}
-          limit={limit}
-          handleTicketClick={handleTicketClick}
-          handlePrevPage={handlePrevPage}
-          handleNextPage={handleNextPage}
-        />
+        <ProtectedAction module="tickets" action="manageAssignTicketList">  
+          <TicketColumn
+            title="Assign Ticket"
+            color="bg-[#003865]"
+            tickets={tickets.assignedTickets}
+            type="assigned"
+            page={pages.assigned}
+            limit={limit}
+            handleTicketClick={handleTicketClick}
+            handlePrevPage={handlePrevPage}
+            handleNextPage={handleNextPage}
+          />
+        </ProtectedAction>
       </div>
     </div>
   );

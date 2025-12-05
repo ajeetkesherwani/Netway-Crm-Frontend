@@ -5,6 +5,7 @@ import {
 } from "../../service/ticketResolutionOption";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function TicketResolutionOptionList() {
   const [options, setOptions] = useState([]);
@@ -81,12 +82,14 @@ export default function TicketResolutionOptionList() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Ticket Resolution Option List</h1>
-        <button
-          onClick={() => navigate("/setting/resolution/create")}
-          className="px-[8px] py-[6px] text-white bg-blue-600 rounded hover:bg-blue-700"
-        >
-          Add Option
-        </button>
+        <ProtectedAction module="setting" action="ticketResolutionCreate">
+          <button
+            onClick={() => navigate("/setting/resolution/create")}
+            className="px-[8px] py-[6px] text-white bg-blue-600 rounded hover:bg-blue-700"
+          >
+            Add Option
+          </button>
+        </ProtectedAction>
       </div>
 
       {/* Error Message */}
@@ -125,23 +128,27 @@ export default function TicketResolutionOptionList() {
                     <td className="px-[2px] py-[6px] text-left">
                       <div className="flex items-center gap-2">
                         {/* ✅ Navigate to update page */}
-                        <button
-                          onClick={() =>
-                            navigate(`/setting/resolution/update/${opt._id}`)
-                          }
-                          className="p-1 text-gray-600 hover:text-green-600 rounded"
-                          title="Update"
-                        >
-                          <FaEdit />
-                        </button>
+                        <ProtectedAction module="setting" action="ticketResolutionUpdate">
+                          <button
+                            onClick={() =>
+                              navigate(`/setting/resolution/update/${opt._id}`)
+                            }
+                            className="p-1 text-gray-600 hover:text-green-600 rounded"
+                            title="Update"
+                          >
+                            <FaEdit />
+                          </button>
+                        </ProtectedAction>
                         {/* Delete button */}
-                        <button
-                          onClick={() => handleDelete(opt._id, opt.name)}
-                          className="p-1 text-red-600 hover:text-red-700 rounded"
-                          title="Delete"
-                        >
-                          <FaTrash />
-                        </button>
+                        <ProtectedAction module="setting" action="ticketResolutionRemove">
+                          <button
+                            onClick={() => handleDelete(opt._id, opt.name)}
+                            className="p-1 text-red-600 hover:text-red-700 rounded"
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                        </ProtectedAction>
                       </div>
                     </td>
                   </tr>

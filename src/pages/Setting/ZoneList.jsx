@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getZones, updateZone, deleteZone } from "../../service/apiClient";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function ZoneList() {
   const [zones, setZones] = useState([]);
@@ -133,12 +134,14 @@ export default function ZoneList() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Zone List</h1>
-        <button
-          onClick={() => navigate("/setting/zone/create")}
-          className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
-        >
-          Add Zone
-        </button>
+        <ProtectedAction module="setting" action="zoneCreate">
+          <button
+            onClick={() => navigate("/setting/zone/create")}
+            className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
+          >
+            Add Zone
+          </button>
+        </ProtectedAction>
       </div>
       {zones.length === 0 ? (
         <p className="text-gray-500">No zones found.</p>
@@ -170,13 +173,16 @@ export default function ZoneList() {
                       </td>
                       <td className="px-[2px] py-[0px] text-left">
                         <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleUpdate(zone._id, zone.zoneName)}
-                            className="p-1 text-gray-600 hover:text-green-600 rounded"
-                            title="Update"
-                          >
-                            <FaEdit />
-                          </button>
+                          <ProtectedAction module="setting" action="zoneUpdate">
+                            <button
+                              onClick={() => handleUpdate(zone._id, zone.zoneName)}
+                              className="p-1 text-gray-600 hover:text-green-600 rounded"
+                              title="Update"
+                            >
+                              <FaEdit />
+                            </button>
+                          </ProtectedAction>
+                          <ProtectedAction module="setting" action="zoneDelete">
                           <button
                             onClick={() => handleDelete(zone._id, zone.zoneName)}
                             className="p-1 text-red-600 hover:text-red-700 rounded"
@@ -184,108 +190,114 @@ export default function ZoneList() {
                           >
                             <FaTrash />
                           </button>
-                        </div>
-                      </td>
+                        </ProtectedAction>
+                      </div>
+                    </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {/* Mobile Card View */}
-          <div className="space-y-4 md:hidden">
-            {zones.map((zone, index) => {
-              const date = new Date(zone.createdAt);
-              const dateStr = date.toLocaleString();
-              return (
-                <div
-                  key={zone._id}
-                  className="p-4 border rounded-lg shadow-sm bg-white"
-                >
-                  <p className="text-sm text-gray-500">{index + 1}</p>
-                  <h2 className="text-lg font-medium">{zone.zoneName}</h2>
-                  <p className="text-sm">Created By: {zone.createdBy}</p>
-                  <p className="text-sm" title={dateStr}>
-                    Created At: {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  <div className="flex justify-end space-x-3 mt-3">
-                    <button
-                      onClick={() => handleUpdate(zone._id, zone.zoneName)}
-                      className="text-green-600 flex items-center text-sm"
-                    >
-                      <FaEdit className="mr-1" /> Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(zone._id, zone.zoneName)}
-                      className="text-red-600 flex items-center text-sm"
-                    >
-                      <FaTrash className="mr-1" /> Delete
-                    </button>
-                  </div>
-                </div>
               );
-            })}
-          </div>
-        </>
-      )}
-
-      {/* Confirmation modal */}
-      {confirmOpen && confirmZone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={cancelDelete} />
-          <div className="bg-white rounded-lg shadow-lg z-60 max-w-sm w-full p-5">
-            <h3 className="text-lg font-semibold mb-3">Confirm Delete</h3>
-            <p className="mb-4">Are you sure you want to delete zone "<strong>{confirmZone.zoneName}</strong>"?</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={cancelDelete}
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+                })}
+            </tbody>
+          </table>
         </div>
-      )}
-
-      {/* Update modal */}
-      {updateOpen && updateZoneData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={cancelUpdate} />
-          <div className="bg-white rounded-lg shadow-lg z-60 max-w-sm w-full p-5">
-            <h3 className="text-lg font-semibold mb-3">Update Zone</h3>
-            <label className="block text-sm mb-2">Zone Name</label>
-            <input
-              value={updateName}
-              onChange={(e) => setUpdateName(e.target.value)}
-              className="w-full border p-2 rounded mb-4"
-              placeholder="Enter zone name"
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={cancelUpdate}
-                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                disabled={updateLoading}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmUpdate}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                disabled={updateLoading}
-              >
-                {updateLoading ? "Updating..." : "Update"}
-              </button>
+      {/* Mobile Card View */}
+      <div className="space-y-4 md:hidden">
+        {zones.map((zone, index) => {
+          const date = new Date(zone.createdAt);
+          const dateStr = date.toLocaleString();
+          return (
+            <div
+              key={zone._id}
+              className="p-4 border rounded-lg shadow-sm bg-white"
+            >
+              <p className="text-sm text-gray-500">{index + 1}</p>
+              <h2 className="text-lg font-medium">{zone.zoneName}</h2>
+              <p className="text-sm">Created By: {zone.createdBy}</p>
+              <p className="text-sm" title={dateStr}>
+                Created At: {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <div className="flex justify-end space-x-3 mt-3">
+                <button
+                  onClick={() => handleUpdate(zone._id, zone.zoneName)}
+                  className="text-green-600 flex items-center text-sm"
+                >
+                  <FaEdit className="mr-1" /> Update
+                </button>
+                <button
+                  onClick={() => handleDelete(zone._id, zone.zoneName)}
+                  className="text-red-600 flex items-center text-sm"
+                >
+                  <FaTrash className="mr-1" /> Delete
+                </button>
+              </div>
             </div>
-          </div>
+          );
+        })}
+      </div>
+    </>
+  )
+}
+
+{/* Confirmation modal */ }
+{
+  confirmOpen && confirmZone && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={cancelDelete} />
+      <div className="bg-white rounded-lg shadow-lg z-60 max-w-sm w-full p-5">
+        <h3 className="text-lg font-semibold mb-3">Confirm Delete</h3>
+        <p className="mb-4">Are you sure you want to delete zone "<strong>{confirmZone.zoneName}</strong>"?</p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={cancelDelete}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmDelete}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Delete
+          </button>
         </div>
-      )}
+      </div>
     </div>
+  )
+}
+
+{/* Update modal */ }
+{
+  updateOpen && updateZoneData && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={cancelUpdate} />
+      <div className="bg-white rounded-lg shadow-lg z-60 max-w-sm w-full p-5">
+        <h3 className="text-lg font-semibold mb-3">Update Zone</h3>
+        <label className="block text-sm mb-2">Zone Name</label>
+        <input
+          value={updateName}
+          onChange={(e) => setUpdateName(e.target.value)}
+          className="w-full border p-2 rounded mb-4"
+          placeholder="Enter zone name"
+        />
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={cancelUpdate}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+            disabled={updateLoading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmUpdate}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={updateLoading}
+          >
+            {updateLoading ? "Updating..." : "Update"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+    </div >
   );
 }

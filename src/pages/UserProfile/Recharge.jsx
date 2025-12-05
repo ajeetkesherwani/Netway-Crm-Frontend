@@ -7,6 +7,7 @@ import {
   renewPurchasedPlan,
   getAssignedPackageList,
 } from "../../service/recharge";
+import ProtectedAction from "../../components/ProtectedAction";
 
 const UserRechargePackage = () => {
   const { id: userId } = useParams();
@@ -187,12 +188,14 @@ const UserRechargePackage = () => {
           <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
 
           <div className="flex justify-end gap-6 mb-8">
+            <ProtectedAction module="customer" action="purchasedNewPackage">
             <button
               onClick={openPurchaseModal}
               className="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
             >
               Purchase New Plan
             </button>
+            </ProtectedAction>
           </div>
 
           {!plan ? (
@@ -213,7 +216,9 @@ const UserRechargePackage = () => {
                     <th className="px-6 py-4 text-left">Start</th>
                     <th className="px-6 py-4 text-left">Expiry</th>
                     <th className="px-6 py-4 text-left">Status</th>
+                    <ProtectedAction module="customer" action="renewPackage">
                     <th className="px-6 py-4 text-left">Action</th>
+                    </ProtectedAction>
                   </tr>
                 </thead>
                 <tbody>
@@ -230,6 +235,7 @@ const UserRechargePackage = () => {
                         Active
                       </span>
                     </td>
+                    <ProtectedAction module="customer" action="renewPackage">
                     <td className="px-6 py-4">
                       <button
                         onClick={openRenewModal}
@@ -238,6 +244,7 @@ const UserRechargePackage = () => {
                         Renew Now
                       </button>
                     </td>
+                    </ProtectedAction>
                   </tr>
                 </tbody>
               </table>

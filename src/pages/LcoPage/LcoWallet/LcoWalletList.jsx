@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaEye } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 import { getLcoWalletList } from "../../../service/lco";
+import ProtectedAction from "../../../components/ProtectedAction";
 
 export default function LcoWalletList() {
   const { id } = useParams(); // LCO member ID from URL params
@@ -70,42 +71,16 @@ export default function LcoWalletList() {
     <div className="">
       <div className="flex items-center justify-end h-0 mb-4">
         <div className="space-x-2 flex">
-          {/* <button
-            onClick={() => navigate(`/lco/list`)}
-            className="px-[2px] py-[2px] text-white bg-gray-600 rounded hover:bg-gray-700 text-[12px]"
-          >
-            <span className="flex items-center">
-              <IoMdArrowBack className="mr-1" /> Back
-            </span>
-          </button> */}
-          <button
-            onClick={() => navigate(`/lco/wallet/create/${id}`, { state: { data: transferData } })}
-            className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
-          >
-            Add Transaction
-          </button>
+          <ProtectedAction module="lco" action="addTransaction">
+            <button
+              onClick={() => navigate(`/lco/wallet/create/${id}`, { state: { data: transferData } })}
+              className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
+            >
+              Add Transaction
+            </button>
+          </ProtectedAction>
         </div>
       </div>
-      {/* <div className="mb-1 flex flex-col md:flex-row justify-between items-start">
-        <input
-          type="text"
-          placeholder="Search transactions..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="border p-2 w-full md:w-1/3 rounded mb-2 md:mb-0"
-        />
-        <div className="flex flex-wrap gap-1">
-          {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'All'].map((letter) => (
-            <button
-              key={letter}
-              onClick={() => handleFilter(letter === 'All' ? '' : letter)}
-              className={`px-2 py-1 rounded ${filterLetter === (letter === 'All' ? '' : letter) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} hover:bg-blue-500 hover:text-white`}
-            >
-              {letter}
-            </button>
-          ))}
-        </div>
-      </div> */}
       {transactions.length === 0 ? (
         <p className="text-gray-500 text-center">No transactions found.</p>
       ) : (
@@ -179,28 +154,6 @@ export default function LcoWalletList() {
               ))}
             </div>
           </div>
-          {/* pagination */}
-          {/* <div className="md:w-1/4 md:ml-4 mt-4 md:mt-0">
-            <div className="flex flex-col items-end">
-              <button
-                onClick={handlePrevPage}
-                disabled={page === 1}
-                className="px-4 py-2 bg-gray-300 rounded mb-2 disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="mb-2">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={handleNextPage}
-                disabled={page === totalPages}
-                className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div> */}
         </div>
       )}
     </div>

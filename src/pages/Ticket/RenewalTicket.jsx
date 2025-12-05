@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getReassignTicketList, deleteTicket } from "../../service/ticket";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function ReassignTicketList() {
   const [tickets, setTickets] = useState([]);
@@ -128,12 +129,26 @@ export default function ReassignTicketList() {
                   <td className="px-3 py-1 border text-gray-700 text-sm">
                     {(page - 1) * limit + index + 1}
                   </td>
-                  <td
-                    className="px-3 py-1 border text-blue-600 font-semibold cursor-pointer hover:underline"
-                    onClick={() => navigate(`/ticket/view/${ticket._id}`)}
-                  >
-                    {ticket.ticketNumber || "N/A"}
-                  </td>
+                  <ProtectedAction module="tickets" action="renewalTicketView">
+                    {(allowed) => (
+                      <td
+                        className={
+                          "px-3 py-1 border font-semibold " +
+                          (allowed
+                            ? "text-blue-600 cursor-pointer hover:underline"
+                            : "text-gray-400 cursor-not-allowed opacity-60"
+                          )
+                        }
+                        onClick={() => {  
+                          if (allowed) {
+                            navigate(`/ticket/view/${ticket._id}`);
+                          }
+                        }}
+                      >
+                        {ticket.ticketNumber || "N/A"}
+                      </td>
+                    )}
+                  </ProtectedAction>
                   <td className="px-3 py-1 border">
                     <span
                       className="text-blue-700 cursor-pointer font-medium hover:underline"
@@ -168,13 +183,12 @@ export default function ReassignTicketList() {
                   <td className="px-3 py-1 border relative">
                     <div className="flex items-center justify-between">
                       <span
-                        className={`px-2 py-1 text-xs rounded font-medium ${
-                          ticket.currentAssignee.currentStatus === "Open"
+                        className={`px-2 py-1 text-xs rounded font-medium ${ticket.currentAssignee.currentStatus === "Open"
                             ? "bg-green-100 text-green-700"
                             : ticket.currentAssignee.currentStatus === "Closed"
-                            ? "bg-gray-200 text-gray-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
+                              ? "bg-gray-200 text-gray-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                       >
                         {ticket.currentAssignee.currentStatus}
                       </span>
@@ -194,24 +208,30 @@ export default function ReassignTicketList() {
 
                         {openMenuId === ticket._id && (
                           <div className="absolute right-0 top-6 w-36 bg-white border shadow-md rounded z-20 text-left action-menu">
-                            <button
-                              onClick={() => handleRemove(ticket._id)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-red-600"
-                            >
-                              Remove
-                            </button>
-                            <button
-                              onClick={() => handleResolve(ticket._id)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                            >
-                              Resolve
-                            </button>
-                            <button
-                              onClick={() => handleHistory(ticket._id)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                            >
-                              Ticket History
-                            </button>
+                            <ProtectedAction module="tickets" action="renewalTicketRemove">
+                              <button
+                                onClick={() => handleRemove(ticket._id)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-red-600"
+                              >
+                                Remove
+                              </button>
+                            </ProtectedAction>
+                            <ProtectedAction module="tickets" action="renewalTicketResolve">
+                              <button
+                                onClick={() => handleResolve(ticket._id)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                              >
+                                Resolve
+                              </button>
+                            </ProtectedAction>
+                            <ProtectedAction module="tickets" action="renewalTicketHistory">
+                              <button
+                                onClick={() => handleHistory(ticket._id)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                              >
+                                Ticket History
+                              </button>
+                            </ProtectedAction>
                           </div>
                         )}
                       </div>

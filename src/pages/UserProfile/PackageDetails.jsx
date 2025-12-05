@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import ProtectedAction from "../../components/ProtectedAction";
 
 import {
   getAvailablePackagesForUser,
@@ -98,34 +99,6 @@ const UserPackageDetails = () => {
   }
 };
 
-
-  // const saveNewPackage = async () => {
-  //   if (!newPackage.packageId) {
-  //     alert("Select package first");
-  //     return;
-  //   }
-
-  //   try {
-  //     await assignPackageToUser(userId, newPackage);
-  //     alert("Package Assigned!");
-  //     setAddRow(false);
-
-  //     setNewPackage({
-  //       packageId: "",
-  //       packageName: "",
-  //       billType: "",
-  //       basePrice: "",
-  //       customPrice: "",
-  //     });
-
-  //     // loadAssigned();
-  //     loadAssigned();
-  //     loadPackages();
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
   const handleDeletePackage = async (id) => {
     if (!window.confirm("Are you sure you want to delete this package?")) return;
 
@@ -169,8 +142,12 @@ const UserPackageDetails = () => {
               <th className="py-3 px-3 text-left">Package Name</th>
               <th className="py-3 px-3 text-left">Bill Type</th>
               <th className="py-3 px-3 text-left">Price</th>
-              <th className="py-3 px-3 text-left">Status</th>
-              <th className="py-3 px-3 text-left">Action</th>
+              <ProtectedAction module="customer" action="updateAssignPackageStatus">
+                <th className="py-3 px-3 text-left">Status</th>
+              </ProtectedAction>
+              <ProtectedAction module="customer" action="deleteAssignPackage">
+                <th className="py-3 px-3 text-left">Action</th>
+              </ProtectedAction>
             </tr>
           </thead>
 
@@ -187,6 +164,7 @@ const UserPackageDetails = () => {
                 {/* <td className="py-3 px-3">{p.customPrice || p.basePrice}</td> */}
                 <td className="py-3 px-3">{p.customPrice ?? p.basePrice}</td>
 
+                <ProtectedAction module="customer" action="updateAssignPackageStatus">
                 <td className="py-3 px-3">
                   {/* Tailwind Toggle Switch */}
                   <label className="relative inline-block w-12 h-6">
@@ -205,7 +183,8 @@ const UserPackageDetails = () => {
                     <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-6"></span>
                   </label>
                 </td>
-
+                </ProtectedAction>
+                <ProtectedAction module="customer" action="deleteAssignPackage">
                 <td className="py-3 px-3">
                   <button
                     onClick={() => handleDeletePackage(p._id)}
@@ -213,17 +192,13 @@ const UserPackageDetails = () => {
                   >
                     Delete
                   </button>
-                </td>
-
-                {/* <td className="py-3 px-3">
-                  <button className="bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </td> */}
+                </td> 
+                </ProtectedAction>
               </tr>
             ))}
 
             {/* ADD NEW ROW */}
+            <ProtectedAction module="customer" action="assignPackage">
             {addRow && (
               <tr className="bg-blue-50 border-b border-gray-300">
                 <td className="py-3 px-3">
@@ -275,6 +250,7 @@ const UserPackageDetails = () => {
                 </td>
               </tr>
             )}
+            </ProtectedAction>
           </tbody>
         </table>
       </div>

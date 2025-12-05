@@ -6,6 +6,7 @@ import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/
 import LcoWalletList from "./LcoWallet/LcoWalletList";
 import { FaLongArrowAltLeft } from "react-icons/fa";
 import LcoAssignPackageList from "./AssignPackage/LcoAssignPackageList";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function LcoDetails() {
   const { id } = useParams();
@@ -16,7 +17,7 @@ export default function LcoDetails() {
 
   // for open and closed the employees
   const [isEmployeeOpen, setIsEmployeeOpen] = useState(false)
-  const [isWalletHistoryOpen,setIsWalletHistoryOpen] = useState(false)
+  const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(false)
   const [isAssignedPackageOpen, setIsAssignedPaclagesOpen] = useState(false)
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function LcoDetails() {
   );
   return (
     <>
-        <h3 className="text-2xl font-semibold ">LCO Details</h3>
+      <h3 className="text-2xl font-semibold ">LCO Details</h3>
       <div className="flex justify-between mb-1">
         <button
           onClick={() => navigate(-1)}
@@ -59,12 +60,14 @@ export default function LcoDetails() {
         >
           <FaLongArrowAltLeft /> Back
         </button>
-         <button
-            onClick={() => navigate(`/lco/wallet/create/${lco?._id}`, {state:{ data:{ lcoWalletBalance: lco?.walletBalance || '0', creditBalance: lco?.creditBalance || {}, name: lco?.retailerId?.resellerName || '' ,}} })}
-            className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-          >
-            Add Transaction
-          </button>
+        <ProtectedAction module="lco" action="addTransaction">
+        <button
+          onClick={() => navigate(`/lco/wallet/create/${lco?._id}`, { state: { data: { lcoWalletBalance: lco?.walletBalance || '0', creditBalance: lco?.creditBalance || {}, name: lco?.retailerId?.resellerName || '', } } })}
+          className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+        >
+          Add Transaction
+        </button>
+        </ProtectedAction>
       </div>
       <div className="border rounded-lg overflow-hidden shadow">
         <div className="grid grid-cols-1 md:grid-cols-2">
@@ -115,11 +118,11 @@ export default function LcoDetails() {
           ) : (
             <MdKeyboardDoubleArrowDown size={20} />
           )}
-        </div>  
+        </div>
       </div>
       {isEmployeeOpen && <LcoEmployeeList />}
       {/* this is for the wallet history */}
-       <div className="flex justify-between mt-1 ">
+      <div className="flex justify-between mt-1 ">
         <div>Wallet History</div>
         <div
           className="cursor-pointer flex items-center gap-1"
@@ -132,22 +135,22 @@ export default function LcoDetails() {
           )}
         </div>
       </div>
-           {isWalletHistoryOpen && <LcoWalletList />}
-           {/* this is for the listing of the assign packages to the lco */}
-                 <div className="flex justify-between mt-1">
-                   <div>Assigned Packages</div>
-                   <div
-                     className="cursor-pointer flex items-center gap-1"
-                     onClick={() => setIsAssignedPaclagesOpen(!isAssignedPackageOpen)}
-                   >
-                     {isAssignedPackageOpen ? (
-                       <MdKeyboardDoubleArrowUp size={20} />
-                     ) : (
-                       <MdKeyboardDoubleArrowDown size={20} />
-                     )}
-                   </div>
-                 </div>
-                 {isAssignedPackageOpen && <LcoAssignPackageList/>}
+      {isWalletHistoryOpen && <LcoWalletList />}
+      {/* this is for the listing of the assign packages to the lco */}
+      <div className="flex justify-between mt-1">
+        <div>Assigned Packages</div>
+        <div
+          className="cursor-pointer flex items-center gap-1"
+          onClick={() => setIsAssignedPaclagesOpen(!isAssignedPackageOpen)}
+        >
+          {isAssignedPackageOpen ? (
+            <MdKeyboardDoubleArrowUp size={20} />
+          ) : (
+            <MdKeyboardDoubleArrowDown size={20} />
+          )}
+        </div>
+      </div>
+      {isAssignedPackageOpen && <LcoAssignPackageList />}
     </>
   );
 }
