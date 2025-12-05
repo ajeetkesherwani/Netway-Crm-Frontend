@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEllipsisV, FaEdit, FaTrash ,FaEye} from "react-icons/fa";
+import { FaEllipsisV, FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { deleteUser, getAllUserList, updateUserStatus } from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -89,14 +89,14 @@ export default function UserList() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">User List</h1>
+        <h1 className="text-xl font-semibold">Customer List</h1>
         <ProtectedAction module="users" action="create">
           <button
             onClick={() => navigate("/user/create")}
             className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none"
             aria-label="Add User"
           >
-            Add User
+            Add Customer
           </button>
         </ProtectedAction>
       </div>
@@ -124,9 +124,9 @@ export default function UserList() {
                   <tr key={user._id} className="hover:bg-gray-50 relative">
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
                     <td className="px-[2px] py-[2px] hover:cursor-pointer hover:underline"
-                    //  onClick={() => handleView(user._id)}
-                   onClick={() => navigate(`/user/profile/${user._id}`)}
-                     >
+                      //  onClick={() => handleView(user._id)}
+                      onClick={() => navigate(`/user/profile/${user._id}`)}
+                    >
                       {user.generalInformation?.name}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.email}</td>
                     <td className="px-[2px] py-[2px]">{user.generalInformation?.phone}</td>
