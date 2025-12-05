@@ -66,31 +66,65 @@ const UserPackageDetails = () => {
   };
 
   const saveNewPackage = async () => {
-    if (!newPackage.packageId) {
-      alert("Select package first");
-      return;
-    }
+  if (!newPackage.packageId) {
+    alert("Select package first");
+    return;
+  }
 
-    try {
-      await assignPackageToUser(userId, newPackage);
-      alert("Package Assigned!");
-      setAddRow(false);
+  try {
+    await assignPackageToUser(userId, {
+      packageId: newPackage.packageId,
+      packageName: newPackage.packageName,
+      billType: newPackage.billType,
+      basePrice: Number(newPackage.basePrice),
+      customPrice: Number(newPackage.customPrice),  // ❗ updated price always saved
+    });
 
-      setNewPackage({
-        packageId: "",
-        packageName: "",
-        billType: "",
-        basePrice: "",
-        customPrice: "",
-      });
+    alert("Package Assigned!");
+    setAddRow(false);
 
-      // loadAssigned();
-      loadAssigned();
-      loadPackages();
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    setNewPackage({
+      packageId: "",
+      packageName: "",
+      billType: "",
+      basePrice: "",
+      customPrice: "",
+    });
+
+    loadAssigned();
+    loadPackages();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+
+  // const saveNewPackage = async () => {
+  //   if (!newPackage.packageId) {
+  //     alert("Select package first");
+  //     return;
+  //   }
+
+  //   try {
+  //     await assignPackageToUser(userId, newPackage);
+  //     alert("Package Assigned!");
+  //     setAddRow(false);
+
+  //     setNewPackage({
+  //       packageId: "",
+  //       packageName: "",
+  //       billType: "",
+  //       basePrice: "",
+  //       customPrice: "",
+  //     });
+
+  //     // loadAssigned();
+  //     loadAssigned();
+  //     loadPackages();
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   const handleDeletePackage = async (id) => {
     if (!window.confirm("Are you sure you want to delete this package?")) return;
@@ -150,7 +184,8 @@ const UserPackageDetails = () => {
                 <td className="py-3 px-3 font-semibold">{p.packageName}</td>
                 <td className="py-3 px-3">{p.billType}</td>
 
-                <td className="py-3 px-3">{p.customPrice || p.basePrice}</td>
+                {/* <td className="py-3 px-3">{p.customPrice || p.basePrice}</td> */}
+                <td className="py-3 px-3">{p.customPrice ?? p.basePrice}</td>
 
                 <td className="py-3 px-3">
                   {/* Tailwind Toggle Switch */}
