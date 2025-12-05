@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from "../../service/category";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function Category() {
   const [categories, setCategories] = useState([]);
@@ -133,12 +134,14 @@ export default function Category() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">Ticket Categories</h2>
           <div className="flex items-center space-x-3">
+            <ProtectedAction module="setting" action="ticketCategoryCreate">
             <button
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               onClick={() => openUpdateModal(null, "")}
             >
               Create Category
             </button>
+            </ProtectedAction>
             <button className="px-3 py-2 bg-gray-100 rounded-md" onClick={fetchCategories}>Refresh</button>
           </div>
         </div>
@@ -170,18 +173,22 @@ export default function Category() {
                         {date ? `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <button
-                          className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
-                          onClick={() => openUpdateModal(cat._id || cat.id, cat.name)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                          onClick={() => openDeleteModal(cat._id || cat.id)}
-                        >
-                          Delete
-                        </button>
+                        <ProtectedAction module="setting" action="ticketCategoryUpdate">
+                          <button
+                            className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+                            onClick={() => openUpdateModal(cat._id || cat.id, cat.name)}
+                          >
+                            Update
+                          </button>
+                        </ProtectedAction>
+                        <ProtectedAction module="setting" action="ticketCategoryRemove">
+                          <button
+                            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                            onClick={() => openDeleteModal(cat._id || cat.id)}
+                          >
+                            Delete
+                          </button>
+                        </ProtectedAction>
                       </td>
                     </tr>
                   );

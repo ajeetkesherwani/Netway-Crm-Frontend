@@ -2,6 +2,7 @@ import { Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getUserFullDetails } from "../service/user";
 import { FaEdit } from "react-icons/fa"; // ← Yeh icon import karna
+import ProtectedAction from "../components/ProtectedAction";
 
 const ProfileHeader = () => {
   const { id } = useParams();
@@ -14,13 +15,13 @@ const ProfileHeader = () => {
   const currentPath = location.pathname.split("/").pop() || "profile";
 
   const tabs = [
-    { id: "profile", label: "Profile", path: `/user/profile/${id}/profile` },
-    { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details` },
-    { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice` },
-    { id: "payment", label: "Payments", path: `/user/profile/${id}/payment` },
-    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets` },
-    { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log` },
-    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package` },
+    { id: "profile", label: "Profile", path: `/user/profile/${id}/profile`, module: "customer", action: "profile" },
+    { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details`, module: "customer", action:"packageDetailView" },
+    { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice`, module: "customer", action: "invoice" },
+    { id: "payment", label: "Payments", path: `/user/profile/${id}/payment`, module: "customer", action: "payments" },
+    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "ticket" },
+    { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log`, module: "customer", action: "logs" },
+    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package`, module: "customer", action: "rechargePackageList" },
   ];
 
   useEffect(() => {
@@ -90,21 +91,6 @@ const ProfileHeader = () => {
             <span className="sm:hidden">Edit</span>
           </button>
         </div>
-
-        {/* <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-bold text-gray-800">User Profile</h2> */}
-
-        {/* Edit Pencil Icon */}
-        {/* <button
-            onClick={() => navigate(`/user/update/${id}`)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg"
-            title="Edit User Details"
-          >
-            <FaEdit className="text-lg" />
-            <span className="hidden sm:inline font-medium">Edit User</span>
-          </button>
-        </div> */}
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Left - Avatar + Info */}
           <div className="flex gap-6">
@@ -145,23 +131,22 @@ const ProfileHeader = () => {
           </div>
         </div>
       </div>
-
-      {/* Tabs */}
       <div className="bg-white shadow px-6 py-4 flex flex-wrap gap-4 border-b">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => navigate(tab.path)}
-            className={`px-5 py-2 rounded-md font-medium transition-all
-              ${currentPath === tab.id
-                ? "bg-blue-600 text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-100"
-              }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+          {tabs.map((tab) => (
+            <ProtectedAction module="customer" action={tab.action}>
+              <button
+                onClick={() => navigate(tab.path)}
+                className={`px-5 py-2 rounded-md font-medium transition-all
+                  ${currentPath === tab.id
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                {tab.label}
+              </button>
+            </ProtectedAction>
+          ))}
+        </div>
 
       {/* Child Routes */}
       <div className="p-8 bg-gray-50 min-h-screen">

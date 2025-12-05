@@ -160,7 +160,7 @@ export default function HardwareList() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Hardware List</h1>
-        {/* <ProtectedAction module="hardware" action="create"> */}
+        <ProtectedAction module="setting" action="hardwareCreate">
           <button
             onClick={() => navigate("/setting/hardware/create")}
             className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -168,7 +168,7 @@ export default function HardwareList() {
           >
             Add Hardware
           </button>
-        {/* </ProtectedAction> */}
+        </ProtectedAction>
       </div>
 
       {hardware.length === 0 ? (
@@ -213,49 +213,49 @@ export default function HardwareList() {
                       <td className="px-[2px] py-[2px]">{status}</td>
                       <td className="px-[2px] py-[2px] text-right">
                         <div className="flex items-center space-x-2 justify-start">
-                          {/* <ProtectedAction module="hardware" action="view"> */}
-                          <button
-                            onClick={() => navigate(`/setting/hardware/view/${id}`)}
-                            className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
-                            title="View"
-                            aria-label="View"
-                          >
-                            <FaEye size={16} />
-                          </button>
-                          {/* </ProtectedAction> */}
+                          <ProtectedAction module="setting" action="hardwareCreate">
+                            <button
+                              onClick={() => navigate(`/setting/hardware/view/${id}`)}
+                              className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
+                              title="View"
+                              aria-label="View"
+                            >
+                              <FaEye size={16} />
+                            </button>
+                          </ProtectedAction>
 
-                          {/* <ProtectedAction module="hardware" action="edit"> */}
-                          <button
-                            onClick={() => handleUpdate(id)}
-                            className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
-                            title="Edit"
-                            aria-label="Edit"
-                          >
-                            <FaEdit size={16} />
-                          </button>
-                          {/* </ProtectedAction> */}
+                          <ProtectedAction module="setting" action="hardwareUpdate">
+                            <button
+                              onClick={() => handleUpdate(id)}
+                              className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
+                              title="Edit"
+                              aria-label="Edit"
+                            >
+                              <FaEdit size={16} />
+                            </button>
+                          </ProtectedAction>
 
-                          {/* <ProtectedAction module="hardware" action="assign"> */}
-                          <button
-                            onClick={() => handleOpenAssign(id, name)}
-                            className="p-1 text-indigo-600 hover:bg-gray-100 focus:outline-none"
-                            title="Assign"
-                            aria-label="Assign"
-                          >
-                            Assign
-                          </button>
-                          {/* </ProtectedAction> */}
+                          <ProtectedAction module="setting" action="hardwareAssign">
+                            <button
+                              onClick={() => handleOpenAssign(id, name)}
+                              className="p-1 text-indigo-600 hover:bg-gray-100 focus:outline-none"
+                              title="Assign"
+                              aria-label="Assign"
+                            >
+                              Assign
+                            </button>
+                          </ProtectedAction>
 
-                          {/* <ProtectedAction module="hardware" action="delete"> */}
-                          <button
-                            onClick={() => handleDelete(id, name)}
-                            className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
-                            title="Delete"
-                            aria-label="Delete"
-                          >
-                            <FaTrash size={16} />
-                          </button>
-                          {/* </ProtectedAction> */}
+                          <ProtectedAction module="setting" action="hardwareRemove">
+                            <button
+                              onClick={() => handleDelete(id, name)}
+                              className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
+                              title="Delete"
+                              aria-label="Delete"
+                            >
+                              <FaTrash size={16} />
+                            </button>
+                          </ProtectedAction>
                         </div>
                       </td>
                     </tr>

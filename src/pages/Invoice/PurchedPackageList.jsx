@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { FaCheck, FaTrashAlt, FaEye, FaEllipsisV } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { getPurchasedPlans } from "../../service/purchasedPlan";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function PurchasedPlanList() {
   const [plans, setPlans] = useState([]);
@@ -187,18 +188,22 @@ export default function PurchasedPlanList() {
                           ref={menuRef}
                           className="absolute right-6 top-9 z-50 bg-white border rounded shadow-md w-36 py-1"
                         >
+                          <ProtectedAction module="invoice" action="packageRechargeView">
                           <button
                             onClick={() => handleViewInvoice(plan._id)}
                             className="flex items-center w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <FaEye className="mr-2 text-blue-600" /> View
                           </button>
+                          </ProtectedAction>
+                          <ProtectedAction module="invoice" action="packageRechargeRemove">
                           <button
                             onClick={() => handleDelete(plan._id)}
                             className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-gray-100"
                           >
                             <FaTrashAlt className="mr-2" /> Remove
                           </button>
+                          </ProtectedAction>
                         </div>
                       )}
                     </td>

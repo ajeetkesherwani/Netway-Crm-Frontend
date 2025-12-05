@@ -116,82 +116,8 @@ export default function LcoList() {
                     <td className="px-[2px] py-[2px]">{item.mobileNo}</td>
                     <td className="px-[2px] py-[2px]">{item.state}</td>
                     <td className="px-[2px] py-[2px]">{item.email || "—"}</td>
-                    {/* <td className="px-[2px] py-[2px] text-right relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(openMenuId === item._id ? null : item._id)
-                        }
-                        className="p-2 rounded hover:bg-gray-200"
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {openMenuId === item._id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded shadow-md z-30"
-                        >
-                            <button
-                            onClick={() => handleEmployee(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAccountBalanceWallet size={20} className="mr-2" /> Employee
-                          </button>
-                          <button
-                            onClick={() => handleWallet(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAccountBalanceWallet size={20} className="mr-2" />Wallet
-                          </button>
-                          <button
-                            onClick={() => handleAssignPackage(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAssignment size={20} className="mr-2" /><marquee behavior="scroll" direction="" scrollAmount="5"> Assign Package</marquee>
-                          </button>
-                          <button
-                            onClick={() => handleView(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEye className="mr-2" /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEdit className="mr-2" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <FaTrash className="mr-2" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </td> */}
                     <td className="px-[2px] py-[2px] text-right relative">
                       <div className="flex justify-start space-x-3">
-                        {/* <button
-                          onClick={() => handleEmployee(item._id)}
-                          className="p-1 hover:bg-gray-100 focus:outline-none"
-                          title="Employee"
-                        >
-                          <MdOutlineSupportAgent  size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleWallet(item._id)}
-                          className="p-1 hover:bg-gray-100 focus:outline-none"
-                          title="Wallet"
-                        >
-                          <MdOutlineAccountBalanceWallet size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleAssignPackage(item._id)}
-                          className="p-1 hover:bg-gray-100 focus:outline-none"
-                          title="Assign Package"
-                        >
-                          <MdOutlineAssignment size={20} />
-                        </button> */}
                      <ProtectedAction module="lco" action="view">
                           <button
                             onClick={() => handleView(item._id)}

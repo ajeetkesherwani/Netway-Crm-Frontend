@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAllTicketList, deleteTicket } from "../../service/ticket";
 import { FaEllipsisV, FaTrash, FaHistory, FaCheckCircle } from "react-icons/fa";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function AllTicket() {
   const [filteredTickets, setFilteredTickets] = useState([]);
@@ -177,29 +178,35 @@ export default function AllTicket() {
 
                 {openMenuId === ticket._id && (
                   <div className="ticket-action-menu absolute right-0 mt-8 w-48 bg-white border rounded-lg shadow-lg z-30">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveTicket(ticket._id);
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 text-gray-700"
-                    >
-                      <FaTrash className="text-red-500" /> Remove
-                    </button>
+                    <ProtectedAction module="tickets" action="allTicketReomve">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveTicket(ticket._id);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-red-50 text-gray-700"
+                      >
+                        <FaTrash className="text-red-500" /> Remove
+                      </button>
+                    </ProtectedAction>
 
-                    <button
-                      onClick={(e) => handleViewHistory(ticket._id, e)}
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700"
-                    >
-                      <FaHistory className="text-blue-500" /> Ticket History
-                    </button>
+                    <ProtectedAction module="tickets" action="allTicketHistory">
+                      <button
+                        onClick={(e) => handleViewHistory(ticket._id, e)}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700"
+                      >
+                        <FaHistory className="text-blue-500" /> Ticket History
+                      </button>
+                    </ProtectedAction>
 
-                    <button
-                      onClick={(e) => handleViewResolution(ticket._id, e)}
-                      className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-green-50 text-gray-700"
-                    >
-                      <FaCheckCircle className="text-green-500" /> Resolution
-                    </button>
+                    <ProtectedAction module="tickets" action="allTicketResolve">
+                      <button
+                        onClick={(e) => handleViewResolution(ticket._id, e)}
+                        className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-green-50 text-gray-700"
+                      >
+                        <FaCheckCircle className="text-green-500" /> Resolution
+                      </button>
+                    </ProtectedAction>
                   </div>
                 )}
               </div>
