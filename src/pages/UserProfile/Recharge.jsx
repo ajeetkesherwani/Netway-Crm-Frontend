@@ -1,304 +1,465 @@
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import { getCurrentPlan } from "../../service/recharge";
-
-// const UserRechargePackage = () => {
-//   const { id: userId } = useParams();
-
-//   const [plan, setPlan] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [renewLoading, setRenewLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-
-//   useEffect(() => {
-//     fetchCurrentPlan();
-//   }, [userId]);
-
-//   const fetchCurrentPlan = async () => {
-//     try {
-//       setLoading(true);
-//       const res = await getCurrentPlan(userId);
-//       if (res.status && res.data) setPlan(res.data);
-//       else setPlan(null);
-//     } catch (err) {
-//       console.error("Error fetching current plan:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
-
-//   const handleRenew = async () => {
-//     if (!plan?._id) return alert("Invalid Plan ID");
-
-//     try {
-//       setRenewLoading(true);
-//       const res = await renewPlan(plan._id);
-
-//       if (res.status) {
-//         setMessage("Plan Renewed Successfully!");
-
-//         setTimeout(async () => {
-//           const refreshed = await getCurrentPlan(userId);
-//           if (refreshed.status) setPlan(refreshed.data);
-//         }, 1500);
-//       } else {
-//         setMessage(res.message || "Renew Failed");
-//       }
-//     } catch {
-//       setMessage("Something Went Wrong");
-//     } finally {
-//       setRenewLoading(false);
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div style={{ padding: "60px", textAlign: "center", fontSize: "20px" }}>
-//         Loading Package...
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div style={{ padding: "20px", fontFamily: "Arial", background: "#f9f9f9", minHeight: "100vh" }}>
-//       <h2 style={{ marginBottom: "20px" }}>User Current Package</h2>
-
-//       {!plan ? (
-//         <div style={{ textAlign: "center", padding: "45px", background: "#fff", borderRadius: "10px", border: "1px solid #ccc" }}>
-//           No Active Plan Found
-//         </div>
-//       ) : (
-//         <div style={{ background: "#fff", borderRadius: "10px", overflow: "hidden", border: "1px solid #ddd" }}>
-//           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-//             <thead>
-//               <tr style={{ background: "#e6e6e6", borderBottom: "1px solid #ccc" }}>
-//                 <th style={{ padding: "14px 12px", textAlign: "left" }}>Package Name</th>
-//                 <th style={{ padding: "14px 12px", textAlign: "left" }}>Validity</th>
-//                 <th style={{ padding: "14px 12px", textAlign: "left" }}>Start Date</th>
-//                 <th style={{ padding: "14px 12px", textAlign: "left" }}>Expiry Date</th>
-//                 <th style={{ padding: "14px 12px", textAlign: "left" }}>Status</th>
-//               </tr>
-//             </thead>
-
-//             <tbody>
-//               <tr style={{ background: "#fafafa", borderBottom: "1px solid #eee" }}>
-//                 <td style={{ padding: "14px 12px" }}>{plan.packageId?.name}</td>
-//                 <td style={{ padding: "14px 12px" }}>
-//                   {plan.packageId?.validity?.number} {plan.packageId?.validity?.unit}
-//                 </td>
-//                 <td style={{ padding: "14px 12px" }}>{formatDate(plan.startDate)}</td>
-//                 <td style={{ padding: "14px 12px" }}>{formatDate(plan.expiryDate)}</td>
-
-//                 <td style={{ padding: "14px 12px" }}>
-//                   <span style={{
-//                     background: "#d4edda",
-//                     color: "#155724",
-//                     padding: "4px 10px",
-//                     borderRadius: "4px",
-//                     fontWeight: "bold",
-//                     fontSize: "12px"
-//                   }}>
-//                     {plan.status}
-//                   </span>
-//                 </td>
-//               </tr>
-//             </tbody>
-//           </table>
-
-//           <div style={{ padding: "20px" }}>
-//             <button
-//               onClick={handleRenew}
-//               disabled={renewLoading}
-//               style={{ background: "#007bff", color: "#fff", padding: "12px 20px", borderRadius: "6px", cursor: "pointer" }}
-//             >
-//               {renewLoading ? "Processing..." : "Renew Package"}
-//             </button>
-
-//             {message && (
-//               <div style={{ marginTop: "15px", padding: "10px", background: "#e7f3fe", color: "#0c5460", borderRadius: "5px" }}>
-//                 {message}
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default UserRechargePackage;
-
 
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getCurrentPlan } from "../../service/recharge";
+import { useParams } from "react-router-dom";
+import {
+  getCurrentPlan,
+  createPurchasedPlan,
+  renewPurchasedPlan,
+  getAssignedPackageList,
+} from "../../service/recharge";
 
 const UserRechargePackage = () => {
   const { id: userId } = useParams();
-  const navigate = useNavigate();
 
   const [plan, setPlan] = useState(null);
+  const [packages, setPackages] = useState([]); // assigned packages
   const [loading, setLoading] = useState(true);
-  const [renewLoading, setRenewLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isRenew, setIsRenew] = useState(false);
   const [message, setMessage] = useState("");
+  const [selectedPackage, setSelectedPackage] = useState(null); // for display
+
+  const [form, setForm] = useState({
+    packageId: "",
+    amountPaid: 0,
+    startDate: "",
+    expiryDate: "",
+    paymentReceived: "No",
+    paymentAmount: 0,
+    paymentDate: "",
+    paymentMethod: "Cash",
+    remark: "",
+    paymentRemark: "",
+  });
 
   useEffect(() => {
     fetchCurrentPlan();
+    fetchPackages();
   }, [userId]);
 
   const fetchCurrentPlan = async () => {
     try {
       setLoading(true);
       const res = await getCurrentPlan(userId);
-      if (res.status && res.data) {
-        setPlan(res.data);
-      } else {
-        setPlan(null);
+      if (res.status && res.data && res.data.length > 0) {
+        const active = res.data.find((p) => p.status === "active") || res.data[0];
+        setPlan(active);
       }
     } catch (err) {
-      console.error("Error fetching current plan:", err);
-      setPlan(null);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
-
-  const handleRenew = async () => {
-    if (!plan?._id) return alert("Invalid Plan ID");
-
+  const fetchPackages = async () => {
     try {
-      setRenewLoading(true);
-      setMessage("");
-
-      // Replace with your actual renew API
-      // const res = await renewPlan(plan._id);
-
-      // Mock success (remove when real API is connected)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const res = { status: true };
-
+      const res = await getAssignedPackageList(userId);
       if (res.status) {
-        setMessage("Plan Renewed Successfully!");
-        setTimeout(() => {
-          fetchCurrentPlan();
-          setMessage("");
-        }, 1500);
-      } else {
-        setMessage(res.message || "Renew Failed");
+        setPackages(res.data || []);
       }
     } catch (err) {
-      setMessage("Something went wrong. Please try again.");
-    } finally {
-      setRenewLoading(false);
+      console.error("Failed to load packages", err);
     }
   };
 
-  const handlePurchase = () => {
-    navigate(`/user/${userId}/purchase-package`);
+  const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
+
+  const openPurchaseModal = () => {
+    setIsRenew(false);
+    const today = new Date().toISOString().split("T")[0];
+    setForm({
+      packageId: "",
+      amountPaid: 0,
+      startDate: today,
+      expiryDate: "",
+      paymentReceived: "No",
+      paymentAmount: 0,
+      paymentDate: today,
+      paymentMethod: "Cash",
+      remark: "",
+      paymentRemark: "",
+    });
+    setSelectedPackage(null);
+    setShowModal(true);
+  };
+
+  const openRenewModal = () => {
+    if (!plan) return alert("No active plan to renew");
+
+    const assignedPkg = packages.find(p => p.packageId === plan.packageId?._id);
+    if (!assignedPkg) return alert("Assigned package not found");
+
+    const start = new Date(plan.expiryDate);
+    start.setDate(start.getDate() + 1);
+    const expiry = new Date(start);
+    expiry.setMonth(expiry.getMonth() + (assignedPkg.validity?.number || 1));
+
+    setIsRenew(true);
+    setSelectedPackage(assignedPkg);
+    setForm({
+      packageId: assignedPkg._id,
+      amountPaid: assignedPkg.customPrice,
+      startDate: start.toISOString().split("T")[0],
+      expiryDate: expiry.toISOString().split("T")[0],
+      paymentReceived: "No",
+      paymentAmount: assignedPkg.customPrice,
+      paymentDate: new Date().toISOString().split("T")[0],
+      paymentMethod: "Cash",
+      remark: "Renewed plan",
+      paymentRemark: "",
+    });
+    setShowModal(true);
+  };
+
+  const handlePackageChange = (assignedPkgId) => {
+    const pkg = packages.find((p) => p._id === assignedPkgId);
+    if (!pkg) return;
+
+    setSelectedPackage(pkg);
+
+    const start = isRenew ? new Date(plan.expiryDate) : new Date();
+    start.setDate(start.getDate() + (isRenew ? 1 : 0));
+    const expiry = new Date(start);
+    expiry.setMonth(expiry.getMonth() + (pkg.validity?.number || 1));
+
+    setForm({
+      ...form,
+      packageId: pkg._id,
+      amountPaid: pkg.customPrice,
+      paymentAmount: pkg.customPrice,
+      startDate: start.toISOString().split("T")[0],
+      expiryDate: expiry.toISOString().split("T")[0],
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!form.packageId) return alert("Please select a package");
+
+    try {
+      setMessage("Processing...");
+      const payload = {
+        userId,
+        packageId: selectedPackage?.packageId,
+        assignedPackageId: form.packageId,
+        startDate: new Date(form.startDate).toISOString(),
+        expiryDate: new Date(form.expiryDate).toISOString(),
+        amountPaid: parseFloat(form.amountPaid),
+        paymentMethod: form.paymentMethod,
+        paymentStatus: form.paymentReceived === "Yes" ? "paid" : "pending",
+        paymentDate: form.paymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
+        remark: form.remark,
+        paymentRemark: form.paymentRemark,
+      };
+
+      let res;
+      if (isRenew && plan?._id) {
+        res = await renewPurchasedPlan(plan._id, payload);
+      } else {
+        res = await createPurchasedPlan(payload);
+      }
+
+      if (res.status) {
+        setMessage("Plan processed successfully!");
+        setTimeout(() => {
+          setShowModal(false);
+          fetchCurrentPlan();
+          setMessage("");
+        }, 2000);
+      }
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Something went wrong.");
+    }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 text-xl font-medium">
-        Loading Package Details...
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="text-xl text-gray-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-5 font-sans">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">User Current Package</h2>
+    <>
+      <div className="min-h-screen bg-gray-100 p-6">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
 
-      {/* Always Visible Purchase Button */}
-      <div className="text-right mb-6">
-        <button
-          onClick={handlePurchase}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-200"
-        >
-          Purchase New Package
-        </button>
-      </div>
-
-      {/* No Plan Found */}
-      {!plan ? (
-        <div className="text-center py-16 bg-white rounded-lg border border-gray-300 shadow-sm">
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Active Plan Found</h3>
-          <p className="text-gray-500">This user has not purchased any package yet.</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-300 overflow-hidden shadow-md">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="bg-gray-300 text-left text-gray-800">
-                <th className="px-4 py-3 font-semibold">Package Name</th>
-                <th className="px-4 py-3 font-semibold">Validity</th>
-                <th className="px-4 py-3 font-semibold">Start Date</th>
-                <th className="px-4 py-3 font-semibold">Expiry Date</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 text-center font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="bg-gray-50 border-b border-gray-200 hover:bg-gray-100 transition">
-                <td className="px-4 py-4 font-semibold text-gray-800">
-                  {plan.packageId?.name || "N/A"}
-                </td>
-                <td className="px-4 py-4 text-gray-700">
-                  {plan.packageId?.validity?.number} {plan.packageId?.validity?.unit}
-                </td>
-                <td className="px-4 py-4 text-gray-700">{formatDate(plan.startDate)}</td>
-                <td className="px-4 py-4 text-gray-700">{formatDate(plan.expiryDate)}</td>
-
-                {/* Status Badge - Matches UserTickets Style */}
-                <td className="px-4 py-4">
-                  <span
-                    className={`inline-block px-3 py-1.5 rounded text-xs font-bold uppercase tracking-wider ${
-                      plan.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {plan.status || "Unknown"}
-                  </span>
-                </td>
-
-                {/* Renew Button */}
-                <td className="px-4 py-4 text-center">
-                  <button
-                    onClick={handleRenew}
-                    disabled={renewLoading}
-                    className={`px-5 py-2 rounded font-bold text-sm transition ${
-                      renewLoading
-                        ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                        : "bg-yellow-500 hover:bg-yellow-600 text-gray-900 shadow"
-                    }`}
-                  >
-                    {renewLoading ? "Renewing..." : "Renew"}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Success / Error Message */}
-          {message && (
-            <div
-              className={`p-4 border-t border-gray-200 font-medium ${
-                message.includes("Success")
-                  ? "bg-green-50 text-green-800"
-                  : "bg-red-50 text-red-800"
-              }`}
+          <div className="flex justify-end gap-6 mb-8">
+            <button
+              onClick={openPurchaseModal}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
             >
-              {message}
+              Purchase New Plan
+            </button>
+          </div>
+
+          {!plan ? (
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <p className="text-xl text-gray-600">No active plan found for this user.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-gray-800 text-white p-4">
+                <h3 className="text-xl font-bold">Current Active Plan</h3>
+              </div>
+              <table className="w-full">
+                <thead className="bg-gray-200 text-gray-700">
+                  <tr>
+                    <th className="px-6 py-4 text-left">Package</th>
+                    <th className="px-6 py-4 text-left">Speed</th>
+                    <th className="px-6 py-4 text-left">Validity</th>
+                    <th className="px-6 py-4 text-left">Start</th>
+                    <th className="px-6 py-4 text-left">Expiry</th>
+                    <th className="px-6 py-4 text-left">Status</th>
+                    <th className="px-6 py-4 text-left">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="hover:bg-gray-50 border-b">
+                    <td className="px-6 py-4 font-semibold">{plan.packageId?.name}</td>
+                    <td className="px-6 py-4">{plan.packageId?.speed} Mbps</td>
+                    <td className="px-6 py-4">
+                      {plan.packageId?.validity?.number} {plan.packageId?.validity?.unit}
+                    </td>
+                    <td className="px-6 py-4">{formatDate(plan.startDate)}</td>
+                    <td className="px-6 py-4">{formatDate(plan.expiryDate)}</td>
+                    <td className="px-6 py-4">
+                      <span className="bg-green-100 text-green-800 px-4 py-1 rounded-full text-sm font-bold">
+                        Active
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={openRenewModal}
+                        className="bg-gray-600 hover:bg-gray-700 text-white text-sm font-bold py-2 px-5 rounded shadow transition"
+                      >
+                        Renew Now
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           )}
         </div>
+      </div>
+
+      {/* MODAL - ALL FIELDS PRESERVED + BLUE BORDER + COMPACT */}
+
+      {showModal && (
+        <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl border-4 border-blue-500 max-h-screen">
+            {/* Header */}
+            <div className="bg-gray-700 text-white px-5 py-2.5 flex items-center justify-between text-sm sticky top-0 z-10">
+              <div className="font-bold text-sm">
+                {isRenew ? "Renew Plan" : "Purchase / Upgrade Plan"} | User ID: {userId}
+              </div>
+              <div className="flex items-center gap-6 text-xs">
+                <label className="flex items-center gap-1.5">
+                  <input type="radio" checked={isRenew} readOnly className="w-3.5 h-3.5" />
+                  <span>Renew</span>
+                </label>
+                <label className="flex items-center gap-1.5">
+                  <input type="radio" checked={!isRenew} readOnly className="w-3.5 h-3.5" />
+                  <span>Upgrade</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="p-1 bg-gray-50 text-xs space-y-3.5 text-gray-700">
+              <div className="grid grid-cols-2 gap-6">
+
+                {/* LEFT COLUMN */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <label className="w-36 font-semibold">Current Plan :</label>
+                    <select
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none"
+                      value={form.packageId}
+                      onChange={(e) => handlePackageChange(e.target.value)}
+                      disabled={isRenew}
+                    >
+                      <option value="">Select Package</option>
+                      {packages.map((pkg) => (
+                        <option key={pkg._id} value={pkg._id}>
+                          {pkg.packageName}
+                          {/* - ₹{pkg.customPrice}  */} 
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">MRP :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value={selectedPackage?.customPrice || "0"} readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Discount :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Refund Charge :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0.0" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Wallet Balance :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold" value="-100.00" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36 font-bold ">Total Pay Amount :</label>
+                    <input
+                      type="text"
+                      className="flex-1 border-2 border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold "
+                      value={form.amountPaid || "0.00"}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">CAF No :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5" defaultValue="NIPL-0021013" />
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <input type="checkbox" className="w-4 h-4" defaultChecked={isRenew} />
+                    <span className="font-bold text-xs">Advance Renewal</span>
+                    <input type="text" className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs" value="03/01/2026" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Validity :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value={`${selectedPackage?.validity?.number || ""} ${selectedPackage?.validity?.unit || ""}`} readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Volume Quota :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Time Quota :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Old Plan Used :</label>
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="" readOnly />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-40">Sales Rep :</label>
+                    <select className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs">
+                      <option>Select Sales Representative</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="w-36">Remark :</label>
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs"
+                      value={form.remark}
+                      onChange={(e) => setForm({ ...form, remark: e.target.value })}
+                      placeholder="Enter remark"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Section */}
+              <div className="border-t-2 border-gray-400 mt-4 pt-3.5 pb-2">
+                <div className="text-center mb-2">
+                  <span className="font-bold text-sm">Payment Received</span>
+                  <div className="inline-flex gap-8 ml-5">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={form.paymentReceived === "Yes"}
+                        onChange={() => setForm({ ...form, paymentReceived: "Yes", paymentAmount: form.amountPaid })}
+                        className="w-4 h-4"
+                      />
+                      <span className="font-bold text-sm">Yes</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={form.paymentReceived === "No"}
+                        onChange={() => setForm({ ...form, paymentReceived: "No" })}
+                        className="w-4 h-4"
+                      />
+                      <span className="font-bold text-sm">No</span>
+                    </label>
+                  </div>
+                </div>
+
+                {form.paymentReceived === "Yes" && (
+                  <div className="grid grid-cols-2 gap-5 max-w-4xl mx-auto text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Amount</span>
+                      <input type="number" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentAmount} onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })} />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Payment Date</span>
+                      <input type="date" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentDate} onChange={(e) => setForm({ ...form, paymentDate: e.target.value })} />
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Payment Mode</span>
+                      <select className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
+                        <option>Cash</option>
+                        <option>UPI</option>
+                        <option>Bank Transfer</option>
+                        <option>Cheque</option>
+                        <option>Online</option>
+                      </select>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Remark</span>
+                      <input type="text" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentRemark} onChange={(e) => setForm({ ...form, paymentRemark: e.target.value })} placeholder="e.g. Paid via GPay" />
+                    </div>
+                  </div>
+                )}
+
+                <div className="border-t border-gray-300 my-2"></div>
+                <div className="grid grid-cols-2 gap-2 text-xs font-bold max-w-4xl mx-auto">
+                  <div className="flex justify-between"><span>Total Payable</span><span className="text-gray-800">₹{form.amountPaid || "0.00"}</span></div>
+                  <div className="flex justify-between"><span>Remaining</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (form.amountPaid - (parseFloat(form.paymentAmount) || 0)).toFixed(2) : form.amountPaid || "0.00"}</span></div>
+                  <div className="flex justify-between"><span>Payment Received</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? form.paymentAmount || "0.00" : "0.00"}</span></div>
+                  <div className="flex justify-between"><span>Wallet After</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (-100 - (form.amountPaid - (parseFloat(form.paymentAmount) || 0))).toFixed(2) : (-100 - form.amountPaid).toFixed(2)}</span></div>
+                </div>
+              </div>
+
+              {/* Buttons - Tight & Clean */}
+
+              <div className="flex justify-center gap-2 py-2 border-t border-gray-300 -mt-3">
+                <button
+                  onClick={handleSubmit}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-8 rounded shadow transition"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1.5 px-8 rounded shadow transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 };
 
