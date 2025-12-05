@@ -9,6 +9,7 @@ import {
 import { useLogin } from "../../../service/login";
 import { IoMdArrowBack } from "react-icons/io";
 import { toast } from "react-hot-toast";
+import ProtectedAction from "../../../components/ProtectedAction";
 
 export default function RetailerEmployeeList() {
   const [employees, setEmployees] = useState([]);
@@ -107,49 +108,19 @@ export default function RetailerEmployeeList() {
       toast.error("Login failed");
     }
   };
-
-  // const handleRetailerLogin = async (data) => {
-  //   console.log(data, " this is the data inside the retailer login function");
-  //   const formData = { employeeUserName: data.employeeUserName, password: data?.plainPassword };
-  //   try {
-  //     const res = await login(formData);
-  //     if (res && res.success) {
-  //       console.log(res, res?.data?.user?.role?.permissions, "This is the response");
-  //       // setAuth(res.token); // store token
-  //       // localStorage.setItem("token", res.token);
-  //       localStorage.setItem("auth", "true");
-  //       localStorage.setItem("rolePermission", JSON.stringify(res?.data?.user?.role?.permissions));
-  //       return;
-  //       navigate("/");
-  //     } else {
-  //       toast.error(res?.error || "Login failed");
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Login failed");
-  //   }
-  // };
-  // if (loading) return <p className="p-4">Loading employees...</p>;
-  // if (error) return <p className="p-4 text-red-500">{error}</p>;
   return (
     <div className="">
       <div className="flex items-center justify-between h-0">
         <div></div>
         <div className="space-x-2 flex">
-          {/* <button
-            onClick={() => navigate(`/retailer/list`)}
-            className="px-[2px] py-[2px] text-white bg-gray-600 rounded hover:bg-gray-700 text-[12px]"
-          >
-            <span className="flex items-center h-full">
-              <IoMdArrowBack className="mr-1" /> Back
-            </span>
-          </button> */}
-          <button
-            onClick={() => navigate(`/retailer/employee/create/${retailerId}`)}
-            className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
-          >
-            Add Employee
-          </button>
+          <ProtectedAction module="reseller" action="addEmployee">
+            <button
+              onClick={() => navigate(`/retailer/employee/create/${retailerId}`)}
+              className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
+            >
+              Add Employee
+            </button>
+          </ProtectedAction>
         </div>
       </div>
       {employees.length < 1 ? (
@@ -169,7 +140,9 @@ export default function RetailerEmployeeList() {
                   <th className="px-[2px] py-[2px] text-left">Email</th>
                   <th className="px-[2px] py-[2px] text-left">Status</th>
                   <th className="px-[2px] py-[2px] text-left">Action</th>
-                  <th className="px-[2px] py-[2px] text-left">Login</th>
+                  <ProtectedAction module="reseller" action="employeeLogin">
+                    <th className="px-[2px] py-[2px] text-left">Login</th>
+                  </ProtectedAction>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -188,71 +161,45 @@ export default function RetailerEmployeeList() {
                       {employee.email || "—"}
                     </td>
                     <td
-                      className={`px-[2px] py-[2px] ${
-                        employee.status === "active"
+                      className={`px-[2px] py-[2px] ${employee.status === "active"
                           ? "text-green-700"
                           : "text-red-700"
-                      }`}
+                        }`}
                     >
                       {employee.status}
                     </td>
-                    {/* <td className="px-[2px] py-[2px] text-right relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(
-                            openMenuId === employee._id ? null : employee._id
-                          )
-                        }
-                        className="p-2 rounded hover:bg-gray-200"
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {openMenuId === employee._id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded shadow-md z-30"
-                        >
-                          <button
-                            onClick={() => handleEdit(employee._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEdit className="mr-2" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(employee._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <FaTrash className="mr-2" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </td> */}
                     <td className="px-[2px] py-[2px] text-left">
                       <div className="flex items-center justify-start gap-1">
-                        <button
-                          onClick={() => handleEdit(employee._id)}
-                          className="p-1 text-gray-600 hover:text-green-600 rounded"
-                          title="Edit"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(employee._id)}
-                          className="p-1 text-red-600 hover:text-red-700 rounded"
-                          title="Delete"
-                        >
-                          <FaTrash />
-                        </button>
+                        <ProtectedAction module="reseller" action="editEmployee">
+                          <button
+                            onClick={() => handleEdit(employee._id)}
+                            className="p-1 text-gray-600 hover:text-green-600 rounded"
+                            title="Edit"
+                          >
+                            <FaEdit />
+                          </button>
+                        </ProtectedAction>
+                        <ProtectedAction module="reseller" action="deleteEmployee">
+                          <button
+                            onClick={() => handleDelete(employee._id)}
+                            className="p-1 text-red-600 hover:text-red-700 rounded"
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                        </ProtectedAction>
                       </div>
                     </td>
-                    <td className="px-[2px] py-[2px]">
-                      <button
-                        onClick={() => handleRetailerLogin(employee)}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        Login
-                      </button>
-                    </td>
+                    <ProtectedAction module="reseller" action="employeeLogin">
+                      <td className="px-[2px] py-[2px]">
+                        <button
+                          onClick={() => handleRetailerLogin(employee)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Login
+                        </button>
+                      </td>
+                    </ProtectedAction>
                   </tr>
                 ))}
               </tbody>
@@ -272,11 +219,10 @@ export default function RetailerEmployeeList() {
                 <p className="text-sm">{employee.mobile}</p>
                 <p className="text-sm">{employee.email || "—"}</p>
                 <p
-                  className={`text-sm ${
-                    employee.status === "active"
+                  className={`text-sm ${employee.status === "active"
                       ? "text-green-700"
                       : "text-red-700"
-                  }`}
+                    }`}
                 >
                   {employee.status}
                 </p>

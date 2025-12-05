@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaEye } from "react-icons/fa";
 import { IoMdArrowBack } from "react-icons/io";
 import { getRetailerWalletList } from "../../../service/retailer";
+import ProtectedAction from "../../../components/ProtectedAction";
 
 export default function RetailerWalletList() {
   const { id } = useParams(); // Retailer ID from URL params
@@ -66,22 +67,15 @@ export default function RetailerWalletList() {
   return (
     <div className="">
       <div className="flex items-center justify-end h-0 mb-4">
-        {/* <h1 className="text-xl font-semibold">Retailer Wallet Transactions</h1> */}
         <div className="space-x-2 flex">
-          {/* <button
-            onClick={() => navigate(`/retailer/list`)}
-            className="px-[2px] py-[2px] text-white bg-gray-600 rounded hover:bg-gray-700 text-[12px]"
-          >
-            <span className="flex items-center">
-              <IoMdArrowBack className="mr-1" /> Back
-            </span>
-          </button> */}
-          <button
-            onClick={() => navigate(`/retailer/wallet/create/${id}`, { state: { data: transferData } })}
-            className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
-          >
-            Add Transaction
-          </button>
+          <ProtectedAction module="reseller" action="addTransaction">
+            <button
+              onClick={() => navigate(`/retailer/wallet/create/${id}`, { state: { data: transferData } })}
+              className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
+            >
+              Add Transaction
+            </button>
+          </ProtectedAction>
         </div>
       </div>
       <div className="mb-1 flex flex-col md:flex-row justify-between items-start">
@@ -150,35 +144,35 @@ export default function RetailerWalletList() {
                     </tr>
                   ))}
                 </tbody>
-            </table>
-          </div>
+              </table>
+            </div>
 
-          {/* Mobile Card View */}
-          <div className="space-y-4 md:hidden">
-            {transactions.map((transaction, index) => (
-              <div
-                key={transaction._id}
-                className="p-4 border rounded-lg shadow-sm bg-white"
-              >
-                <p className="text-sm text-gray-500">#{index + 1}</p>
-                <h2 className="text-lg font-medium">{transaction._id}</h2>
-                <p className="text-sm">Reseller: {transaction.reseller?.resellerName || "N/A"}</p>
-                <p className="text-sm">Amount: {transaction.amount}</p>
-                <p className="text-sm">Mode: {transaction.mode}</p>
-                <p className="text-sm">Remark: {transaction.remark}</p>
-                <p className="text-sm">Payment Date: {new Date(transaction.paymentDate).toLocaleString()}</p>
-                <p className="text-sm">Created: {new Date(transaction.createdAt).toLocaleString()}</p>
-                <div className="flex justify-end space-x-3 mt-3">
-                  <button
-                    onClick={() => handleView(transaction._id)}
-                    className="text-blue-600 flex items-center text-sm"
-                  >
-                    <FaEye className="mr-1" /> View
-                  </button>
+            {/* Mobile Card View */}
+            <div className="space-y-4 md:hidden">
+              {transactions.map((transaction, index) => (
+                <div
+                  key={transaction._id}
+                  className="p-4 border rounded-lg shadow-sm bg-white"
+                >
+                  <p className="text-sm text-gray-500">#{index + 1}</p>
+                  <h2 className="text-lg font-medium">{transaction._id}</h2>
+                  <p className="text-sm">Reseller: {transaction.reseller?.resellerName || "N/A"}</p>
+                  <p className="text-sm">Amount: {transaction.amount}</p>
+                  <p className="text-sm">Mode: {transaction.mode}</p>
+                  <p className="text-sm">Remark: {transaction.remark}</p>
+                  <p className="text-sm">Payment Date: {new Date(transaction.paymentDate).toLocaleString()}</p>
+                  <p className="text-sm">Created: {new Date(transaction.createdAt).toLocaleString()}</p>
+                  <div className="flex justify-end space-x-3 mt-3">
+                    <button
+                      onClick={() => handleView(transaction._id)}
+                      className="text-blue-600 flex items-center text-sm"
+                    >
+                      <FaEye className="mr-1" /> View
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </div>
           {/* <div className="md:w-1/4 md:ml-4 mt-4 md:mt-0">
             <div className="flex flex-col items-end">

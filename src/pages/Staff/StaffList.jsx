@@ -68,9 +68,6 @@ export default function StaffPage() {
       console.log("✅ API Response:", res);
 
       if (res?.token || res?.success) {
-        // ❌ remove this (no need to setAuth)
-        // setAuth(res.token);
-
         // ✅ Permissions saved automatically inside useLogin
         toast.success(`Logged in as ${staff.name} ✅`);
         navigate("/");
@@ -83,51 +80,6 @@ export default function StaffPage() {
       toast.error(err.message || "Something went wrong ❌");
     }
   };
-
-  // const handleLoginAsStaff = async (staff) => {
-  //   console.log("🧩 Login clicked for:", staff?.name);
-
-  //   if (!staff?.userName || !staff?.plainPassword) {
-  //     toast.error("This staff does not have login credentials ❌");
-  //     return;
-  //   }
-
-  //   if (!window.confirm(`Login as ${staff.name}?`)) return;
-
-  //   try {
-  //     toast.loading(`Logging in as ${staff.name}...`);
-
-  //     console.log("📡 Sending to API:", {
-  //       userName: staff.userName,
-  //       password: staff.plainPassword,
-  //     });
-
-  //     // ✅ API hit using /api/admin/auth/login
-  //     const res = await login({
-  //       userName: staff.userName,
-  //       password: staff.plainPassword,
-  //     });
-
-  //     toast.dismiss();
-  //     console.log("✅ API Response:", res);
-
-  //     if (res?.token || res?.success) {
-  //       setAuth(res.token);
-  //       localStorage.setItem(
-  //         "rolePermission",
-  //         JSON.stringify(res?.data?.user?.role?.permissions || [])
-  //       );
-  //       toast.success(`Logged in as ${staff.name} ✅`);
-  //       navigate("/");
-  //     } else {
-  //       toast.error(res?.message || "Login failed ❌");
-  //     }
-  //   } catch (err) {
-  //     toast.dismiss();
-  //     console.error("❌ Login failed:", err);
-  //     toast.error(err.message || "Something went wrong ❌");
-  //   }
-  // };
 
   if (loading) return <p className="p-4">Loading Staff...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
@@ -177,16 +129,20 @@ export default function StaffPage() {
                         onClick={() => handleView(staff._id)}
                         title="View"
                       />
-                      <FaEdit
-                        className="text-green-600 cursor-pointer hover:text-green-800"
-                        onClick={() => handleEdit(staff._id)}
-                        title="Edit"
-                      />
-                      <FaTrash
-                        className="text-red-600 cursor-pointer hover:text-red-800"
-                        onClick={() => handleDelete(staff._id)}
-                        title="Delete"
-                      />
+                      <ProtectedAction module="staff" action="update">
+                        <FaEdit
+                          className="text-green-600 cursor-pointer hover:text-green-800"
+                          onClick={() => handleEdit(staff._id)}
+                          title="Edit"
+                        />
+                      </ProtectedAction>
+                      <ProtectedAction module="staff" action="delete">
+                        <FaTrash
+                          className="text-red-600 cursor-pointer hover:text-red-800"
+                          onClick={() => handleDelete(staff._id)}
+                          title="Delete"
+                        />
+                      </ProtectedAction>
                     </div>
                   </td>
                   <td className="px-[2px] py-[2px] text-center">

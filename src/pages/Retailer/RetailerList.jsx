@@ -8,6 +8,7 @@ import {
   MdOutlineSupportAgent,
 } from "react-icons/md";
 import LcoList from "../LcoPage/LcoList";
+import ProtectedAction from "../../components/ProtectedAction";
 
 export default function RetailerList() {
   const [retailers, setRetailers] = useState([]);
@@ -86,15 +87,17 @@ export default function RetailerList() {
   return (
     <>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">Reseller List</h1>
-          <button
-            onClick={() => navigate("/retailer/create")}
-            className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Add Reseller
-          </button>
-        </div>
+        <ProtectedAction module="reseller" action="create">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-semibold">Reseller List</h1>
+            <button
+              onClick={() => navigate("/retailer/create")}
+              className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
+            >
+              Add Reseller
+            </button>
+          </div>
+        </ProtectedAction>
         {retailers.length === 0 ? (
           <p className="text-gray-500">No retailers found.</p>
         ) : (
@@ -132,105 +135,36 @@ export default function RetailerList() {
                       <td className="px-[2px] py-[0px]">
                         {retailer.email || "—"}
                       </td>
-                      {/* <td className="px-[2px] py-[0px] text-right relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(
-                            openMenuId === retailer._id ? null : retailer._id
-                          )
-                        }
-                        className="p-2 rounded hover:bg-gray-200"
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {openMenuId === retailer._id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded shadow-md z-30"
-                        >
-                          <button
-                            onClick={() => handleEmployee(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAccountBalanceWallet size={20} className="mr-2" /> Employee
-                          </button>
-                          <button
-                            onClick={() => handleWallet(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAccountBalanceWallet size={20} className="mr-2" />Wallet
-                          </button>
-                          <button
-                            onClick={() => handleAssignPackage(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <MdOutlineAssignment size={20} className="mr-2" /><marquee behavior="scroll" direction="" scrollAmount="5">Assign Package</marquee>
-                          </button>
-                          <button
-                            onClick={() => handleView(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEye className="mr-2" /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEdit className="mr-2" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(retailer._id)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <FaTrash className="mr-2" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </td> */}
                       <td className="px-[2px] py-[0px] text-left relative">
                         <div className="flex items-center  gap-1">
-                          {/* <button
-                          onClick={() => handleEmployee(retailer._id)}
-                          className="p-1 text-gray-600 hover:text-blue-600 rounded"
-                          title="Employee"
-                        >
-                          <MdOutlineSupportAgent size={20} />
-                        </button> */}
-                          {/* <button
-                          onClick={() => handleWallet(retailer._id)}
-                          className="p-1 text-gray-600 hover:text-blue-600 rounded"
-                          title="Wallet"
-                        >
-                          <MdOutlineAccountBalanceWallet size={20} />
-                        </button> */}
-                          {/* <button
-                          onClick={() => handleAssignPackage(retailer._id)}
-                          className="p-1 text-gray-600 hover:text-green-600 rounded"
-                          title="Assign Package"
-                        >
-                          <MdOutlineAssignment size={20} />
-                        </button> */}
-                          <button
-                            onClick={() => handleView(retailer._id)}
-                            className="p-1 text-gray-600 hover:text-blue-600 rounded"
-                            title="View"
-                          >
-                            <FaEye />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(retailer._id)}
-                            className="p-1 text-gray-600 hover:text-green-600 rounded"
-                            title="Edit"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(retailer._id)}
-                            className="p-1 text-red-600 hover:text-red-700 rounded"
-                            title="Delete"
-                          >
-                            <FaTrash />
-                          </button>
+                          <ProtectedAction module="reseller" action="view">
+                            <button
+                              onClick={() => handleView(retailer._id)}
+                              className="p-1 text-gray-600 hover:text-blue-600 rounded"
+                              title="View"
+                            >
+                              <FaEye />
+                            </button>
+                          </ProtectedAction>
+
+                          <ProtectedAction module="reseller" action="edit">
+                            <button
+                              onClick={() => handleEdit(retailer._id)}
+                              className="p-1 text-gray-600 hover:text-green-600 rounded"
+                              title="Edit"
+                            >
+                              <FaEdit />
+                            </button>
+                          </ProtectedAction>
+                          <ProtectedAction module="reseller" action="delete">
+                            <button
+                              onClick={() => handleDelete(retailer._id)}
+                              className="p-1 text-red-600 hover:text-red-700 rounded"
+                              title="Delete"
+                            >
+                              <FaTrash />
+                            </button>
+                          </ProtectedAction>
                         </div>
                       </td>
                     </tr>

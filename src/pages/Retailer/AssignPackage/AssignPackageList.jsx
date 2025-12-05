@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaEllipsisV, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { getAssignedPackageList, updateAssignedPackageStatus } from "../../../service/rolePermission";
 import { IoMdArrowBack } from "react-icons/io";
+import ProtectedAction from "../../../components/ProtectedAction";
 
 export default function AssignPackageList() {
   const { id } = useParams(); // Reseller ID from URL params
@@ -81,20 +82,14 @@ export default function AssignPackageList() {
       <div className="flex items-center justify-between h-0">
         <div></div>
         <div className="space-x-2 flex">
-          {/* <button
-            onClick={() => navigate(`/retailer/list`)}
-            className="px-[2px] py-[2px] text-white bg-gray-600 rounded hover:bg-gray-700 text-[12px]"
-          >
-            <span className="flex items-center h-full">
-              <IoMdArrowBack className="mr-1" /> Back
-            </span>
-          </button> */}
-          <button
-            onClick={() => navigate(`/retailer/assignPackage/${id}`)}
-            className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
-          >
-            Assign New Package
-          </button>
+          <ProtectedAction module="reseller" action="assignPackage">
+            <button
+              onClick={() => navigate(`/retailer/assignPackage/${id}`)}
+              className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
+            >
+              Assign New Package
+            </button>
+          </ProtectedAction>
         </div>
       </div>
       {packages.length === 0 ? (
@@ -124,43 +119,6 @@ export default function AssignPackageList() {
                     <td className="px-[2px] py-[2px]">{pkg.offerPrice}</td>
                     <td className="px-[2px] py-[2px]">{pkg.retailerPrice}</td>
                     <td className={`px-[2px] py-[2px] ${pkg.status === "active" ? "text-green-700" : "text-red-700"}`}>{pkg.status}</td>
-                    {/* <td className="px-[2px] py-[2px] text-right relative">
-                      <button
-                        onClick={() =>
-                          setOpenMenuId(
-                            openMenuId === pkg.packageId ? null : pkg.packageId
-                          )
-                        }
-                        className="p-2 rounded hover:bg-gray-200"
-                      >
-                        <FaEllipsisV />
-                      </button>
-                      {openMenuId === pkg.packageId && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded shadow-md z-30"
-                        >
-                          <button
-                            onClick={() => handleView(pkg.packageId)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEye className="mr-2" /> View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(pkg.packageId, pkg.status)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm hover:bg-gray-100"
-                          >
-                            <FaEdit className="mr-2" /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(pkg.packageId)}
-                            className="flex items-center w-full px-3 py-[2px] text-sm text-red-600 hover:bg-gray-100"
-                          >
-                            <FaTrash className="mr-2" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </td> */}
                     <td className="px-[2px] py-[2px] text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
