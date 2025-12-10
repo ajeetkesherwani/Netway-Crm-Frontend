@@ -666,18 +666,17 @@ export default function TicketCreate() {
 
         {/* Assign To */}
         <div>
-          <label className="block font-medium">Assign To *</label>
+          <label className="block font-medium">Assign To</label>
           <select
             name="assignToId"
             value={formData.assignToId}
             onChange={handleChange}
             className="border p-2 w-full rounded"
-            required
           >
             <option value="">Select Staff</option>
             {staffList.map((staff) => (
               <option key={staff._id} value={staff._id}>
-                {staff.roleName || staff.name}
+                {staff.staffName || staff.name}
               </option>
             ))}
           </select>

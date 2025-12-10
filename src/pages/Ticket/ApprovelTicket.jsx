@@ -113,22 +113,28 @@ export default function ApprovalTicket() {
       {/* ✅ Table */}
       <div className="overflow-x-auto bg-white shadow rounded-lg border border-gray-100">
         {/* Table Header */}
-        <div className="hidden md:grid grid-cols-8 bg-blue-50 border-b font-semibold text-sm text-gray-700 py-3 px-4">
-          <div>S.No</div>
+        <div className="hidden md:grid grid-cols-9 bg-blue-50 border-b font-semibold text-sm text-gray-700 py-3 px-4">
+          <div>S No</div>
           <div>Ticket No</div>
-          <div>Name</div>
+          <div>Category</div>
+          {/* <div>Name</div>
           <div>Phone</div>
           <div>Email</div>
-          <div>Severity</div>
-          <div>Created</div>
-          <div className="text-center">Status / Actions</div>
+          <div>Severity</div> */}
+          <div>Ticket Date/Time</div>
+          <div>Call Source</div>
+          <div>Assigned Date/Time</div>
+          <div>Resolve By</div>
+          <div>Resolve Date/Time</div>
+          <div>Status</div>
+          {/* <div className="text-center">Status / Actions</div> */}
         </div>
 
         {tickets.length > 0 ? (
           tickets.map((ticket, index) => (
             <div
               key={ticket._id}
-              className="grid grid-cols-2 md:grid-cols-8 items-center text-sm text-gray-700 border-b hover:bg-gray-50 px-4 py-3 transition duration-200 relative"
+              className="grid grid-cols-2 md:grid-cols-9 items-center text-sm text-gray-700 border-b hover:bg-gray-50 px-4 py-3 transition duration-200 relative"
             >
               {/* S.No */}
               <div>{(page - 1) * limit + index + 1}</div>
@@ -140,7 +146,7 @@ export default function ApprovalTicket() {
               >
                 {ticket._id?.slice(-6)}
               </div>
-
+              <div>--</div>
               <div>{ticket.personName || "—"}</div>
               <div>{ticket.personNumber || "—"}</div>
               <div>{ticket.email || "—"}</div>
