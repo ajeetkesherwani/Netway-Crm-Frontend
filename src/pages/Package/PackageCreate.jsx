@@ -19,6 +19,8 @@ export default function PackageCreate() {
     iptvPlanName: "",
     isOtt: false,
     ottPlanName: "",
+    basePrice: "",
+    offerPrice: ""
   });
 
   const navigate = useNavigate();
@@ -52,6 +54,8 @@ export default function PackageCreate() {
         typeOfPlan: formData.typeOfPlan,
         categoryOfPlan: formData.categoryOfPlan,
         description: formData.description,
+        basePrice: formData.basePrice,
+        offerPrice: formData.offerPrice,
         // Only include if checked
         ...(formData.isIptv && {
           isIptv: true,
@@ -88,6 +92,8 @@ export default function PackageCreate() {
       iptvPlanName: "",
       isOtt: false,
       ottPlanName: "",
+      basePrice: "",
+      offerPrice:""
     });
   };
 
@@ -214,6 +220,30 @@ export default function PackageCreate() {
             type="datetime-local"
             name="toDate"
             value={formData.toDate}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+          />
+        </div>
+
+        {/* basePrice */}
+        <div>
+          <label className="block font-medium mb-1">BasePrice</label>
+          <input
+            type="number"
+            name="basePrice"
+            value={formData.basePrice}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+          />
+        </div>
+
+        {/* offerPrice */}
+        <div>
+          <label className="block font-medium mb-1">OfferPrice</label>
+          <input
+            type="number"
+            name="offerPrice"
+            value={formData.offerPrice}
             onChange={handleChange}
             className="border p-2 w-full rounded"
           />

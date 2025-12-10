@@ -1,104 +1,394 @@
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { FaEye, FaEdit, FaTrash, FaSignInAlt, FaToggleOn, FaToggleOff, FaEllipsisV } from "react-icons/fa";
+// import ProtectedAction from "../../components/ProtectedAction";
+// import { getStaff } from "../../service/staffService";
+// import toast from "react-hot-toast";
+// import { useLogin } from "../../service/login";
 
-import { useEffect, useState, useRef } from "react";
+// export default function StaffPage() {
+//   const [staffList, setStaffList] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState("");
+//   const [openMenuId, setOpenMenuId] = useState(null);
+//   const navigate = useNavigate();
+//   const { login } = useLogin();
+
+//   useEffect(() => {
+//     const loadStaff = async () => {
+//       try {
+//         const res = await getStaff();
+//         const normalized = (res.data || []).map((staff) => ({
+//           ...staff,
+//           status:
+//             staff.status === "true" || staff.status === true
+//               ? "active"
+//               : staff.status || "inactive",
+//         }));
+//         setStaffList(normalized);
+//       } catch (err) {
+//         console.error(err);
+//         setError("Failed to load staff");
+//         toast.error("Failed to load staff");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     loadStaff();
+//   }, []);
+
+//   const toggleMenu = (id) => {
+//     setOpenMenuId(openMenuId === id ? null : id);
+//   };
+
+//   // Close menu when clicking outside
+//   useEffect(() => {
+//     const handleClickOutside = () => setOpenMenuId(null);
+//     document.addEventListener("click", handleClickOutside);
+//     return () => document.removeEventListener("click", handleClickOutside);
+//   }, []);
+
+//   const handleView = (id) => {
+//     navigate(`/staff/view/${id}`);
+//     setOpenMenuId(null);
+//   };
+//   const handleEdit = (id) => {
+//     navigate(`/staff/update/${id}`);
+//     setOpenMenuId(null);
+//   };
+
+//   const handleDelete = (id) => {
+//     if (window.confirm("Are you sure you want to delete this staff?")) {
+//       setStaffList((prev) => prev.filter((s) => s._id !== id));
+//       toast.success("Staff deleted");
+//       setOpenMenuId(null);
+//     }
+//   };
+
+//   const handleToggleStatus = (staff) => {
+//     const newStatus = staff.status === "active" ? "inactive" : "active";
+//     if (window.confirm(`Make ${staff.name} ${newStatus.toUpperCase()}?`)) {
+//       setStaffList((prev) =>
+//         prev.map((s) =>
+//           s._id === staff._id ? { ...s, status: newStatus } : s
+//         )
+//       );
+//       toast.success(`Staff is now ${newStatus}`);
+//       setOpenMenuId(null);
+//     }
+//   };
+
+//   const handleLoginAsStaff = async (staff) => {
+//     if (!staff?.userName || !staff?.plainPassword) {
+//       toast.error("No login credentials");
+//       return;
+//     }
+//     if (!window.confirm(`Login as ${staff.name}?`)) return;
+
+//     try {
+//       toast.loading("Logging in...");
+//       const res = await login({
+//         userName: staff.userName,
+//         password: staff.plainPassword,
+//       });
+//       toast.dismiss();
+//       if (res?.token || res?.success) {
+//         toast.success(`Logged in as ${staff.name}`);
+//         navigate("/");
+//       } else {
+//         toast.error(res?.message || "Login failed");
+//       }
+//     } catch (err) {
+//       toast.dismiss();
+//       toast.error("Login failed");
+//     }
+//     setOpenMenuId(null);
+//   };
+
+//   if (loading) return <p className="p-4">Loading Staff...</p>;
+//   if (error) return <p className="p-4 text-red-500">{error}</p>;
+
+//   return (
+//     <div className="p-6">
+//       <div className="flex items-center justify-between mb-4">
+//         <h1 className="text-lg font-medium">Staff List</h1>
+//         <ProtectedAction module="staff" action="create">
+//           <button
+//             onClick={() => navigate("/staff/create")}
+//             className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+//           >
+//             Add Staff
+//           </button>
+//         </ProtectedAction>
+//       </div>
+
+//       {staffList.length === 0 ? (
+//         <p className="text-gray-500">No Staff Found.</p>
+//       ) : (
+//         <div className="hidden md:block overflow-x-auto">
+//           <table className="min-w-[900px] w-full border border-gray-200 divide-y divide-gray-200 text-[12px]">
+//             <thead className="bg-gray-100">
+//               <tr>
+//                 <th className="px-[2px] py-[2px] text-left">S.No</th>
+//                 <th className="px-[2px] py-[2px] text-left">Name</th>
+//                 <th className="px-[2px] py-[2px] text-left">Phone No</th>
+//                 <th className="px-[2px] py-[2px] text-left">Email</th>
+//                 <th className="px-[2px] py-[2px] text-left">Role</th>
+//                 <th className="px-[2px] py-[2px] text-left">Status</th>
+//                 <th className="px-[2px] py-[2px] text-center">Actions</th>
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-gray-200">
+//               {staffList.map((staff, index) => (
+//                 <tr key={staff._id} className="hover:bg-gray-50">
+//                   <td className="px-[2px] py-[2px]">{index + 1}</td>
+//                   <td
+//                     className="px-[2px] py-[2px] text-black hover:text-blue-600 hover:underline cursor-pointer"
+//                     onClick={() => handleView(staff._id)}
+//                   >
+//                     {staff.name}
+//                   </td>
+//                   <td className="px-[2px] py-[2px]">{staff.phoneNo}</td>
+//                   <td className="px-[2px] py-[2px]">{staff.email || "—"}</td>
+//                   <td className="px-[2px] py-[2px]">{staff.role?.roleName || "—"}</td>
+//                   <td className="px-[2px] py-[2px]">
+//                     <span
+//                       className={`px-2 py-0.5 rounded text-xs ${
+//                         staff.status === "active"
+//                           ? "bg-green-100 text-green-800"
+//                           : "bg-red-100 text-red-800"
+//                       }`}
+//                     >
+//                       {staff.status}
+//                     </span>
+//                   </td>
+
+//                   {/* 3-Dot Menu */}
+//                   <td className="px-[2px] py-[2px] text-center relative">
+//                     <button
+//                       onClick={(e) => {
+//                         e.stopPropagation();
+//                         toggleMenu(staff._id);
+//                       }}
+//                       className="p-1 hover:bg-gray-200 rounded"
+//                     >
+//                       <FaEllipsisV className="text-gray-600" />
+//                     </button>
+
+//                     {/* Dropdown Menu */}
+//                     {openMenuId === staff._id && (
+//                       <div
+//                         className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10"
+//                         onClick={(e) => e.stopPropagation()}
+//                       >
+//                         <div className="py-1">
+//                           <button
+//                             onClick={() => handleView(staff._id)}
+//                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+//                           >
+//                             <FaEye /> View
+//                           </button>
+// {/* 
+//                           <ProtectedAction module="staff" action="update">
+//                             <button
+//                               onClick={() => handleEdit(staff._id)}
+//                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+//                             >
+//                               <FaEdit /> Edit
+//                             </button>
+//                           </ProtectedAction> */}
+
+                       
+//                             <button
+//                               onClick={() => handleEdit(staff._id)}
+//                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+//                             >
+//                               <FaEdit /> Edit
+//                             </button>
+                
+
+//                           <button
+//                             onClick={() => handleToggleStatus(staff)}
+//                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+//                           >
+//                             {staff.status === "active" ? (
+//                               <>
+//                                 <FaToggleOn className="text-green-600" /> Deactivate
+//                               </>
+//                             ) : (
+//                               <>
+//                                 <FaToggleOff className="text-red-600" /> Activate
+//                               </>
+//                             )}
+//                           </button>
+
+//                           <button
+//                             onClick={() => handleLoginAsStaff(staff)}
+//                             className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 flex items-center gap-2"
+//                           >
+//                             <FaSignInAlt /> Login as Staff
+//                           </button>
+
+//                           <ProtectedAction module="staff" action="delete">
+//                             <button
+//                               onClick={() => handleDelete(staff._id)}
+//                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+//                             >
+//                               <FaTrash /> Delete
+//                             </button>
+//                           </ProtectedAction>
+//                         </div>
+//                       </div>
+//                     )}
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEdit, FaTrash, FaSignInAlt } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaSignInAlt, FaToggleOn, FaToggleOff, FaEllipsisV, FaSearch } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
 import { getStaff } from "../../service/staffService";
 import toast from "react-hot-toast";
 import { useLogin } from "../../service/login";
-
 export default function StaffPage() {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const navigate = useNavigate();
-  const { login } = useLogin(); // ✅ FIXED
-
-  // ✅ Load staff data
+  const { login } = useLogin();
   useEffect(() => {
     const loadStaff = async () => {
       try {
         const res = await getStaff();
-        setStaffList(res.data || []);
+        const normalized = (res.data || []).map((staff) => ({
+          ...staff,
+          status:
+            staff.status === "true" || staff.status === true
+              ? "active"
+              : staff.status || "inactive",
+        }));
+        setStaffList(normalized);
       } catch (err) {
-        console.error("Error fetching staff:", err);
+        console.error(err);
         setError("Failed to load staff");
+        toast.error("Failed to load staff");
       } finally {
         setLoading(false);
       }
     };
     loadStaff();
   }, []);
-
-  // ✅ View / Edit / Delete Handlers
-  const handleView = (id) => navigate(`/staff/view/${id}`);
-  const handleEdit = (id) => navigate(`/staff/update/${id}`);
-  const handleDelete = async (id) => {
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+  const handleView = (id) => {
+    navigate(`/staff/view/${id}`);
+    setOpenMenuId(null);
+  };
+  const handleEdit = (id) => {
+    navigate(`/staff/update/${id}`);
+    setOpenMenuId(null);
+  };
+  const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this staff?")) {
-      setStaffList(staffList.filter((s) => s._id !== id));
+      setStaffList((prev) => prev.filter((s) => s._id !== id));
+      toast.success("Staff deleted");
+      setOpenMenuId(null);
     }
   };
-
-  // ✅ Admin Login as Staff
+  const handleToggleStatus = (staff) => {
+    const newStatus = staff.status === "active" ? "inactive" : "active";
+    if (window.confirm(`Make ${staff.name} ${newStatus.toUpperCase()}?`)) {
+      setStaffList((prev) =>
+        prev.map((s) =>
+          s._id === staff._id ? { ...s, status: newStatus } : s
+        )
+      );
+      toast.success(`Staff is now ${newStatus}`);
+      setOpenMenuId(null);
+    }
+  };
   const handleLoginAsStaff = async (staff) => {
-    console.log("🧩 Login clicked for:", staff?.name);
-
     if (!staff?.userName || !staff?.plainPassword) {
-      toast.error("This staff does not have login credentials ❌");
+      toast.error("No login credentials");
       return;
     }
-
     if (!window.confirm(`Login as ${staff.name}?`)) return;
-
     try {
-      toast.loading(`Logging in as ${staff.name}...`);
-
-      console.log("📡 Sending to API:", {
-        userName: staff.userName,
-        password: staff.plainPassword,
-      });
-
-      // ✅ use login() from your hook
+      toast.loading("Logging in...");
       const res = await login({
         userName: staff.userName,
         password: staff.plainPassword,
       });
-
       toast.dismiss();
-      console.log("✅ API Response:", res);
-
       if (res?.token || res?.success) {
-        // ✅ Permissions saved automatically inside useLogin
-        toast.success(`Logged in as ${staff.name} ✅`);
+        toast.success(`Logged in as ${staff.name}`);
         navigate("/");
       } else {
-        toast.error(res?.message || "Login failed ❌");
+        toast.error(res?.message || "Login failed");
       }
     } catch (err) {
       toast.dismiss();
-      console.error("❌ Login failed:", err);
-      toast.error(err.message || "Something went wrong ❌");
+      toast.error("Login failed");
     }
+    setOpenMenuId(null);
   };
-
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm);
+  };
+  const displayedStaff = staffList.filter((staff) =>
+    staff.name.toLowerCase().includes(appliedSearch.toLowerCase())
+  );
   if (loading) return <p className="p-4">Loading Staff...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
-
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-lg font-medium">Staff List</h1>
+        <div className="flex items-center">
+          <h1 className="text-lg font-medium">Staff List</h1>
+          <div className="ml-4 flex items-center">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name"
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            />
+            <button
+              onClick={handleSearch}
+              className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              <FaSearch />
+            </button>
+          </div>
+        </div>
         <ProtectedAction module="staff" action="create">
           <button
             onClick={() => navigate("/staff/create")}
-            className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none"
+            className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             Add Staff
           </button>
         </ProtectedAction>
       </div>
-
-      {staffList.length === 0 ? (
+      {displayedStaff.length === 0 ? (
         <p className="text-gray-500">No Staff Found.</p>
       ) : (
         <div className="hidden md:block overflow-x-auto">
@@ -109,50 +399,107 @@ export default function StaffPage() {
                 <th className="px-[2px] py-[2px] text-left">Name</th>
                 <th className="px-[2px] py-[2px] text-left">Phone No</th>
                 <th className="px-[2px] py-[2px] text-left">Email</th>
+                <th className="px-[2px] py-[2px] text-left">Role</th>
                 <th className="px-[2px] py-[2px] text-left">Status</th>
-                <th className="px-[2px] py-[2px] text-left">Action</th>
-                <th className="px-[2px] py-[2px] text-center">Login</th>
+                <th className="px-[2px] py-[2px] text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {staffList.map((staff, index) => (
+              {displayedStaff.map((staff, index) => (
                 <tr key={staff._id} className="hover:bg-gray-50">
                   <td className="px-[2px] py-[2px]">{index + 1}</td>
-                  <td className="px-[2px] py-[2px]">{staff.name}</td>
+                  <td
+                    className="px-[2px] py-[2px] text-black hover:text-blue-600 hover:underline cursor-pointer"
+                    onClick={() => handleView(staff._id)}
+                  >
+                    {staff.name}
+                  </td>
                   <td className="px-[2px] py-[2px]">{staff.phoneNo}</td>
                   <td className="px-[2px] py-[2px]">{staff.email || "—"}</td>
-                  <td className="px-[2px] py-[2px]">{staff.status}</td>
+                  <td className="px-[2px] py-[2px]">{staff.role?.roleName || "—"}</td>
                   <td className="px-[2px] py-[2px]">
-                    <div className="flex items-center gap-2">
-                      <FaEye
-                        className="text-blue-600 cursor-pointer hover:text-blue-800"
-                        onClick={() => handleView(staff._id)}
-                        title="View"
-                      />
-                      <ProtectedAction module="staff" action="update">
-                        <FaEdit
-                          className="text-green-600 cursor-pointer hover:text-green-800"
-                          onClick={() => handleEdit(staff._id)}
-                          title="Edit"
-                        />
-                      </ProtectedAction>
-                      <ProtectedAction module="staff" action="delete">
-                        <FaTrash
-                          className="text-red-600 cursor-pointer hover:text-red-800"
-                          onClick={() => handleDelete(staff._id)}
-                          title="Delete"
-                        />
-                      </ProtectedAction>
-                    </div>
-                  </td>
-                  <td className="px-[2px] py-[2px] text-center">
-                    <button
-                      onClick={() => handleLoginAsStaff(staff)}
-                      className="p-1 text-blue-600 bg-gray-100 rounded hover:bg-blue-100 focus:outline-none"
-                      title="Login as this staff"
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs ${
+                        staff.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
                     >
-                      <FaSignInAlt size={16} />
+                      {staff.status}
+                    </span>
+                  </td>
+                  {/* 3-Dot Menu */}
+                  <td className="px-[2px] py-[2px] text-center relative">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMenu(staff._id);
+                      }}
+                      className="p-1 hover:bg-gray-200 rounded"
+                    >
+                      <FaEllipsisV className="text-gray-600" />
                     </button>
+                    {/* Dropdown Menu */}
+                    {openMenuId === staff._id && (
+                      <div
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleView(staff._id)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          >
+                            <FaEye /> View
+                          </button>
+{/*
+                          <ProtectedAction module="staff" action="update">
+                            <button
+                              onClick={() => handleEdit(staff._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <FaEdit /> Edit
+                            </button>
+                          </ProtectedAction> */}
+                      
+                            <button
+                              onClick={() => handleEdit(staff._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              <FaEdit /> Edit
+                            </button>
+               
+                          <button
+                            onClick={() => handleToggleStatus(staff)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          >
+                            {staff.status === "active" ? (
+                              <>
+                                <FaToggleOn className="text-green-600" /> Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <FaToggleOff className="text-red-600" /> Activate
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleLoginAsStaff(staff)}
+                            className="w-full text-left px-4 py-2 text-sm text-purple-700 hover:bg-purple-50 flex items-center gap-2"
+                          >
+                            <FaSignInAlt /> Login as Staff
+                          </button>
+                          <ProtectedAction module="staff" action="delete">
+                            <button
+                              onClick={() => handleDelete(staff._id)}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                            >
+                              <FaTrash /> Delete
+                            </button>
+                          </ProtectedAction>
+                        </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}

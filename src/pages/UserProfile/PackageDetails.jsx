@@ -79,6 +79,12 @@ const UserPackageDetails = () => {
       billType: newPackage.billType,
       basePrice: Number(newPackage.basePrice),
       customPrice: Number(newPackage.customPrice),  // ❗ updated price always saved
+      validity: {
+        number: Number(newPackage.validity?.number) || 30,
+        unit: newPackage.validity?.unit 
+          ? newPackage.validity.unit.charAt(0).toUpperCase() + newPackage.validity.unit.slice(1).toLowerCase()
+          : "Day"
+      }
     });
 
     alert("Package Assigned!");
