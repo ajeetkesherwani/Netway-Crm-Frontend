@@ -162,6 +162,7 @@ export const permissionsConfig = [
             "approvalTicketApprove",
             "approvalTicketDisapprove",
             "approvalTicketView",
+            "closeTicketList",
         ],
     },
     {

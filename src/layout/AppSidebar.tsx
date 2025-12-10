@@ -131,14 +131,12 @@ const AppSidebar: React.FC = () => {
     // 🎫 Tickets (fixed naming and all keys)
 
     const ticketsSubItems = [];
-    if (permissions.tickets?.renewalTicketList)
-      ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
     if (permissions.tickets?.create)
       ticketsSubItems.push({ name: "Create Ticket", path: "/ticket/create" });
-    if (permissions.tickets?.close)
-      ticketsSubItems.push({ name: "Close Ticket", path: "/ticket/close" });
     if (permissions.tickets?.manageOpenList)
       ticketsSubItems.push({ name: "Manage Ticket", path: "/ticket/manage" });
+    if (permissions.tickets?.closeTicketList)
+      ticketsSubItems.push({ name: "Close Ticket", path: "/ticket/close" });
     if (permissions.tickets?.allTicketList)
       ticketsSubItems.push({ name: "All Ticket", path: "/ticket/all" });
     if (permissions.tickets?.approvalTicketList)
@@ -146,6 +144,8 @@ const AppSidebar: React.FC = () => {
         name: "Approval Ticket",
         path: "/ticket/approval",
       });
+    if (permissions.tickets?.renewalTicketList)
+      ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
     if (ticketsSubItems.length > 0)
       generatedNavItems.push({
         name: "Tickets",
