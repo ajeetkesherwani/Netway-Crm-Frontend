@@ -7,7 +7,7 @@ import { getAllLco } from "../../service/lco";
 import { toast } from "react-toastify";
 import { getStaffList } from "../../service/ticket";
 import { getAllPackageList } from "../../service/package";
-
+import { assignPackageToUser } from "../../service/userPackage";
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ export default function CreateUser() {
   const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
   const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
   const [selectedLco, setSelectedLco] = useState("");
+  const [customPackagePrice, setCustomPackagePrice] = useState("");
 
 
   const [formErrors, setFormErrors] = useState({});
@@ -36,11 +37,13 @@ export default function CreateUser() {
   const [showDropdown, setShowDropdown] = useState(false);
 
 
-  const connectionTypes = ["IIL", "FTTH", "Wireless", "Other"];
+  const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
+  const serviceOpted = ["intercom", "broadband", "corporate"]
+
 
   const initialForm = {
     customer: {
@@ -71,6 +74,7 @@ export default function CreateUser() {
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
+      customArea: "", //new
       nas: [],
       stbNo: "",
       vcNo: "",
@@ -80,6 +84,7 @@ export default function CreateUser() {
         type: "Self"
       },
       packageDetails: {
+        packageId: "",
         packageName: "",
         packageAmount: "",
         packageStart: "",
@@ -275,25 +280,38 @@ export default function CreateUser() {
   const handlePackageChange = (packageId) => {
     const selected = packageList.find((p) => p._id === packageId);
     if (selected) {
-      setFieldValue(
-        "customer.packageDetails.packageId",
-        selected.packageId || ""
-      );
-      setFieldValue(
-        "customer.packageDetails.packageName",
-        selected.packageName || selected.name || ""
-      );
-      setFieldValue(
-        "customer.packageDetails.packageAmount",
-        selected.basePrice || selected.price || selected.amount || ""
-      );
+      const basePrice = selected.basePrice || selected.price || "";
+
+      // Save package ID and name
+      setFieldValue("customer.packageDetails.packageId", selected._id);
+      setFieldValue("customer.packageDetails.packageName", selected.packageName || selected.name || "");
+
+      // Set the original base price (for display and fallback)
+      setFieldValue("customer.packageDetails.packageAmount", basePrice);
+
+      // Also set the editable custom price to base price initially
+      setCustomPackagePrice(basePrice);
     } else {
+      // Reset everything if no package selected
+      setFieldValue("customer.packageDetails.packageId", "");
       setFieldValue("customer.packageDetails.packageName", "");
       setFieldValue("customer.packageDetails.packageAmount", "");
+      setCustomPackagePrice("");
     }
   };
+  // const handlePackageChange = (packageId) => {
+  //   const selected = packageList.find((p) => p._id === packageId);
+  //   if (selected) {
+  //     setFieldValue("customer.packageDetails.packageId", selected._id);           // ← ID save
+  //     setFieldValue("customer.packageDetails.packageName", selected.packageName || selected.name || "");
+  //     setFieldValue("customer.packageDetails.packageAmount", selected.basePrice || selected.price || "");
+  //   } else {
+  //     setFieldValue("customer.packageDetails.packageId", "");
+  //     setFieldValue("customer.packageDetails.packageName", "");
+  //     setFieldValue("customer.packageDetails.packageAmount", "");
+  //   }
+  // };
 
-  // VALIDATION & SUBMIT (same as before)
 
   // validation: focus on required payment fields & some basics
   const validateForm = () => {
@@ -337,6 +355,8 @@ export default function CreateUser() {
     return errors;
   };
 
+
+  //handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -351,14 +371,12 @@ export default function CreateUser() {
 
     try {
       const payload = new FormData();
-
       payload.append("customer", JSON.stringify(formData.customer));
       payload.append("addresses", JSON.stringify(formData.addresses));
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
       payload.append("area", selectedArea);
 
-      // FIXED — Only append type when file exists, and use documentTypes[]
       formData.documents.forEach((doc) => {
         if (doc.file && doc.type) {
           payload.append("documents", doc.file);
@@ -366,33 +384,145 @@ export default function CreateUser() {
         }
       });
 
+      // Sirf ek call → User + Package dono ban jayenge
       await createUser(payload);
-      toast.success("User created successfully");
+
+      toast.success("Customer created & package assigned successfully!");
       navigate("/user/list");
 
     } catch (err) {
-      console.error(err);
-      toast.error(err?.message || "Failed to create user");
+      toast.error(err.response?.data?.message || "Failed to create customer");
     } finally {
       setLoading(false);
     }
   };
+
+  //   const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+
+  //   const errors = validateForm();
+  //   if (Object.keys(errors).length) {
+  //     setFormErrors(errors);
+  //     toast.error("Please fix form errors");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const payload = new FormData();
+  //     payload.append("customer", JSON.stringify(formData.customer));
+  //     payload.append("addresses", JSON.stringify(formData.addresses));
+  //     payload.append("payment", JSON.stringify(formData.payment));
+  //     payload.append("additional", JSON.stringify(formData.additional));
+  //     payload.append("area", selectedArea);
+
+  //     formData.documents.forEach((doc) => {
+  //       if (doc.file && doc.type) {
+  //         payload.append("documents", doc.file);
+  //         payload.append("documentTypes[]", doc.type);
+  //       }
+  //     });
+
+  //     // 1. Create User
+  //     const userRes = await createUser(payload);
+  //     const newUserId = userRes?.data?._id || userRes?.data?.user?._id;
+
+  //     if (!newUserId) {
+  //       throw new Error("User creation failed - no ID returned");
+  //     }
+
+  //     toast.success("Customer created successfully!");
+
+  //     // 2. Agar Package Select Kiya Hai → Assign Kar Do!
+  //     const pkgId = formData.customer.packageDetails.packageId;
+  //     if (pkgId) {
+  //       await assignPackageToUser(newUserId, {
+  //         packageId: pkgId,
+  //         packageName: formData.customer.packageDetails.packageName,
+  //         basePrice: Number(formData.customer.packageDetails.packageAmount),
+  //         customPrice: Number(formData.customer.packageDetails.packageAmount),
+  //         billType: "Prepaid",  // ya jo bhi default hai
+  //         status: "active"      // optional
+  //       });
+  //       console.log("Package auto-assigned on user creation!");
+  //     }
+
+  //     navigate("/user/list");
+
+  //   } catch (err) {
+  //     console.error("Create User Error:", err);
+  //     toast.error(err?.response?.data?.message || err?.message || "Failed to create customer");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+
+  //   const errors = validateForm();
+  //   if (Object.keys(errors).length) {
+  //     setFormErrors(errors);
+  //     toast.error("Please fix form errors");
+  //     setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const payload = new FormData();
+
+  //     payload.append("customer", JSON.stringify(formData.customer));
+  //     payload.append("addresses", JSON.stringify(formData.addresses));
+  //     payload.append("payment", JSON.stringify(formData.payment));
+  //     payload.append("additional", JSON.stringify(formData.additional));
+  //     payload.append("area", selectedArea);
+
+  //     // FIXED — Only append type when file exists, and use documentTypes[]
+  //     formData.documents.forEach((doc) => {
+  //       if (doc.file && doc.type) {
+  //         payload.append("documents", doc.file);
+  //         payload.append("documentTypes[]", doc.type);
+  //       }
+  //     });
+
+  //     await createUser(payload);
+  //     toast.success("User created successfully");
+  //     navigate("/user/list");
+
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error(err?.message || "Failed to create user");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
 
   const handleClear = () => {
     setFormData(initialForm);
     setFormErrors({});
     setSelectedArea("");
+    setCustomPackagePrice("");
   };
 
   const documentTypes = [
-    "ID proof",
-    "Profile Id",
-    "Aadhar Card",
-    "Insurence Paper",
+    "Address Proof", 
+    "Profile Photo", 
+    "Addhar Card", 
+    "Passport", 
     "Signature",
-    "Pan Card",
+    "Pan Card", 
+    "Driving Licence", 
+    "GST", 
     "Other"
+    // "ID proof",
+    // "Profile Id",
+    // "Aadhar Card",
+    // "Insurence Paper",
+    // "Signature",
+    // "Pan Card",
+    // "Other"
   ];
   const addDocumentRow = () =>
     setFormData((prev) => ({
@@ -533,7 +663,8 @@ export default function CreateUser() {
 
             <div>
               <label className="block text-sm font-medium">
-                Account Id (IPACCT Id)
+                {/* Account Id (IPACCT Id) */}
+                IPACCT ID/H8
               </label>
               <input
                 value={formData.customer.accountId}
@@ -710,7 +841,7 @@ export default function CreateUser() {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium">IP Type</label>
               <select
                 value={formData.customer.ipType}
@@ -723,7 +854,7 @@ export default function CreateUser() {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {formData.customer.ipType === "Dynamic IP Pool" && (
               <div>
@@ -757,13 +888,29 @@ export default function CreateUser() {
               />
             </div>
 
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium">Service Opted</label>
               <input
                 value={formData.customer.serviceOpted}
                 onChange={(e) => handleChange(e, "customer.serviceOpted")}
                 className="mt-1 p-2 border rounded w-full"
               />
+            </div> */}
+
+            <div>
+              <label className="block text-sm font-medium">Service Opted</label>
+              <select
+                value={formData.customer.serviceOpted || ""}
+                onChange={(e) => handleChange(e, "customer.serviceOpted")}
+                className="mt-1 p-2 border rounded w-full"
+              >
+                <option value="">-- Select Service --</option>
+                {serviceOpted.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -801,9 +948,9 @@ export default function CreateUser() {
                 onChange={(e) => handleCreatedForChange(e.target.value)}
               >
                 <option value="" disabled selected>Select</option>
-                <option value="admin">Admin</option>
-                <option value="reseller">Reseller</option>
-                <option value="lco">Lco</option>
+                <option value="Admin">Admin</option>
+                <option value="Retailer">Reseller</option>
+                <option value="Lco">Lco</option>
               </select>
             </div>
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
@@ -1042,8 +1189,8 @@ export default function CreateUser() {
 
             {/* dynamic area editor (bottom row across grid) */}
 
-            {/* ====== SINGLE AREA (ZONE) DROPDOWN – YE DAAL DO ====== */}
-            <div className="md:col-span-3 mt-6 p-5 rounded-xl border-2 ">
+            {/* SINGLE AREA (ZONE) DROPDOWN  */}
+            {/* <div className="md:col-span-3 mt-6 p-5 rounded-xl border-2 ">
               <label className="block text-lg font-bold text-blue-900 mb-3">
                 Select Area (Zone) <span className="text-red-500">*</span>
               </label>
@@ -1060,39 +1207,54 @@ export default function CreateUser() {
                 ))}
               </select>
 
-              {/* Error show */}
               {formErrors.area && (
                 <p className="text-red-600 font-medium mt-2">{formErrors.area}</p>
               )}
+            </div> */}
+
+            {/* ZONE + CUSTOM AREA - SIMPLE & CLEAN (Same as other inputs) */}
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              {/* Left: Zone Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Zone <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedArea}
+                  onChange={(e) => setSelectedArea(e.target.value)}
+                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                >
+                  <option value="">-- Select Zone --</option>
+                  {zoneList.map((zone) => (
+                    <option key={zone._id} value={zone._id}>
+                      {zone.zoneName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Right: Custom Area Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+              Area 
+                </label>
+                <input
+                  type="text"
+                  value={formData.customer.customArea || ""}
+                  onChange={(e) => setFieldValue("customer.customArea", e.target.value)}
+                  placeholder="e.g. Shivaji Nagar, Near Temple"
+                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                />
+              </div>
             </div>
 
-            {/* <div className="md:col-span-3 mt-2 border rounded p-3">
-              <h4 className="font-medium">Areas (Dynamic)</h4>
-              <div className="space-y-2 mt-2">
-                {areas.map((a, i) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <select
-                      value={formData.addresses.area}
-                      onChange={(e) => updateArea(i, e.target.value)}
-                      className="p-2 border rounded w-full"
-                    >
-                      <option value="">Select Area</option>
-                      {zoneList.map((zone) => (
-                        <option key={zone._id} value={zone._id}>
-                          {zone.zoneName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div> */}
+
           </div>
         </section>
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
         <section className="border rounded">
           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
-            Network & Package
+            Package Details
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* PACKAGE DROPDOWN + AUTO PRICE */}
@@ -1116,7 +1278,7 @@ export default function CreateUser() {
                 ))}
               </select>
 
-              <div className="mt-4">
+              {/* <div className="mt-4">
                 <label className="block text-sm font-medium">
                   Package Price (Auto-filled)
                 </label>
@@ -1126,11 +1288,44 @@ export default function CreateUser() {
                   className="w-full p-2 border rounded bg-gray-100 font-bold text-green-700"
                   placeholder="Price appears here"
                 />
+              </div> */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium">
+                  Package Price <span className="text-red-500">*</span>
+                  {customPackagePrice && formData.customer.packageDetails.packageAmount !== customPackagePrice && (
+                    <span className="text-xs text-orange-600 ml-2">(Customized)</span>
+                  )}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">₹</span>
+                  <input
+                    type="number"
+                    value={customPackagePrice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCustomPackagePrice(value);
+                      // Update the form data so it gets submitted
+                      setFieldValue("customer.packageDetails.packageAmount", value);
+                    }}
+                    className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
+                    placeholder="Enter custom price"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+                {formData.customer.packageDetails.packageAmount && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Original price: ₹{formData.customer.packageDetails.packageAmount}
+                    {customPackagePrice && customPackagePrice !== formData.customer.packageDetails.packageAmount &&
+                      ` → Now: ₹${customPackagePrice}`
+                    }
+                  </p>
+                )}
               </div>
             </div>
 
             {/* NETWORK TYPE */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium">Network Type</label>
               <select
                 value={formData.customer.networkType || ""}
@@ -1146,7 +1341,7 @@ export default function CreateUser() {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
           </div>
         </section>
 

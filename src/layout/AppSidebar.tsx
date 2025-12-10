@@ -61,15 +61,38 @@ const AppSidebar: React.FC = () => {
     ];
 
     // 👥 Staff
-    const staffSubItems = [];
-    if (permissions.staff?.listing)
-      staffSubItems.push({ name: "Staff List", path: "/staff/list" });
-    if (staffSubItems.length > 0)
-      generatedNavItems.push({
-        name: "Staff",
-        icon: <ListIcon />,
-        subItems: staffSubItems,
-      });
+const staffSubItems = [];
+
+// Add Staff List if permission exists
+if (permissions.staff?.listing) {
+  staffSubItems.push({ name: "Staff List", path: "/staff/list" });
+}
+
+// Add Role List under Staff if permission exists
+if (permissions.rolepermission?.listing) {
+  staffSubItems.push({ name: "Role List", path: "/role/list" });
+}
+
+// Only push Staff menu if there are sub-items
+if (staffSubItems.length > 0) {
+  generatedNavItems.push({
+    name: "Staff",
+    icon: <ListIcon />,
+    subItems: staffSubItems,
+  });
+}
+
+
+    // // 👥 Staff
+    // const staffSubItems = [];
+    // if (permissions.staff?.listing)
+    //   staffSubItems.push({ name: "Staff List", path: "/staff/list" });
+    // if (staffSubItems.length > 0)
+    //   generatedNavItems.push({
+    //     name: "Staff",
+    //     icon: <ListIcon />,
+    //     subItems: staffSubItems,
+    //   });
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
@@ -107,15 +130,15 @@ const AppSidebar: React.FC = () => {
       });
 
     // 🔐 Role Permission
-    const rolePermissionSubItems = [];
-    if (permissions.rolepermission?.listing)
-      rolePermissionSubItems.push({ name: "Role List", path: "/role/list" });
-    if (rolePermissionSubItems.length > 0)
-      generatedNavItems.push({
-        name: "Role Permission",
-        icon: <ListIcon />,
-        subItems: rolePermissionSubItems,
-      });
+    // const rolePermissionSubItems = [];
+    // if (permissions.rolepermission?.listing)
+    //   rolePermissionSubItems.push({ name: "Role List", path: "/role/list" });
+    // if (rolePermissionSubItems.length > 0)
+    //   generatedNavItems.push({
+    //     name: "Role Permission",
+    //     icon: <ListIcon />,
+    //     subItems: rolePermissionSubItems,
+    //   });
 
     // 📊 Reports
     const reportsSubItems = [];

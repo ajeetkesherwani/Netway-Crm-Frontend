@@ -69,6 +69,14 @@ export default function PackageDetails() {
             label="To Date"
             value={new Date(pkg.toDate).toLocaleDateString()}
           />
+          <Row
+            label="Base Price"
+            value={pkg.basePrice}
+          />
+             <Row
+            label="Offer Price"
+            value={pkg.offerPrice}
+          />
         </div>
       </div>
     </>

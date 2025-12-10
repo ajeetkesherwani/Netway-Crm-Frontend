@@ -189,7 +189,7 @@ export default function StaffCreate() {
                 </div>
 
                 {/* Staff Name */}
-                <div>
+                {/* <div>
                     <label className="block font-medium">Staff Name *</label>
                     <input
                         type="text"
@@ -199,11 +199,11 @@ export default function StaffCreate() {
                         required
                         className="border p-2 w-full rounded"
                     />
-                </div>
+                </div> */}
 
                 {/* Log ID */}
                 <div>
-                    <label className="block font-medium">Log ID *</label>
+                    <label className="block font-medium">User ID *</label>
                     <input
                         type="text"
                         name="logId"
@@ -283,7 +283,7 @@ export default function StaffCreate() {
                 </div>
 
                 {/* Address */}
-                <div>
+                {/* <div>
                     <label className="block font-medium">Address</label>
                     <input
                         type="text"
@@ -292,19 +292,12 @@ export default function StaffCreate() {
                         onChange={handleChange}
                         className="border p-2 w-full rounded"
                     />
-                </div>
+                </div> */}
 
                 {/* Area */}
-                <div>
+                {/* <div>
                     <label className="block font-medium">Area</label>
-                    {/* <input
-            type="text"
-            name="area"
-            value={formData.area}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          /> */}
-                    <select
+                <select
                         name="area"
                         value={formData.area}
                         onChange={handleChange}
@@ -320,7 +313,7 @@ export default function StaffCreate() {
                             </option>
                         ))}
                     </select>
-                </div>
+                </div> */}
 
                 {/* Salary */}
                 <div>
@@ -336,7 +329,7 @@ export default function StaffCreate() {
                 </div>
 
                 {/* Staff IP */}
-                <div>
+                {/* <div>
                     <label className="block font-medium">Staff IP</label>
                     <input
                         type="text"
@@ -346,10 +339,10 @@ export default function StaffCreate() {
                         className="border p-2 w-full rounded"
                         placeholder="e.g., 192.168.1.1"
                     />
-                </div>
+                </div> */}
 
                 {/* Reset OTP Expires */}
-                <div>
+                {/* <div>
                     <label className="block font-medium">Reset OTP Expires</label>
                     <input
                         type="datetime-local"
@@ -358,10 +351,10 @@ export default function StaffCreate() {
                         onChange={handleChange}
                         className="border p-2 w-full rounded"
                     />
-                </div>
+                </div> */}
 
                 {/* Bio */}
-                <div className="col-span-2">
+                {/* <div className="col-span-2">
                     <label className="block font-medium">Bio</label>
                     <textarea
                         name="bio"
@@ -369,7 +362,7 @@ export default function StaffCreate() {
                         onChange={handleChange}
                         className="border p-2 w-full rounded h-24"
                     />
-                </div>
+                </div> */}
 
                 {/* Comment */}
                 <div className="col-span-2">

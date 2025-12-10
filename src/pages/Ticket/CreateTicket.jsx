@@ -727,7 +727,7 @@ export default function TicketCreate() {
         <div className="col-span-2 flex justify-end gap-3 mt-4">
           <button
             type="button"
-            onClick={() => navigate("/ticket/list")}
+            onClick={() => navigate("/ticket/all")}
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
           >
             Back

@@ -89,7 +89,7 @@ export const createPurchasedPlan = async (data) => {
 // RENEW PLAN
 export const renewPurchasedPlan = async (planId, data) => {
   const res = await fetch(`${BASE_URL}/purchasedPlan/renew/${planId}`, {
-    method: "PATCH",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
@@ -110,5 +110,17 @@ export const getAssignedPackageList = async (userId) => {
     },
   });
   if (!res.ok) throw new Error("Failed to fetch assigned packages");
+  return res.json();
+};
+
+//get wallet balance
+export const getWalletBalance = async (userId) => {
+  const res = await fetch(`${BASE_URL}/userPackage/walletBalance/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to fetch wallet balance");
   return res.json();
 };
