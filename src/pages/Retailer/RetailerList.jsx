@@ -221,7 +221,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch } from "react-icons/fa";
+import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch, FaWallet } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
 import { deleteRetailer, getRetailer } from "../../service/retailer";
 import toast from "react-hot-toast";
@@ -235,6 +235,8 @@ export default function RetailerList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15;
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
@@ -261,7 +263,9 @@ export default function RetailerList() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
-      setOpenMenuId(null);
+      if (!event.target.closest(".menu-dropdown")) {
+        setOpenMenuId(null);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -296,19 +300,27 @@ export default function RetailerList() {
 
   const handleSearch = () => {
     setAppliedSearch(searchTerm);
+    setCurrentPage(1); // Reset to first page on search
     setShowSuggestions(false);
   };
 
   const selectSuggestion = (name) => {
     setSearchTerm(name);
     setAppliedSearch(name);
+    setCurrentPage(1);
     setShowSuggestions(false);
   };
 
-  // Filter for display
-  const displayedRetailers = retailers.filter((retailer) =>
+  // Filter full list
+  const filteredRetailers = retailers.filter((retailer) =>
     retailer.resellerName?.toLowerCase().includes(appliedSearch.toLowerCase())
   );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredRetailers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedRetailers = filteredRetailers.slice(startIndex, endIndex);
 
   // Suggestions
   const suggestions = [...new Set(
@@ -426,7 +438,7 @@ export default function RetailerList() {
               <tbody className="divide-y divide-gray-200">
                 {displayedRetailers.map((retailer, index) => (
                   <tr key={retailer._id} className="hover:bg-gray-50">
-                    <td className="px-2 py-2">{index + 1}</td>
+                    <td className="px-2 py-2">{startIndex + index + 1}</td>
                     <td className="px-2 py-2">
                       <span
                         className="hover:text-blue-600 hover:underline cursor-pointer"
@@ -441,11 +453,10 @@ export default function RetailerList() {
                     <td className="px-2 py-2">{retailer.walletBalance || 0}</td>
                     <td className="px-2 py-2">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          retailer.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-2 py-1 rounded text-xs font-medium ${retailer.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {retailer.status === "active" ? "Active" : "Inactive"}
                       </span>
@@ -461,10 +472,7 @@ export default function RetailerList() {
                         <FaEllipsisV className="text-gray-600" />
                       </button>
                       {openMenuId === retailer._id && (
-                        <div
-                          className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <div className="menu-dropdown absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                           <ul className="py-2 text-sm">
                             <li>
                               <button
@@ -494,6 +502,28 @@ export default function RetailerList() {
                                 </button>
                               </li>
                             </ProtectedAction>
+
+                            <ProtectedAction module="reseller" action="addTransaction">
+                              <li>
+                                <button
+                                  onClick={() =>
+                                    navigate(`/retailer/wallet/create/${retailer?._id}`, {
+                                      state: {
+                                        data: {
+                                          rsellerWalletBalance: retailer?.walletBalance || "",
+                                          creditBalance: retailer?.creditBalance || {},
+                                          resellerName: retailer?.resellerName || "",
+                                        },
+                                      },
+                                    })
+                                  }
+                                  className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
+                                >
+                                  <FaWallet /> Add Transaction
+                                </button>
+                              </li>
+                            </ProtectedAction>
+
                           </ul>
                         </div>
                       )}
@@ -504,13 +534,36 @@ export default function RetailerList() {
             </table>
           </div>
 
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6 flex justify-center items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
           {/* Mobile View */}
           <div className="space-y-4 md:hidden">
             {displayedRetailers.map((retailer, index) => (
               <div key={retailer._id} className="p-4 border rounded-lg shadow-sm bg-white">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-sm text-gray-500">#{index + 1}</p>
+                    <p className="text-sm text-gray-500">#{startIndex + index + 1}</p>
                     <h2 className="text-lg font-medium">{retailer.resellerName}</h2>
                   </div>
                   <button
@@ -530,11 +583,10 @@ export default function RetailerList() {
                 <p className="text-sm">
                   Status:{" "}
                   <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      retailer.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
+                    className={`px-2 py-1 rounded text-xs ${retailer.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                      }`}
                   >
                     {retailer.status === "active" ? "Active" : "Inactive"}
                   </span>
@@ -564,6 +616,27 @@ export default function RetailerList() {
                         >
                           <FaTrash /> Delete
                         </button>
+                      </ProtectedAction>
+
+                      <ProtectedAction module="reseller" action="addTransaction">
+                        <li>
+                          <button
+                            onClick={() =>
+                              navigate(`/retailer/wallet/create/${retailer?._id}`, {
+                                state: {
+                                  data: {
+                                    rsellerWalletBalance: retailer?.walletBalance || "",
+                                    creditBalance: retailer?.creditBalance || {},
+                                    resellerName: retailer?.resellerName || "",
+                                  },
+                                },
+                              })
+                            }
+                            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
+                          >
+                            <FaWallet /> Add Transaction
+                          </button>
+                        </li>
                       </ProtectedAction>
                     </div>
                   </div>

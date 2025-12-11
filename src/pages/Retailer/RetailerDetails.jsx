@@ -53,7 +53,52 @@ export default function RetailerView() {
       <div className="p-4  mx-auto flex gap-2 items-center -mt-4">
         <h3 className="text-2xl font-semibold">{retailer?.resellerName} Details</h3>
       </div>
-      <div className="flex justify-between mb-1">
+
+<div className="flex justify-between mb-1">
+  {/* BACK BUTTON */}
+  <button
+    onClick={() => navigate(-1)}
+    className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+  >
+    <span className="flex items-center"> <FaLongArrowAltLeft /> Back</span>
+  </button>
+
+  {/* ACTION BUTTONS */}
+  <div className="flex items-center gap-2">
+    {/* EDIT BUTTON */}
+    <ProtectedAction module="reseller" action="edit">
+      <button
+        onClick={() => navigate(`/retailer/update/${retailer?._id}`)}
+        className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+      >
+        Edit
+      </button>
+    </ProtectedAction>
+
+    {/* ADD TRANSACTION BUTTON */}
+    <ProtectedAction module="reseller" action="addTransaction">
+      <button
+        onClick={() =>
+          navigate(`/retailer/wallet/create/${retailer?._id}`, {
+            state: {
+              data: {
+                rsellerWalletBalance: retailer?.walletBalance || '',
+                creditBalance: retailer?.creditBalance || {},
+                resellerName: retailer?.resellerName || ''
+              }
+            }
+          })
+        }
+        className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+      >
+        Add Transaction
+      </button>
+    </ProtectedAction>
+  </div>
+</div>
+
+
+      {/* <div className="flex justify-between mb-1">
          <button
           onClick={() => navigate(-1)}
           className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
@@ -68,7 +113,7 @@ export default function RetailerView() {
             Add Transaction
           </button>
         </ProtectedAction>
-      </div>
+      </div> */}
       <div className="border rounded-lg overflow-hidden shadow">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <Row label="Title" value={retailer.title} />

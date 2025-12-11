@@ -49,7 +49,7 @@ export const getPackageDetails = async (id) => {
 // Update package
 export const updatePackage = async (id, packageData) => {
   const res = await fetch(`${BASE_URL}/package/update/${id}`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,

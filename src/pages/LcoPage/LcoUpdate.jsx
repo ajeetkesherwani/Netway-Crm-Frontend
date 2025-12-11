@@ -428,7 +428,8 @@ export default function UpdateLco() {
 
     try {
       await updateLco(id, submitData);
-      navigate("/lco/list");
+      // navigate("/lco/list");
+       navigate(-1, { replace: true });
     } catch (err) {
       console.error(err);
     } finally {
@@ -489,9 +490,9 @@ export default function UpdateLco() {
                 ))}
               </select>
             </div>
-            <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">State *</label>
               <select name="state" value={formData.state} onChange={handleChange} required className="w-full border rounded p-3">
@@ -501,9 +502,9 @@ export default function UpdateLco() {
             </div>
             <div><label className="block font-semibold mb-1">Pincode</label><input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Area</label><input type="text" name="area" value={formData.area} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Status</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full border rounded p-3">
                 <option value="active">Active</option>

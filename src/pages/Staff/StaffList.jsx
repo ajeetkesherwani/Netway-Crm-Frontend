@@ -268,7 +268,7 @@ import { useLogin } from "../../service/login";
 import * as XLSX from 'xlsx'; 
 
 export default function StaffPage() {
-  const [staffList, setStaffList] = useState([]);
+  const [staffList, setStaffList] = useState([]); // ← Full list (all staff)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
