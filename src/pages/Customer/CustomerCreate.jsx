@@ -8,6 +8,8 @@ import { toast } from "react-toastify";
 import { getStaffList } from "../../service/ticket";
 import { getAllPackageList } from "../../service/package";
 import { assignPackageToUser } from "../../service/userPackage";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -626,6 +628,68 @@ export default function CreateUser() {
                 </p>
               )}
             </div>
+
+               {/* dob */}
+               <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Date of Birth
+  </label>
+  <div className="relative">
+    <DatePicker
+      selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
+      onChange={(date) => {
+        const formatted = date ? date.toISOString().split("T")[0] : "";
+        setFieldValue("additional.dob", formatted);
+      }}
+      dateFormat="dd/MM/yyyy"
+      placeholderText="dd/mm/yyyy"
+      className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
+      showMonthDropdown
+      showYearDropdown
+      dropdownMode="select"
+      maxDate={new Date()}
+      yearDropdownItemNumber={80}
+      scrollableYearDropdown
+      popperPlacement="bottom-start"
+      // This allows clicking the icon to open calendar
+      onClickOutside={() => {}}
+      // Ensures calendar opens on icon click
+      showPopperArrow={false}
+    />
+
+    {/* Calendar Icon Inside Input - Clickable */}
+    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Trigger the DatePicker to open
+          document.querySelector('.react-datepicker__input-container input')?.focus();
+        }}
+        className="text-gray-400 hover:text-gray-600 focus:outline-none"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+            {/* <div>
+              <label className="block text-sm">DOB</label>
+              <input
+                type="date"
+                value={formData.additional.dob}
+                onChange={(e) => handleChange(e, "additional.dob")}
+                className="mt-1 p-2 border rounded w-full"
+              />
+            </div> */}
 
             <div>
               <label className="block text-sm font-medium">Mobile *</label>
@@ -1440,7 +1504,7 @@ export default function CreateUser() {
             Additional
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+            {/* <div>
               <label className="block text-sm">DOB</label>
               <input
                 type="date"
@@ -1448,7 +1512,7 @@ export default function CreateUser() {
                 onChange={(e) => handleChange(e, "additional.dob")}
                 className="mt-1 p-2 border rounded w-full"
               />
-            </div>
+            </div> */}
 
             <div>
               <label className="block text-sm">eKYC (Aadhar Verified)</label>

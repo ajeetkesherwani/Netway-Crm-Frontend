@@ -1283,7 +1283,7 @@ export default function RetailerCreate() {
               )}
             </div>
             {/* Password */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Password *</label>
               <input
                 type="password"
@@ -1298,7 +1298,7 @@ export default function RetailerCreate() {
               {formErrors.password && (
                 <p className="text-red-500 text-sm">{formErrors.password}</p>
               )}
-            </div>
+            </div> */}
 
             {/* Address */}
             <div>
@@ -1313,7 +1313,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* House No */}
-            <div>
+            {/* <div>
               <label className="block font-medium">House No.</label>
               <input
                 type="text"
@@ -1322,10 +1322,10 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* Taluka */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Taluka</label>
               <input
                 type="text"
@@ -1334,7 +1334,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* District */}
             <div>
@@ -1403,7 +1403,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* Sub Area */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Sub Area</label>
               <input
                 type="text"
@@ -1412,7 +1412,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* Mobile No */}
             <div>
@@ -1488,7 +1488,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* Messenger ID */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Messenger ID</label>
               <input
                 type="text"
@@ -1497,7 +1497,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* DOB */}
             {/* <div>
@@ -1572,7 +1572,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* Reseller Code */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Reseller Code</label>
               <input
                 type="text"
@@ -1581,7 +1581,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* Balance */}
             <div>
@@ -1687,7 +1687,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* Role */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Role</label>
               <select
                 name="roleId"
@@ -1703,7 +1703,7 @@ export default function RetailerCreate() {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {/* nas Checkboxes */}
             {/* <div className="col-span-2">

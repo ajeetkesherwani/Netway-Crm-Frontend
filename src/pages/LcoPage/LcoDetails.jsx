@@ -78,31 +78,31 @@ export default function LcoDetails() {
           <Row label="E-Mail" value={lco.email} />
           <Row label="Address" value={lco.address} />
           <Row label="Area" value={lco.area} />
-          <Row label="Taluka" value={lco.taluka} />
+          {/* <Row label="Taluka" value={lco.taluka} /> */}
           <Row label="State" value={lco.state} />
           <Row label="Country" value={lco.country} />
           <Row label="Pincode" value={lco.pincode} />
           <Row label="GST No." value={lco.gst} />
           <Row label="DOB" value={lco.dob} />
           <Row label="Balance" value={lco.lcoBalance} />
-          <Row label="House No." value={lco.houseNo} />
-          <Row label="SubArea" value={lco.subArea} />
-          <Row label="Fax No." value={lco.faxNo} />
+          {/* <Row label="House No." value={lco.houseNo} /> */}
+          {/* <Row label="SubArea" value={lco.subArea} /> */}
+          {/* <Row label="Fax No." value={lco.faxNo} /> */}
           <Row label="Pan No." value={lco.panNo} />
           <Row label="Reseller Name" value={lco?.retailerId?.resellerName} />
           {/* <Row label="Role" value={lco.roleId.roleName} /> */}
-          <Row label="Messenger ID" value={lco.messengerId} />
+          {/* <Row label="Messenger ID" value={lco.messengerId} /> */}
           <Row label="Dashboard" value={lco.dashboard} />
-          <Row label="LCO Code" value={lco.lcoCode} />
+          {/* <Row label="LCO Code" value={lco.lcoCode} /> */}
           <Row label="Contact Person Number" value={lco.contactPersonNumber} />
           <Row label="WhatsApp" value={lco.supportWhataApp} />
           <Row label="Website" value={lco.website} />
-          <Row label="Anniversary Date" value={lco.anniversaryDate} />
-          <Row label="Contact Person Name" value={lco.contactPersonName} />
-          <Row label="Support Email" value={lco.supportEmail} />
-          <Row label="Latitude" value={lco.latitude} />
-          <Row label="Longitude" value={lco.longitude} />
-          <Row label="NAS" value={lco.nas} />
+          {/* <Row label="Anniversary Date" value={lco.anniversaryDate} /> */}
+          {/* <Row label="Contact Person Name" value={lco.contactPersonName} /> */}
+          {/* <Row label="Support Email" value={lco.supportEmail} /> */}
+          {/* <Row label="Latitude" value={lco.latitude} /> */}
+          {/* <Row label="Longitude" value={lco.longitude} /> */}
+          {/* <Row label="NAS" value={lco.nas} /> */}
           <Row label="Description" value={lco.description} />
           <Row label="Status" value={lco.status} />
         </div>
