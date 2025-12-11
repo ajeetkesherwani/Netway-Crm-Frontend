@@ -78,20 +78,20 @@ export default function RetailerView() {
           <Row label="E-Mail" value={retailer.email} />
           <Row label="Address" value={retailer.address} />
           <Row label="Area" value={retailer.area} />
-          <Row label="Taluka" value={retailer.taluka} />
+          {/* <Row label="Taluka" value={retailer.taluka} /> */}
           <Row label="State" value={retailer.state} />
           <Row label="Country" value={retailer.country} />
           <Row label="Pincode" value={retailer.pincode} />
           <Row label="GST No." value={retailer.gstNo} />
           <Row label="Birth Date" value={retailer.dob} />
           <Row label="Balance" value={retailer.balance} />
-          <Row label="House No." value={retailer.houseNo} />
-          <Row label="SubArea" value={retailer.subArea} />
-          <Row label="Fax" value={retailer.fax} />
+          {/* <Row label="House No." value={retailer.houseNo} /> */}
+          {/* <Row label="SubArea" value={retailer.subArea} /> */}
+          {/* <Row label="Fax" value={retailer.fax} /> */}
           <Row label="PAN No." value={retailer.panNumber} />
-          <Row label="MessengerId" value={retailer.messengerId} />
+          {/* <Row label="MessengerId" value={retailer.messengerId} /> */}
           <Row label="Dashboard" value={retailer.dashboard} />
-          <Row label="Reseller Code" value={retailer.resellerCode} />
+          {/* <Row label="Reseller Code" value={retailer.resellerCode} /> */}
           <Row label="Contact Person Number" value={retailer.contactPersonNumber} />
           <Row label="WhatsApp Number" value={retailer.whatsAppNumber} />
           <Row label="Website" value={retailer.website} />
@@ -101,7 +101,7 @@ export default function RetailerView() {
           <Row label="Latitude" value={retailer.latitude} />
           <Row label="Longitude" value={retailer.longitude} />
           {/* <Row label="Role" value={retailer.role.roleName} /> */}
-          <Row label="NAS" value={retailer.nas} />
+          {/* <Row label="NAS" value={retailer.nas} /> */}
           <Row label="Status" value={retailer.status} />
         </div>
       </div>

@@ -141,6 +141,17 @@ const UserProfile = () => {
             <Field label="Pincode" value={a.installationAddress?.pincode} />
           </div>
 
+           <div style={{ flex: 1, minWidth: "350px" }}>
+            <strong style={{ color: "#1976d2", fontSize: "17px", display: "block", marginBottom: "12px" }}>
+              Permanant Address
+            </strong>
+            <Field label="Address Line 1" value={a.permanentAddress?.addressine1} />
+            <Field label="Address Line 2" value={a.permanentAddress?.addressine2} />
+            <Field label="City" value={a.permanentAddress?.city} />
+            <Field label="State" value={a.permanentAddress?.state} />
+            <Field label="Pincode" value={a.permanentAddress?.pincode} />
+          </div>
+
         </div>
       </div>
 

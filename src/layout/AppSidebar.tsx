@@ -102,7 +102,7 @@ if (staffSubItems.length > 0) {
       resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
     if (resellerSubItems.length > 0)
       generatedNavItems.push({
-        name: "Reseller",
+        name: "Reseller/Lco",
         icon: <ListIcon />,
         subItems: resellerSubItems,
       });

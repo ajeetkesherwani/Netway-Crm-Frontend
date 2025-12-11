@@ -457,9 +457,9 @@ export default function RetailerUpdate() {
             <div><label className="block font-semibold mb-1">Mobile No *</label><input type="text" name="mobileNo" value={formData.mobileNo} onChange={handleChange} required className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Phone No</label><input type="text" name="phoneNo" value={formData.phoneNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">State *</label>
               <select name="state" value={formData.state} onChange={handleChange} required className="w-full border rounded p-3">
@@ -469,11 +469,11 @@ export default function RetailerUpdate() {
             </div>
             <div><label className="block font-semibold mb-1">Pincode</label><input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Area</label><input type="text" name="area" value={formData.area} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">GST No</label><input type="text" name="gstNo" value={formData.gstNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">PAN Number</label><input type="text" name="panNumber" value={formData.panNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Reseller Code</label><input type="text" name="resellerCode" value={formData.resellerCode} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Reseller Code</label><input type="text" name="resellerCode" value={formData.resellerCode} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Balance</label><input type="text" name="balance" value={formData.balance} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Contact Person Name</label><input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Contact Person Number</label><input type="text" name="contactPersonNumber" value={formData.contactPersonNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>

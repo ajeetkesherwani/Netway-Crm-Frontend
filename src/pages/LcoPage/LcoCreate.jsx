@@ -112,7 +112,7 @@ export default function CreateLco() {
     const errors = {};
     if (!formData.lcoName) errors.lcoName = "LCO Name is required";
      if (!formData.email) errors.email = "LCO Email is required";
-    if (!formData.password) errors.password = "Password is required";
+    // if (!formData.password) errors.password = "Password is required";
     if (!formData.mobileNo) errors.mobileNo = "Mobile Number is required";
     if (formData.mobileNo && !/^[0-9]{10}$/.test(formData.mobileNo))
       errors.mobileNo = "Mobile Number must be 10 digits";
@@ -292,17 +292,17 @@ export default function CreateLco() {
                 className={`border p-2 w-full rounded ${formErrors.lcoName ? "border-red-500" : ""}`} />
               {formErrors.lcoName && <p className="text-red-500 text-sm">{formErrors.lcoName}</p>}
             </div>
-
+{/* 
             <div>
               <label className="block font-medium">Password *</label>
               <input type="password" name="password" value={formData.password} onChange={handleChange} required
                 className={`border p-2 w-full rounded ${formErrors.password ? "border-red-500" : ""}`} />
               {formErrors.password && <p className="text-red-500 text-sm">{formErrors.password}</p>}
-            </div>
+            </div> */}
 
-            <div><label className="block font-medium">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             <div><label className="block font-medium">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             <div><label className="block font-medium">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="border p-2 w-full rounded" /></div>
 
             <div>
@@ -316,7 +316,7 @@ export default function CreateLco() {
             <div><label className="block font-medium">Country</label><input type="text" name="country" value={formData.country} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">Pincode</label><input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">Area</label><input type="text" name="area" value={formData.area} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
 
             <div>
               <label className="block font-medium">Mobile No *</label>
@@ -330,7 +330,7 @@ export default function CreateLco() {
             <div><label className="block font-medium">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">GST No</label><input type="text" name="gstNo" value={formData.gstNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">PAN Number</label><input type="text" name="panNumber" value={formData.panNumber} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             <div><label className="block font-medium">Balance</label><input type="number" name="balance" value={formData.balance} onChange={handleChange} className="border p-2 w-full rounded" /></div>
 
             <div>
