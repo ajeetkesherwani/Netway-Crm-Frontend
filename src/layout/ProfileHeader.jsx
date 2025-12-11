@@ -179,7 +179,7 @@ const ProfileHeader = () => {
     { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details`, module: "customer", action: "packageDetailView" },
     { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice`, module: "customer", action: "invoice" },
     { id: "payment", label: "Payments", path: `/user/profile/${id}/payment`, module: "customer", action: "payments" },
-    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "ticket" },
+    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "tickets" },
     { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log`, module: "customer", action: "logs" },
     { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package`, module: "customer", action: "rechargePackageList" },
   ];

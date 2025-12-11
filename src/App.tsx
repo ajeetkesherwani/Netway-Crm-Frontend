@@ -142,6 +142,7 @@ import UserPackageDetails from "./pages/UserProfile/PackageDetails";
 import UserLogs from "./pages/UserProfile/AcitivityLog";
 import UserProfile from "./pages/UserProfile/UserProfileDetails";
 import ConnectionRequestList from "./pages/connectionRequest/connectionRequestList";
+import PackageUpdate from "./pages/Package/PackageUpdate";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
 
 // import UserList from "./pages/User/UserList";
@@ -318,6 +319,7 @@ export default function App() {
             <Route path="package/list" element={<PackageList />} />
             <Route path="package/list/:id" element={<PackageDetails />} />
             <Route path="package/create" element={<PackageCreate />} />
+            <Route path="package/update/:id" element={<PackageUpdate/>} />
             {/*----------------------------------------------------------------------------------------------Customer Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="user/list" element={<CustomerList />} />
             <Route path="user/create" element={<CreateUser />} />
