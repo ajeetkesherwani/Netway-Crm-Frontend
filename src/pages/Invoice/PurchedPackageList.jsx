@@ -72,7 +72,7 @@ export default function PurchasedPlanList() {
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-800">
-          Purchased Plan List
+          Purchased Invoice List
         </h2>
         <span className="text-sm text-gray-500">
           Showing {startIndex + 1}–
@@ -268,3 +268,5 @@ const RechargeType = ({ label, active }) => (
     )}
   </div>
 );
+
+

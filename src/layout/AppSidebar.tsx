@@ -101,22 +101,67 @@ if (staffSubItems.length > 0) {
     if (permissions.lco?.listing)
       resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
     if (resellerSubItems.length > 0)
+         if (permissions.pricebook?.listing)
+      resellerSubItems.push({
+        name: "Price Book List",
+        path: "/pricebook/list",
+      });
       generatedNavItems.push({
         name: "Reseller/Lco",
         icon: <ListIcon />,
         subItems: resellerSubItems,
       });
 
+      //    if (permissions.pricebook?.listing)
+      // priceBookSubItems.push({
+      //   name: "Price Book List",
+      //   path: "/pricebook/list",
+      // });
+
     // 📦 Package
     const packageSubItems = [];
-    if (permissions.package?.listing)
-      packageSubItems.push({ name: "Package List", path: "/package/list" });
-    if (packageSubItems.length > 0)
-      generatedNavItems.push({
-        name: "Package",
-        icon: <ListIcon />,
-        subItems: packageSubItems,
-      });
+
+// Existing Package List
+if (permissions.package?.listing) {
+  packageSubItems.push({ 
+    name: "Package List", 
+    path: "/package/list" 
+  });
+}
+
+// NEW — OTT Package List
+if (permissions.package?.ottListing) {
+  packageSubItems.push({ 
+    name: "OTT Package", 
+    path: "/package/ott-list" 
+  });
+}
+
+// NEW — IPTV Package List
+if (permissions.package?.iptvListing) {
+  packageSubItems.push({ 
+    name: "IPTV Package ", 
+    path: "/package/iptv-list" 
+  });
+}
+
+// Push to menu only if items exist
+if (packageSubItems.length > 0) {
+  generatedNavItems.push({
+    name: "Package",
+    icon: <ListIcon />,
+    subItems: packageSubItems,
+  });
+}
+    // const packageSubItems = [];
+    // if (permissions.package?.listing)
+    //   packageSubItems.push({ name: "Package List", path: "/package/list" });
+    // if (packageSubItems.length > 0)
+    //   generatedNavItems.push({
+    //     name: "Package",
+    //     icon: <ListIcon />,
+    //     subItems: packageSubItems,
+    //   });
 
     // 👤 Customer
     const customerSubItems = [];
@@ -224,19 +269,19 @@ if (staffSubItems.length > 0) {
         subItems: paymentSubItems,
       });
 
-    // 🧾 Price Book
-    const priceBookSubItems = [];
-    if (permissions.pricebook?.listing)
-      priceBookSubItems.push({
-        name: "Price Book List",
-        path: "/pricebook/list",
-      });
-    if (priceBookSubItems.length > 0)
-      generatedNavItems.push({
-        name: "Price Book",
-        icon: <FileIcon />,
-        subItems: priceBookSubItems,
-      });
+    // // 🧾 Price Book
+    // const priceBookSubItems = [];
+    // if (permissions.pricebook?.listing)
+    //   priceBookSubItems.push({
+    //     name: "Price Book List",
+    //     path: "/pricebook/list",
+    //   });
+    // if (priceBookSubItems.length > 0)
+    //   generatedNavItems.push({
+    //     name: "Price Book",
+    //     icon: <FileIcon />,
+    //     subItems: priceBookSubItems,
+    //   });
 
     // ⚙️ Config
     const configSubItems = [];

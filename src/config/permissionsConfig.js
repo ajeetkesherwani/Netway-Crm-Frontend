@@ -75,6 +75,8 @@ export const permissionsConfig = [
             "delete",
             "view",
             "assign",
+            "ottListing",
+            "iptvListing",
         ],
     },
     {
