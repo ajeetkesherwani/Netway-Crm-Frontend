@@ -71,7 +71,9 @@ export default function TicketResolutionOptionCreate() {
       >
         {/* Option Text */}
         <div>
-          <label className="block font-medium mb-1">Option Text</label>
+          <label className="block font-medium mb-1">Option Text
+            <span className="text-black-900 ml-1">*</span>
+          </label>
           <input
             type="text"
             name="name"
