@@ -1,9 +1,18 @@
-import { useEffect, useState, useRef } from "react";
+// src/pages/PriceBook/PriceBookList.jsx
+
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaEllipsisV,
+  FaSearch,
+} from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
 import { getPriceBookList, deletePriceBook } from "../../service/pricebook";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast"; // Using react-hot-toast for consistency
+import * as XLSX from "xlsx";
 
 export default function PriceBookList() {
   const navigate = useNavigate();
@@ -11,235 +20,375 @@ export default function PriceBookList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Pagination (optional - keep if backend supports it)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
   // Fetch price books
-  useEffect(() => {
-    const loadPriceBooks = async () => {
-      setLoading(true);
-      try {
-        const res = await getPriceBookList(page, limit, searchTerm);
-        setPriceBooks(res.data || []);
+  const fetchPriceBooks = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await getPriceBookList(page, limit, appliedSearch);
+      if (res?.data) {
+        setPriceBooks(res.data);
         setTotalPages(res.totalPages || 1);
-      } catch (err) {
-        console.error("Error fetching price books:", err);
-        setError("Failed to load price books");
-      } finally {
-        setLoading(false);
+      } else {
+        throw new Error("Invalid response");
       }
-    };
-    loadPriceBooks();
-  }, [page, searchTerm]);
-
-  // Handlers
-  const handleView = (id) => {
-    navigate(`/pricebook/view/${id}`);
-  };
-  const handleEdit = (id) => {
-    navigate(`/pricebook/update/${id}`);
-  };
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this price book?")) {
-      try {
-        await deletePriceBook(id);
-        toast.success("Price book deleted successfully ✅");
-        setPriceBooks(priceBooks.filter((pb) => pb._id !== id));
-      } catch (err) {
-        console.error("Error deleting price book:", err);
-        toast.error(err.message || "Failed to delete price book ❌");
-      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load price books");
+      toast.error("Failed to load price books");
+    } finally {
+      setLoading(false);
     }
   };
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    setPage(1); // Reset to first page on search
-  };
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
-  };
-  const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
+
+  useEffect(() => {
+    fetchPriceBooks();
+  }, [page, appliedSearch]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const toggleMenu = (id) => {
+    setOpenMenuId((prev) => (prev === id ? null : id));
   };
 
-  if (loading) return <p className="p-4">Loading price books...</p>;
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
+  const handleView = (id) => {
+    navigate(`/pricebook/view/${id}`);
+    setOpenMenuId(null);
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/pricebook/update/${id}`);
+    setOpenMenuId(null);
+  };
+
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Delete price book "${name}" permanently?`)) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    try {
+      const res = await deletePriceBook(id);
+      if (res?.success || res?.status) {
+        setPriceBooks((prev) => prev.filter((pb) => pb._id !== id));
+        toast.success("Price book deleted successfully");
+      } else {
+        toast.error(res?.message || "Delete failed");
+      }
+    } catch (err) {
+      toast.error("Failed to delete price book");
+    }
+    setOpenMenuId(null);
+  };
+
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm.trim().toLowerCase());
+    setPage(1);
+  };
+
+  const exportToExcel = () => {
+    if (priceBooks.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const data = priceBooks.map((pb, i) => ({
+      "S.No": (page - 1) * limit + i + 1,
+      "Price Book Name": pb.priceBookName,
+      "From Date": new Date(pb.fromDate).toLocaleDateString(),
+      "To Date": new Date(pb.toDate).toLocaleDateString(),
+      Status: pb.status,
+      Description: pb.description || "-",
+      "Price Book For": pb.priceBookFor?.join(", ") || "-",
+      Packages: pb.package?.map((p) => p.name).join(", ") || "-",
+      "Assigned Resellers": pb.assignedTo?.length || 0,
+      "Created At": new Date(pb.createdAt).toLocaleString(),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Price Books");
+    XLSX.writeFile(wb, "price_books.xlsx");
+    toast.success("Exported successfully!");
+  };
+
+  // Filtered data (client-side fallback if backend doesn't filter)
+  const displayedBooks = priceBooks.filter((pb) =>
+    pb.priceBookName.toLowerCase().includes(appliedSearch)
+  );
+
+  if (loading) return <p className="p-6 text-gray-600">Loading price books...</p>;
+  if (error) return <p className="p-6 text-red-500">{error}</p>;
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Price Book List</h1>
-        <ProtectedAction module="pricebook" action="create">
-          <button
-            onClick={() => navigate(`/pricebook/create`)}
-            className="px-[2px] py-[2px] text-white bg-blue-600 rounded hover:bg-blue-700"
-            aria-label="Add Price Book"
-          >
-            Add Price Book
-          </button>
-        </ProtectedAction>
-      </div>
-{/* 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search price books..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="border p-2 w-full md:w-1/3 rounded text-[14px]"
-        />
-      </div> */}
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-800 leading-tight">
+            Price Book
+            
+          </h1>
+        </div>
 
-      {priceBooks.length === 0 ? (
-        <p className="text-gray-500 text-[14px]">No price books found.</p>
+        {/* Search + Buttons */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center bg-white rounded-md shadow-sm border border-gray-300">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Search price books..."
+              className="px-4 py-2 text-sm outline-none min-w-64"
+            />
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-r-md"
+            >
+              <FaSearch />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={exportToExcel}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+            >
+              Download as Excel
+            </button>
+
+            <ProtectedAction module="pricebook" action="create">
+              <button
+                onClick={() => navigate("/pricebook/create")}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
+              >
+                Add Price Book
+              </button>
+            </ProtectedAction>
+          </div>
+        </div>
+      </div>
+
+      {/* Table View - Desktop */}
+      {displayedBooks.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg">
+            {appliedSearch ? "No matching price books found." : "No price books available."}
+          </p>
+        </div>
       ) : (
         <>
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="min-w-[800px] w-full border border-gray-200 divide-y divide-gray-200 text-[14px]">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-[2px] py-[2px] text-left">S.No</th>
-                  <th className="px-[2px] py-[2px] text-left">Price Book Name</th>
-                  <th className="px-[2px] py-[2px] text-left">From Date</th>
-                  <th className="px-[2px] py-[2px] text-left">To Date</th>
-                  <th className="px-[2px] py-[2px] text-left">Status</th>
-                  <th className="px-[2px] py-[2px] text-left">Description</th>
-                  <th className="px-[2px] py-[2px] text-left">Price Book For</th>
-                  <th className="px-[2px] py-[2px] text-left">Packages</th>
-                  <th className="px-[2px] py-[2px] text-left">Assigned To</th>
-                  <th className="px-[2px] py-[2px] text-left">Created At</th>
-                  <th className="px-[2px] py-[2px] text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {priceBooks.map((priceBook, index) => (
-                  <tr key={priceBook._id} className="hover:bg-gray-50 relative">
-                    <td className="px-[2px] py-[2px]">{(page - 1) * limit + index + 1}</td>
-                    <td className="px-[2px] py-[2px] hover:cursor-pointer hover:underline" onClick={() => handleView(priceBook._id)}>{priceBook.priceBookName}</td>
-                    <td className="px-[2px] py-[2px]">{new Date(priceBook.fromDate).toLocaleDateString()}</td>
-                    <td className="px-[2px] py-[2px]">{new Date(priceBook.toDate).toLocaleDateString()}</td>
-                    <td className="px-[2px] py-[2px]">{priceBook.status}</td>
-                    <td className="px-[2px] py-[2px]">{priceBook.description}</td>
-                    <td className="px-[2px] py-[2px]">{priceBook.priceBookFor.join(", ")}</td>
-                    <td className="px-[2px] py-[2px]">{priceBook.package.map((p) => p.name).join(", ")}</td>
-                    <td className="px-[2px] py-[2px]">{priceBook.assignedTo.length} reseller(s)</td>
-                    <td className="px-[2px] py-[2px]">{new Date(priceBook.createdAt).toLocaleString()}</td>
-                    <td className="px-[2px] py-[2px] text-right relative">
-                      <div className="flex justify-end space-x-3">
-                        <ProtectedAction module="pricebook" action="view">
-                          <button
-                            onClick={() => handleView(priceBook._id)}
-                            className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
-                            title="View"
-                            aria-label="View"
-                          >
-                            <FaEye size={16} />
-                          </button>
-                        </ProtectedAction>
-                        <ProtectedAction module="pricebook" action="edit">
-                          <button
-                            onClick={() => handleEdit(priceBook._id)}
-                            className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
-                            title="Edit"
-                            aria-label="Edit"
-                          >
-                            <FaEdit size={16} />
-                          </button>
-                        </ProtectedAction>
-                        <ProtectedAction module="pricebook" action="delete">
-                          <button
-                            onClick={() => handleDelete(priceBook._id)}
-                            className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
-                            title="Delete"
-                            aria-label="Delete"
-                          >
-                            <FaTrash size={16} />
-                          </button>
-                        </ProtectedAction>
-                      </div>
-                    </td>
+          <div className="hidden md:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1000px] text-sm">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">S.No</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Price Book Name</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">From Date</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">To Date</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Status</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Description</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Price Book For</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Packages</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Assigned To</th>
+                    <th className="px-6 py-4 text-left font-medium text-gray-700">Created At</th>
+                    <th className="px-6 py-4 text-center font-medium text-gray-700">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {displayedBooks.map((pb, index) => (
+                    <tr key={pb._id} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4 text-gray-600">
+                        {(page - 1) * limit + index + 1}
+                      </td>
+                      <td
+                        className="px-6 py-4 font-medium text-blue-600 hover:underline cursor-pointer"
+                        onClick={() => handleView(pb._id)}
+                      >
+                        {pb.priceBookName}
+                      </td>
+                      <td className="px-6 py-4">{new Date(pb.fromDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">{new Date(pb.toDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            pb.status === "Active"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {pb.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 max-w-xs truncate">{pb.description || "-"}</td>
+                      <td className="px-6 py-4">{pb.priceBookFor?.join(", ") || "-"}</td>
+                      <td className="px-6 py-4">{pb.package?.map((p) => p.name).join(", ") || "-"}</td>
+                      <td className="px-6 py-4">{pb.assignedTo?.length || 0} reseller(s)</td>
+                      <td className="px-6 py-4 text-xs">
+                        {new Date(pb.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-center relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(pb._id);
+                          }}
+                          className="p-2.5 hover:bg-gray-200 rounded-full transition"
+                        >
+                          <FaEllipsisV className="text-gray-600" />
+                        </button>
+
+                        {openMenuId === pb._id && (
+                          <div
+                            className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <ProtectedAction module="pricebook" action="view">
+                              <button
+                                onClick={() => handleView(pb._id)}
+                                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                              >
+                                <FaEye className="text-blue-600" /> View
+                              </button>
+                            </ProtectedAction>
+
+                            <ProtectedAction module="pricebook" action="edit">
+                              <button
+                                onClick={() => handleEdit(pb._id)}
+                                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                              >
+                                <FaEdit className="text-green-600" /> Edit
+                              </button>
+                            </ProtectedAction>
+
+                            <ProtectedAction module="pricebook" action="delete">
+                              <button
+                                onClick={() => handleDelete(pb._id, pb.priceBookName)}
+                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                              >
+                                <FaTrash /> Delete
+                              </button>
+                            </ProtectedAction>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Mobile Card View */}
-          <div className="space-y-4 md:hidden">
-            {priceBooks.map((priceBook, index) => (
+          <div className="md:hidden space-y-4 mt-6">
+            {displayedBooks.map((pb, index) => (
               <div
-                key={priceBook._id}
-                className="p-4 border rounded-lg shadow-sm bg-white"
+                key={pb._id}
+                className="p-5 border rounded-lg bg-white shadow-sm hover:shadow-md transition"
               >
-                <p className="text-sm text-gray-500">#{index + 1}</p>
-                <h2 className="text-lg font-medium hover:cursor-pointer hover:underline" onClick={() => handleView(priceBook._id)}>{priceBook.priceBookName}</h2>
-                <p className="text-sm">From: {new Date(priceBook.fromDate).toLocaleDateString()}</p>
-                <p className="text-sm">To: {new Date(priceBook.toDate).toLocaleDateString()}</p>
-                <p className="text-sm">Status: {priceBook.status}</p>
-                <p className="text-sm">Description: {priceBook.description}</p>
-                <p className="text-sm">Price Book For: {priceBook.priceBookFor.join(", ")}</p>
-                <p className="text-sm">Packages: {priceBook.package.map((p) => p.name).join(", ")}</p>
-                <p className="text-sm">Assigned To: {priceBook.assignedTo.length} reseller(s)</p>
-                <p className="text-sm">Created: {new Date(priceBook.createdAt).toLocaleString()}</p>
-                <div className="flex justify-end space-x-3 mt-3">
-                  <ProtectedAction module="pricebook" action="view">
-                    <button
-                      onClick={() => handleView(priceBook._id)}
-                      className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
-                      title="View"
-                      aria-label="View"
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-500">
+                      #{(page - 1) * limit + index + 1}
+                    </p>
+                    <h3
+                      className="font-medium text-lg mt-1 text-blue-600 cursor-pointer"
+                      onClick={() => handleView(pb._id)}
                     >
-                      <FaEye size={16} />
-                    </button>
-                  </ProtectedAction>
-                  <ProtectedAction module="pricebook" action="edit">
-                    <button
-                      onClick={() => handleEdit(priceBook._id)}
-                      className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
-                      title="Edit"
-                      aria-label="Edit"
-                    >
-                      <FaEdit size={16} />
-                    </button>
-                  </ProtectedAction>
-                  <ProtectedAction module="pricebook" action="delete">
-                    <button
-                      onClick={() => handleDelete(priceBook._id)}
-                      className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
-                      title="Delete"
-                      aria-label="Delete"
-                    >
-                      <FaTrash size={16} />
-                    </button>
-                  </ProtectedAction>
+                      {pb.priceBookName}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {new Date(pb.fromDate).toLocaleDateString()} –{" "}
+                      {new Date(pb.toDate).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Status:</strong> {pb.status}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMenu(pb._id);
+                    }}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <FaEllipsisV className="text-gray-600" />
+                  </button>
                 </div>
+
+                {openMenuId === pb._id && (
+                  <div className="mt-4 border-t pt-4">
+                    <ProtectedAction module="pricebook" action="view">
+                      <button
+                        onClick={() => handleView(pb._id)}
+                        className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <FaEye /> View
+                      </button>
+                    </ProtectedAction>
+
+                    <ProtectedAction module="pricebook" action="edit">
+                      <button
+                        onClick={() => handleEdit(pb._id)}
+                        className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <FaEdit /> Edit
+                      </button>
+                    </ProtectedAction>
+
+                    <ProtectedAction module="pricebook" action="delete">
+                      <button
+                        onClick={() => handleDelete(pb._id, pb.priceBookName)}
+                        className="w-full text-left px-2 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <FaTrash /> Delete
+                      </button>
+                    </ProtectedAction>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-
-          {/* Pagination */}
-          {/* <div className="flex justify-between mt-4">
-            <button
-              onClick={handlePrevPage}
-              disabled={page === 1}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 text-[14px]"
-            >
-              Previous
-            </button>
-            <span className="text-[14px]">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={handleNextPage}
-              disabled={page === totalPages}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50 text-[14px]"
-            >
-              Next
-            </button>
-          </div> */}
         </>
       )}
+
+      {/* Optional Pagination (uncomment if needed) */}
+      {/* {totalPages > 1 && (
+        <div className="flex justify-center mt-8 gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="px-4 py-2">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )} */}
     </div>
   );
 }

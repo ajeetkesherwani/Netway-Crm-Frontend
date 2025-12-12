@@ -55,7 +55,9 @@ export default function TicketReplyOptionCreate() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <div>
-          <label className="block font-medium">Option Text</label>
+          <label className="block font-medium">Option Text
+            <span className="text-black-900 ml-1">*</span>
+          </label>
           <input
             type="text"
             name="optionText"
