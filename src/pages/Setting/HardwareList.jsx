@@ -190,7 +190,7 @@ export default function HardwareList() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold text-gray-800 leading-tight">
-            Hardware List
+            Hardware Lists
             
           </h1>
         </div>
