@@ -108,13 +108,16 @@ export const getAssignedPackageList = async (resellerId) => {
 
 // Get assigned package details
 export const getAssignedPackageDetails = async (resellerId, packageId) => {
-  const res = await fetch(`${BASE_URL}/api/admin/assignPackage/${resellerId}/${packageId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+  const res = await fetch(
+    `${BASE_URL}/api/admin/assignPackage/${resellerId}/${packageId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch assigned package details");
   return res.json();
@@ -165,14 +168,22 @@ export const createLco = async (lco) => {
 };
 
 // Get LCO wallet transactions list
-export const getLcoWalletList = async (lcoId, page = 1, limit = 10, search = "") => {
-  const res = await fetch(`${BASE_URL}/lcoWallet/list/${lcoId}?page=${page}&limit=${limit}&search=${search}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+export const getLcoWalletList = async (
+  lcoId,
+  page = 1,
+  limit = 10,
+  search = ""
+) => {
+  const res = await fetch(
+    `${BASE_URL}/lcoWallet/list/${lcoId}?page=${page}&limit=${limit}&search=${search}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch wallet transactions");
   return res.json();
@@ -196,14 +207,17 @@ export const createLcoWalletTransaction = async (transactionData) => {
 
 export const reverseLcoWalletBalance = async (transactionData) => {
   try {
-    const response = await fetch(`${BASE_URL}/resellerWallet/reverser-balance`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-      },
-      body: JSON.stringify(transactionData),
-    });
+    const response = await fetch(
+      `${BASE_URL}/resellerWallet/reverser-balance`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(transactionData),
+      }
+    );
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Failed to reverse balance");
@@ -230,7 +244,10 @@ export const getLcoWalletDetails = async (lcoId, transactionId) => {
 };
 
 // Update LCO wallet transaction
-export const updateLcoWalletTransaction = async (transactionId, transactionData) => {
+export const updateLcoWalletTransaction = async (
+  transactionId,
+  transactionData
+) => {
   const res = await fetch(`${BASE_URL}/lcoWallet/${transactionId}`, {
     method: "PATCH",
     headers: {
@@ -256,6 +273,21 @@ export const getRetailer = async () => {
   });
 
   if (!res.ok) throw new Error("Failed to fetch retailers");
+  return res.json();
+};
+
+export const getRetailers = async ({ search, page = 1, limit = 10 }) => {
+  let url = `${BASE_URL}/retailer/?page=${page}&limit=${limit}&`;
+  if (search) url += `search=${search}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch LCOs");
   return res.json();
 };
 
@@ -303,7 +335,6 @@ export const createRetailer = async (formData) => {
   return data;
 };
 
-
 // Update Retailer
 export const updateRetailer = async (id, formData) => {
   const res = await fetch(`${BASE_URL}/retailer/update/${id}`, {
@@ -312,7 +343,7 @@ export const updateRetailer = async (id, formData) => {
       Authorization: `Bearer ${getToken()}`,
       // ❌ DO NOT set Content-Type for FormData
     },
-    body: formData
+    body: formData,
   });
 
   const data = await res.json();
@@ -349,14 +380,22 @@ export const deleteRetailer = async (id) => {
 };
 
 // Get Retailer wallet transactions list
-export const getRetailerWalletList = async (resellerId, page = 1, limit = 10, search = "") => {
-  const res = await fetch(`${BASE_URL}/resellerWallet/list/${resellerId}?page=${page}&limit=${limit}&search=${search}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+export const getRetailerWalletList = async (
+  resellerId,
+  page = 1,
+  limit = 10,
+  search = ""
+) => {
+  const res = await fetch(
+    `${BASE_URL}/resellerWallet/list/${resellerId}?page=${page}&limit=${limit}&search=${search}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch retailer wallet transactions");
   return res.json();
@@ -374,20 +413,26 @@ export const createRetailerWalletTransaction = async (transactionData) => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to create retailer wallet transaction");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Failed to create retailer wallet transaction"
+    );
   return data;
 };
 // this api for reverse the retailer wallet balance
 export const reverseRetailerWalletBalance = async (transactionData) => {
   try {
-    const response = await fetch(`${BASE_URL}/resellerWallet/reverser-balance`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-      },
-      body: JSON.stringify(transactionData),
-    });
+    const response = await fetch(
+      `${BASE_URL}/resellerWallet/reverser-balance`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify(transactionData),
+      }
+    );
     const data = await response.json();
     if (!response.ok) {
       throw new Error(data.message || "Failed to reverse balance");
@@ -401,19 +446,26 @@ export const reverseRetailerWalletBalance = async (transactionData) => {
 
 // Get Retailer wallet transaction details
 export const getRetailerWalletDetails = async (resellerId, transactionId) => {
-  const res = await fetch(`${BASE_URL}/resellerWallet/list/${resellerId}/${transactionId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
-  if (!res.ok) throw new Error("Failed to fetch retailer wallet transaction details");
+  const res = await fetch(
+    `${BASE_URL}/resellerWallet/list/${resellerId}/${transactionId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
+  if (!res.ok)
+    throw new Error("Failed to fetch retailer wallet transaction details");
   return res.json();
 };
 
 // Update Retailer wallet transaction
-export const updateRetailerWalletTransaction = async (transactionId, transactionData) => {
+export const updateRetailerWalletTransaction = async (
+  transactionId,
+  transactionData
+) => {
   const res = await fetch(`${BASE_URL}/resellerWallet/${transactionId}`, {
     method: "PATCH",
     headers: {
@@ -423,6 +475,9 @@ export const updateRetailerWalletTransaction = async (transactionId, transaction
     body: JSON.stringify(transactionData),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to update retailer wallet transaction");
+  if (!res.ok)
+    throw new Error(
+      data.message || "Failed to update retailer wallet transaction"
+    );
   return data;
 };

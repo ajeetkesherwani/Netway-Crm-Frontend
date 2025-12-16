@@ -94,13 +94,16 @@ export const assignPackageToReseller = async (packageData) => {
 
 // Get assigned package list for a reseller
 export const getAssignedPackageList = async (resellerId) => {
-  const res = await fetch(`${BASE_URL}/api/admin/assignPackage/list/${resellerId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+  const res = await fetch(
+    `${BASE_URL}/api/admin/assignPackage/list/${resellerId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch assigned packages");
   return res.json();
@@ -108,13 +111,16 @@ export const getAssignedPackageList = async (resellerId) => {
 
 // Get assigned package details
 export const getAssignedPackageDetails = async (resellerId, packageId) => {
-  const res = await fetch(`${BASE_URL}/api/admin/assignPackage/${resellerId}/${packageId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+  const res = await fetch(
+    `${BASE_URL}/api/admin/assignPackage/${resellerId}/${packageId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch assigned package details");
   return res.json();
@@ -123,6 +129,21 @@ export const getAssignedPackageDetails = async (resellerId, packageId) => {
 // Get all LCOs
 export const getAllLco = async () => {
   const res = await fetch(`${BASE_URL}/lco/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch LCOs");
+  return res.json();
+};
+
+export const getLcos = async ({ search, page = 1, limit = 10 }) => {
+  let url = `${BASE_URL}/lco/?page=${page}&limit=${limit}&`;
+  if (search) url += `search=${search}`;
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -163,7 +184,6 @@ export const createLco = async (formData) => {
   return data;
 };
 
-
 // Update Lco
 export const updateLco = async (id, formData) => {
   const res = await fetch(`${BASE_URL}/lco/update/${id}`, {
@@ -172,7 +192,7 @@ export const updateLco = async (id, formData) => {
       Authorization: `Bearer ${getToken()}`,
       // FormData ke saath Content-Type na lagana
     },
-    body: formData
+    body: formData,
   });
 
   const data = await res.json();
@@ -194,7 +214,6 @@ export const deleteLco = async (id) => {
   return res.json();
 };
 
-
 // Get all resellers
 export const getAllResellers = async () => {
   const res = await fetch(`${BASE_URL}/reseller/list`, {
@@ -209,14 +228,22 @@ export const getAllResellers = async () => {
 };
 
 // Get LCO wallet transactions list
-export const getLcoWalletList = async (lcoId, page = 1, limit = 10, search = "") => {
-  const res = await fetch(`${BASE_URL}/lcoWallet/list/${lcoId}?page=${page}&limit=${limit}&search=${search}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+export const getLcoWalletList = async (
+  lcoId,
+  page = 1,
+  limit = 10,
+  search = ""
+) => {
+  const res = await fetch(
+    `${BASE_URL}/lcoWallet/list/${lcoId}?page=${page}&limit=${limit}&search=${search}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch wallet transactions");
   return res.json();
@@ -240,20 +267,26 @@ export const createLcoWalletTransaction = async (transactionData) => {
 
 // Get LCO wallet transaction details
 export const getLcoWalletDetails = async (lcoId, transactionId) => {
-  const res = await fetch(`${BASE_URL}/lcoWallet/list/${lcoId}/${transactionId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+  const res = await fetch(
+    `${BASE_URL}/lcoWallet/list/${lcoId}/${transactionId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch transaction details");
   return res.json();
 };
 
 // Update LCO wallet transaction
-export const updateLcoWalletTransaction = async (transactionId, transactionData) => {
+export const updateLcoWalletTransaction = async (
+  transactionId,
+  transactionData
+) => {
   const res = await fetch(`${BASE_URL}/lcoWallet/${transactionId}`, {
     method: "PATCH",
     headers: {
