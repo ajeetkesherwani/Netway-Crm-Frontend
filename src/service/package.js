@@ -61,3 +61,21 @@ export const updatePackage = async (id, packageData) => {
   if (!res.ok) throw new Error(data.message || "Failed to update package");
   return data;
 };
+
+//get activity logs
+export const getActivityLogs = async (role, id) => {
+  const res = await fetch(`${BASE_URL}/admin/common/logList/${role}/${id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch activity logs");
+  }
+
+  return res.json();
+};
