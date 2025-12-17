@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -210,14 +211,16 @@ export default function App() {
 
             {/*-------------------------------------------------------------------------User Profile Details ------------------------------------------------------------------------- */}
 
-
             <Route path="user/profile/:id" element={<ProfileHeader />}>
               <Route index element={<Profile />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="invoice" element={<UserInvoices />} />
               <Route path="tickets" element={<UserTickets />} />
               <Route path="payment" element={<UserPayment />} />
-              <Route path="recharge-package" element={<UserRechargePackage />} />
+              <Route
+                path="recharge-package"
+                element={<UserRechargePackage />}
+              />
               <Route path="package-details" element={<UserPackageDetails />} />
               <Route path="activity-log" element={<UserLogs />} />
               {/* <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"} />} /> */}
@@ -428,8 +431,10 @@ export default function App() {
 
             {/*-----------------------------connectionRequest---------------------------- */}
 
-            <Route path="/connection-request" element={<ConnectionRequestList />} />
-
+            <Route
+              path="/connection-request"
+              element={<ConnectionRequestList />}
+            />
 
             {/*-------------------------------------------------------------------------Subscriber Report list ------------------------------------------------------------------------- */}
             <Route

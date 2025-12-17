@@ -3,24 +3,29 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
 //get all package list
-export const getAllUserList = async () => {
-  const res = await fetch(`${BASE_URL}/user/list`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken()}`,
-    },
-  });
+export const getAllUserList = async (filters) => {
+  const searchParams = new URLSearchParams(filters);
+  const res = await fetch(
+    `${BASE_URL}/user/list?${
+      searchParams.toString() ? searchParams.toString() : ""
+    }`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
 
   if (!res.ok) throw new Error("Failed to fetch user");
   return res.json();
-
 };
 
 // Create package
 export const createUser = async (payload) => {
-  console.log("payload",payload);
-  let options = {
+  console.log("payload", payload);
+  const options = {
     method: "POST",
     headers: {
       Authorization: `Bearer ${getToken()}`,
@@ -50,7 +55,6 @@ export const getUserDetails = async (id) => {
   if (!res.ok) throw new Error("Failed to fetch user Details");
   return res.json();
 };
-
 
 // export const getUserDetails = async (id) => {
 //   const res = await fetch(`${BASE_URL}/api/admin/customer/${id}`, {
@@ -140,8 +144,6 @@ export const getPurchasedPlanList = async (userId, page, limit, search) => {
   return data;
 };
 
-
-
 // Global user search
 // export const searchUsersGlobaly = async (query) => {
 //   try {
@@ -162,13 +164,13 @@ export const getPurchasedPlanList = async (userId, page, limit, search) => {
 //   }
 // };
 
-//serach users globally 
+//serach users globally
 export const searchUsers = async (query) => {
   if (!query?.trim()) return [];
 
   try {
     const response = await fetch(
-      `${BASE_URL}/common/user/details?query=${(query.trim())}`,
+      `${BASE_URL}/common/user/details?query=${query.trim()}`,
       {
         method: "GET",
         headers: {
@@ -206,7 +208,6 @@ export const searchUsers = async (query) => {
 //   }
 // };
 
-
 //zone listing
 export const getAllZoneList = async () => {
   const res = await fetch(`${BASE_URL}/zone/list`, {
@@ -219,11 +220,11 @@ export const getAllZoneList = async () => {
 
   if (!res.ok) throw new Error("Failed to fetch Area");
   return res.json();
-
 };
 
 export const getUserFullDetails = async (userId) => {
-  const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
+  const token =
+    localStorage.getItem("token") || localStorage.getItem("adminToken");
   const res = await fetch(`${BASE_URL}/user/fullDetails/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -232,16 +233,19 @@ export const getUserFullDetails = async (userId) => {
   return await res.json();
 };
 
-
 //lco list by resllesr
 export const getLcoByRetailer = async (retailerId) => {
-  const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
+  const token =
+    localStorage.getItem("token") || localStorage.getItem("adminToken");
 
-  const res = await fetch(`${BASE_URL}/retailer/lcoList?resellerId=${retailerId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const res = await fetch(
+    `${BASE_URL}/retailer/lcoList?resellerId=${retailerId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   return await res.json();
 };

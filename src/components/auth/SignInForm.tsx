@@ -201,7 +201,9 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
         // ✅ No need to manually store token or permissions — context already does this
         console.log("✅ Login successful — handled by PermissionContext");
         toast.success("Login successful!");
-        navigate("/");
+        setTimeout(() => {
+          navigate("/");
+        }, 200);
       } else {
         toast.error(res?.error || "Login failed");
       }

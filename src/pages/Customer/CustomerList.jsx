@@ -277,9 +277,8 @@
 //   );
 // }
 
-
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   FaEllipsisV,
   FaEdit,
@@ -291,9 +290,15 @@ import {
   FaEye,
 } from "react-icons/fa";
 import { FiToggleLeft, FiToggleRight } from "react-icons/fi";
-import { deleteUser, getAllUserList, updateUserStatus } from "../../service/user";
+import {
+  deleteUser,
+  getAllUserList,
+  updateUserStatus,
+} from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
+import { useDebounce } from "../../hooks/useDebounce";
+import CustomerFilters from "./components/CustomerFilters";
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
@@ -303,6 +308,21 @@ export default function UserList() {
   const [openStatusModalId, setOpenStatusModalId] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const filters = {
+    searchQuery: searchParams.get("searchQuery") || "",
+    status: searchParams.get("status") || "",
+    area: searchParams.get("area") || "",
+    ekyc: searchParams.get("ekyc") || "",
+    serviceOpted: searchParams.get("serviceOpted") || "",
+    startDate: searchParams.get("startDate") || "",
+    endDate: searchParams.get("endDate") || "",
+    reseller: searchParams.get("reseller") || "",
+    lco: searchParams.get("lco") || "",
+  };
+
+  const debouncedSearch = useDebounce(filters.searchQuery, 500);
 
   const menuRefs = useRef({});
 
@@ -323,7 +343,7 @@ export default function UserList() {
   // Fetch users
   const loadUsers = async () => {
     try {
-      const res = await getAllUserList();
+      const res = await getAllUserList({ ...filters });
       setUsers(res.data || []);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -335,7 +355,17 @@ export default function UserList() {
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [
+    debouncedSearch,
+    filters.status,
+    filters.area,
+    filters.ekyc,
+    filters.serviceOpted,
+    filters.startDate,
+    filters.endDate,
+    filters.reseller,
+    filters.lco,
+  ]);
 
   const toggleMenu = (userId) => {
     setOpenMenuId(openMenuId === userId ? null : userId);
@@ -379,7 +409,9 @@ export default function UserList() {
       await loadUsers();
       setOpenStatusModalId(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update user status ❌");
+      toast.error(
+        err.response?.data?.message || "Failed to update user status ❌"
+      );
     }
   };
 
@@ -407,6 +439,7 @@ export default function UserList() {
 
   return (
     <div className="p-6">
+      <CustomerFilters filters={filters} setSearchParams={setSearchParams} />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Customer List</h1>
 
@@ -429,13 +462,13 @@ export default function UserList() {
             <table className="min-w-[800px] w-full border border-gray-200 divide-y divide-gray-200 text-[13px]">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-[2px] py-[2px]">S.No</th>
-                  <th className="px-[2px] py-[2px]">Name</th>
-                  <th className="px-[2px] py-[2px]">Email</th>
-                  <th className="px-[2px] py-[2px]">Phone</th>
-                  <th className="px-[2px] py-[2px]">Address</th>
-                  <th className="px-[2px] py-[2px]">Status</th>
-                  <th className="px-[2px] py-[2px]">Action</th>
+                  <th className="px-[2px] py-[2px] text-left">S.No</th>
+                  <th className="px-[2px] py-[2px] text-left">Name</th>
+                  <th className="px-[2px] py-[2px] text-left">Email</th>
+                  <th className="px-[2px] py-[2px] text-left">Phone</th>
+                  <th className="px-[2px] py-[2px] text-left">Address</th>
+                  <th className="px-[2px] py-[2px] text-left">Status</th>
+                  <th className="px-[2px] py-[2px] text-left">Action</th>
                 </tr>
               </thead>
 
@@ -451,11 +484,16 @@ export default function UserList() {
                       {user.generalInformation?.name}
                     </td>
 
-                    <td className="px-[2px] py-[2px]">{user.generalInformation?.email}</td>
-                    <td className="px-[2px] py-[2px]">{user.generalInformation?.phone}</td>
+                    <td className="px-[2px] py-[2px]">
+                      {user.generalInformation?.email}
+                    </td>
+                    <td className="px-[2px] py-[2px]">
+                      {user.generalInformation?.phone}
+                    </td>
 
                     <td className="px-[2px] py-[2px]">
-                      {user.addressDetails?.permanentAddress?.addressine1 || "--"}
+                      {user.addressDetails?.permanentAddress?.addressine1 ||
+                        "--"}
                     </td>
 
                     <td className="px-[2px] py-[2px]">
@@ -491,7 +529,9 @@ export default function UserList() {
                             {/* Status */}
                             <li>
                               <button
-                                onClick={() => toggleStatus(user._id, user.status)}
+                                onClick={() =>
+                                  toggleStatus(user._id, user.status)
+                                }
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
                               >
                                 {user.status === "active" ? (
@@ -590,7 +630,6 @@ export default function UserList() {
 
           {/* MOBILE VIEW — unchanged */}
           {/* (kept same as your original UI) */}
-
         </>
       )}
 
