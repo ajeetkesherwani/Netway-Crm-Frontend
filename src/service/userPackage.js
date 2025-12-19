@@ -2,7 +2,6 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const getToken = () => localStorage.getItem("token");
 
-
 // ---------------------- ASSIGN PACKAGE ----------------------
 export const assignPackageToUser = async (userId, payload) => {
   const res = await fetch(`${BASE_URL}/userPackage/assign/${userId}`, {
@@ -48,9 +47,15 @@ export const updateUserPackageStatus = async (packageId, status) => {
 
 // ---------------------- GET ALL PACKAGES LIST ----------------------
 
-export const getAvailablePackagesForUser = async (userId) => {
-  const res = await fetch(`${BASE_URL}/userPackage/package/list/${userId}`, {
-   
+export const getAvailablePackagesForUser = async (
+  userId,
+  { search, page, limit }
+) => {
+  let url = `${BASE_URL}/userPackage/package/list/${userId}?page=${page}&limit=${limit}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

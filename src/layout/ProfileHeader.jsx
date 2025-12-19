@@ -175,13 +175,55 @@ const ProfileHeader = () => {
   const currentPath = location.pathname.split("/").pop() || "profile";
 
   const tabs = [
-    { id: "profile", label: "Profile", path: `/user/profile/${id}/profile`, module: "customer", action: "profile" },
-    { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details`, module: "customer", action: "packageDetailView" },
-    { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice`, module: "customer", action: "invoice" },
-    { id: "payment", label: "Payments", path: `/user/profile/${id}/payment`, module: "customer", action: "payments" },
-    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "tickets" },
-    { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log`, module: "customer", action: "logs" },
-    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package`, module: "customer", action: "rechargePackageList" },
+    {
+      id: "profile",
+      label: "Profile",
+      path: `/user/profile/${id}/profile`,
+      module: "customer",
+      action: "profile",
+    },
+    {
+      id: "package-details",
+      label: "Package Details",
+      path: `/user/profile/${id}/package-details`,
+      module: "customer",
+      action: "packageDetailView",
+    },
+    {
+      id: "invoice",
+      label: "Invoices",
+      path: `/user/profile/${id}/invoice`,
+      module: "customer",
+      action: "invoice",
+    },
+    {
+      id: "payment",
+      label: "Payments",
+      path: `/user/profile/${id}/payment`,
+      module: "customer",
+      action: "payments",
+    },
+    {
+      id: "tickets",
+      label: "Tickets",
+      path: `/user/profile/${id}/tickets`,
+      module: "customer",
+      action: "tickets",
+    },
+    {
+      id: "activity-log",
+      label: "Logs",
+      path: `/user/profile/${id}/activity-log`,
+      module: "customer",
+      action: "logs",
+    },
+    {
+      id: "recharge-package",
+      label: "Recharge Package",
+      path: `/user/profile/${id}/recharge-package`,
+      module: "customer",
+      action: "rechargePackageList",
+    },
   ];
 
   useEffect(() => {
@@ -224,18 +266,28 @@ const ProfileHeader = () => {
   // Yeh sabse important part hai — latest active plan nikal rahe hain
   const purchasedPlans = userData.purchasedPlans || [];
   const latestPlan = purchasedPlans
-    .filter(plan => new Date(plan.expiryDate) >= new Date()) // Only active/valid plans
-    .sort((a, b) => new Date(b.startDate || b.purchaseDate) - new Date(a.startDate || a.purchaseDate))[0];
+    .filter((plan) => new Date(plan.expiryDate) >= new Date()) // Only active/valid plans
+    .sort(
+      (a, b) =>
+        new Date(b.startDate || b.purchaseDate) -
+        new Date(a.startDate || a.purchaseDate)
+    )[0];
 
-  const currentPackage = latestPlan?.packageId || user.packageInfomation?.packageId || {};
+  const currentPackage =
+    latestPlan?.packageId || user.packageInfomation?.packageId || {};
   const expiryDate = latestPlan?.expiryDate || currentPackage.toDate || null;
-  const lastRechargeDate = latestPlan?.purchaseDate || latestPlan?.startDate || null;
+  const lastRechargeDate =
+    latestPlan?.purchaseDate || latestPlan?.startDate || null;
 
   const remainingDays = expiryDate
-    ? Math.max(0, Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(
+        0,
+        Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24))
+      )
     : 0;
 
-  const formatDate = (date) => (date ? new Date(date).toLocaleDateString("en-GB") : "–");
+  const formatDate = (date) =>
+    date ? new Date(date).toLocaleDateString("en-GB") : "–";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -259,9 +311,23 @@ const ProfileHeader = () => {
           {/* Left - Avatar + Info */}
           <div className="flex gap-6">
             <div className="w-28 h-28 bg-gray-200 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" className="w-20 h-20 text-gray-500">
-                <circle cx="64" cy="40" r="24" fill="currentColor" opacity="0.6" />
-                <path d="M16 120c0-28 20-48 48-48s48 20 48 48" fill="currentColor" opacity="0.5" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 128 128"
+                className="w-20 h-20 text-gray-500"
+              >
+                <circle
+                  cx="64"
+                  cy="40"
+                  r="24"
+                  fill="currentColor"
+                  opacity="0.6"
+                />
+                <path
+                  d="M16 120c0-28 20-48 48-48s48 20 48 48"
+                  fill="currentColor"
+                  opacity="0.5"
+                />
               </svg>
             </div>
 
@@ -270,15 +336,27 @@ const ProfileHeader = () => {
                 {general.title} {general.name || "N/A"}
               </h3>
               <div className="mt-3 space-y-2 text-sm text-gray-700">
-                <p><strong>ID:</strong> {general.ipactId || "N/A"}</p>
-                <p><strong>Mobile:</strong> {general.phone || "N/A"}</p>
-                <p><strong>Email:</strong> {general.email || "N/A"}</p>
-                <p><strong>Current Package:</strong> 
+                <p>
+                  <strong>ID:</strong> {general.ipactId || "N/A"}
+                </p>
+                <p>
+                  <strong>Mobile:</strong> {general.phone || "N/A"}
+                </p>
+                <p>
+                  <strong>Email:</strong> {general.email || "N/A"}
+                </p>
+                <p>
+                  <strong>Current Package:</strong>
                   <span className="font-semibold text-blue-700">
                     {currentPackage.name || "No Active Package"}
                   </span>
                 </p>
-                <p><strong>Service:</strong> {general.serviceOpted ? general.serviceOpted.toUpperCase() : "N/A"}</p>
+                <p>
+                  <strong>Service:</strong>{" "}
+                  {general.serviceOpted
+                    ? general.serviceOpted.toUpperCase()
+                    : "N/A"}
+                </p>
               </div>
             </div>
           </div>
@@ -286,33 +364,69 @@ const ProfileHeader = () => {
           {/* Right - Stats */}
           <div className="grid grid-cols-2 gap-8 text-sm">
             <div className="space-y-3">
-              <p><strong>Expiry Date:</strong> 
-                <span className={`font-bold ${remainingDays <= 7 ? "text-red-600" : "text-gray-600"}`}>
-                  {" "}{formatDate(expiryDate)}
+              <p>
+                <strong>Expiry Date:</strong>
+                <span
+                  className={`font-bold ${
+                    remainingDays <= 7 ? "text-red-600" : "text-gray-600"
+                  }`}
+                >
+                  {" "}
+                  {formatDate(expiryDate)}
                 </span>
               </p>
-              <p><strong>Remaining Days:</strong> 
-                <span className={`font-bold text-lg ${remainingDays <= 7 ? "text-gray-600" : "text-gray-600"}`}>
-                  {" "}{remainingDays} Days
+              <p>
+                <strong>Remaining Days:</strong>
+                <span
+                  className={`font-bold text-lg ${
+                    remainingDays <= 7 ? "text-gray-600" : "text-gray-600"
+                  }`}
+                >
+                  {" "}
+                  {remainingDays} Days
                 </span>
               </p>
-              <p><strong>Dues:</strong> 
+              <p>
+                <strong>Dues:</strong>
                 <span className="font-bold text-gray-600">
-                  ₹{user.walletBalance < 0 ? Math.abs(user.walletBalance).toFixed(2) : "0.00"}
+                  ₹
+                  {user.walletBalance < 0
+                    ? Math.abs(user.walletBalance).toFixed(2)
+                    : "0.00"}
                 </span>
               </p>
-              <p><strong>Last Recharge:</strong> {formatDate(lastRechargeDate)}</p>
+              <p>
+                <strong>Last Recharge:</strong> {formatDate(lastRechargeDate)}
+              </p>
             </div>
             <div className="space-y-3">
-              <p><strong>Auto Renew:</strong> 
-                <span className={latestPlan?.isRenewed ? "text-gray-600 font-bold" : "text-gray-500"}>
+              <p>
+                <strong>Auto Renew:</strong>
+                <span
+                  className={
+                    latestPlan?.isRenewed
+                      ? "text-gray-600 font-bold"
+                      : "text-gray-500"
+                  }
+                >
                   {latestPlan?.isRenewed ? "Yes" : "No"}
                 </span>
               </p>
-              <p><strong>Online Bill Payment:</strong> <span className="text-gray-600 font-bold">Yes</span></p>
-              <p><strong>Online Recharge:</strong> <span className="text-gray-600 font-bold">Yes</span></p>
-              <p><strong>Status:</strong> 
-                <span className={`font-bold ${remainingDays > 0 ? "text-gray-600" : "text-red-600"}`}>
+              <p>
+                <strong>Online Bill Payment:</strong>{" "}
+                <span className="text-gray-600 font-bold">Yes</span>
+              </p>
+              <p>
+                <strong>Online Recharge:</strong>{" "}
+                <span className="text-gray-600 font-bold">Yes</span>
+              </p>
+              <p>
+                <strong>Status:</strong>
+                <span
+                  className={`font-bold ${
+                    remainingDays > 0 ? "text-gray-600" : "text-red-600"
+                  }`}
+                >
                   {remainingDays > 0 ? "Active" : "Expired"}
                 </span>
               </p>
@@ -328,9 +442,11 @@ const ProfileHeader = () => {
             <button
               onClick={() => navigate(tab.path)}
               className={`px-5 py-2 rounded-md font-medium transition-all
-                ${currentPath === tab.id
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "text-gray-600 hover:bg-gray-100"
+                ${
+                  currentPath === tab.id ||
+                  (tab.id === "profile" && currentPath === id)
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
             >
               {tab.label}
