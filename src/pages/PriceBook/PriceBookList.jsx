@@ -551,34 +551,22 @@ export default function PriceBookList() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-sans antialiased">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Price Books</h1>
+            {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="text-xl font-semibold text-gray-800 leading-tight whitespace-nowrap">
+            Price Book
+          </h1>
 
-        {/* Search + Actions */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search Bar */}
-          <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden">
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="px-4 py-3 text-sm bg-gray-50 border-r border-gray-300 outline-none"
-            >
-              <option value="">All Types</option>
-              <option value="Reseller">Reseller</option>
-              <option value="Lco">LCO</option>
-            </select>
+          {/* Search bar next to title */}
+          <div className="flex items-center bg-white rounded-md shadow-sm border border-gray-300">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              placeholder={
-                selectedType
-                  ? `Search ${selectedType === "Lco" ? "LCO" : "Reseller"} name...`
-                  : "First select type to search by name"
-              }
-              disabled={!selectedType} // Disable until type is selected
-              className="px-4 py-3 text-sm outline-none min-w-72 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              placeholder="Search price books..."
+              className="px-4 py-2 text-sm outline-none w-64"
             />
             <button
               onClick={handleSearch}
@@ -587,25 +575,25 @@ export default function PriceBookList() {
               <FaSearch className="text-lg" />
             </button>
           </div>
+        </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3">
+        {/* Action buttons on the right */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+          >
+            Download as Excel
+          </button>
+
+          <ProtectedAction module="pricebook" action="create">
             <button
-              onClick={exportToExcel}
-              className="px-5 py-3 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+              onClick={() => navigate("/pricebook/create")}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
             >
-              Download Excel
+              Add Price Book
             </button>
-
-            <ProtectedAction module="pricebook" action="create">
-              <button
-                onClick={() => navigate("/pricebook/create")}
-                className="px-5 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-              >
-                Add Price Book
-              </button>
-            </ProtectedAction>
-          </div>
+          </ProtectedAction>
         </div>
       </div>
 
@@ -644,7 +632,7 @@ export default function PriceBookList() {
                     <tr key={pb._id} className="hover:bg-blue-50 transition duration-200">
                       <td className="px-6 py-4 text-gray-600">{index + 1}</td>
                       <td
-                        className="px-6 py-4 font-medium text-black hover:text-blue-600 hover:underline cursor-pointer transition"
+                        className="px-6 py-4 font-medium text-gray-600 hover:underline cursor-pointer"
                         onClick={() => handleView(pb._id)}
                       >
                         {pb.priceBookName}
