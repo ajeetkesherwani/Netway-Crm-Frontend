@@ -505,7 +505,7 @@ export default function TicketCreate() {
       });
       await createTicket(data);
       toast.success("Ticket created successfully");
-      navigate("/ticket/list");
+      navigate("/ticket/all");
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to create ticket");
     } finally {

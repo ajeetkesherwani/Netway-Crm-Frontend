@@ -3,13 +3,35 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
 // Get all ticket list with pagination, search, and filter
+// src/service/ticket.js
+export const getAllTicketListWithFilter = async (queryParams = "") => {
+  const url = queryParams 
+    ? `${BASE_URL}/ticket/list?${queryParams}` 
+    : `${BASE_URL}/ticket/list`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch tickets");
+  }
+
+  return data;
+};
 
 export const getAllTicketList = async (page = 1, limit = 10, search = "", filter = "") => {
   const query = new URLSearchParams({
     page,
     limit,
     search,
-    ...(filter && { filter }), // Only include filter if provided
+    ...(filter && { filter }), 
   }).toString();
 
   const res = await fetch(`${BASE_URL}/ticket/list?${query}`, {

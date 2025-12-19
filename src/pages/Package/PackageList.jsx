@@ -771,7 +771,7 @@ export default function PackageList() {
                   <tr key={pkg._id} className="hover:bg-gray-50">
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
                     <td
-                      className="px-[2px] py-[2px] text-blue-600 hover:underline cursor-pointer"
+                      className="px-[2px] py-[2px] text-gray-700 hover:text-blue-600 hover:underline cursor-pointer"
                       onClick={() => handleView(pkg._id)}
                     >
                       {pkg.name}
@@ -782,11 +782,10 @@ export default function PackageList() {
                     <td className="px-[2px] py-[2px]">{pkg.categoryOfPlan || "—"}</td>
                     <td className="px-[2px] py-[2px]">
                       <span
-                        className={`px-2 py-0.5 rounded text-xs ${
-                          pkg.status === "active"
+                        className={`px-2 py-0.5 rounded text-xs ${pkg.status === "active"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {pkg.status}
                       </span>
@@ -871,11 +870,10 @@ export default function PackageList() {
                 <p className="text-sm">
                   Status:{" "}
                   <span
-                    className={`px-2 py-0.5 rounded text-xs ${
-                      pkg.status === "active"
+                    className={`px-2 py-0.5 rounded text-xs ${pkg.status === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {pkg.status}
                   </span>
