@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUser, getAllZoneList, getLcoByRetailer } from "../../service/user";
+import {
+  createUser,
+  getAllZoneList,
+  getLcoByRetailer,
+} from "../../service/user";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
@@ -40,13 +44,11 @@ export default function CreateUser() {
   const [selectedLco, setSelectedLco] = useState("");
   const [customPackagePrice, setCustomPackagePrice] = useState("");
 
-
   const [formErrors, setFormErrors] = useState({});
   // const [areas, setAreas] = useState(["Main Area"]);
   // const [areas, setAreas] = useState([""]);
   const [selectedArea, setSelectedArea] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-
 
   const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
@@ -94,7 +96,7 @@ export default function CreateUser() {
       circuitId: "",
       createdFor: {
         id: "",
-        type: "Self"
+        type: "Self",
       },
       packageDetails: {
         packageId: "",
@@ -403,7 +405,6 @@ export default function CreateUser() {
     } else setFieldValue(path, value);
   };
 
-
   // Handle Created For change
   const handleCreatedForChange = (type) => {
     setSelectedCreatedFor(type);
@@ -438,8 +439,6 @@ export default function CreateUser() {
     setFieldValue("customer.createdFor.id", lcoId);
   };
 
-
-
   // PACKAGE SELECT → AUTO FILL NAME & PRICE
   const handlePackageChange = (packageId) => {
     const selected = packageList.find((p) => p._id === packageId);
@@ -448,7 +447,10 @@ export default function CreateUser() {
 
       // Save package ID and name
       setFieldValue("customer.packageDetails.packageId", selected._id);
-      setFieldValue("customer.packageDetails.packageName", selected.packageName || selected.name || "");
+      setFieldValue(
+        "customer.packageDetails.packageName",
+        selected.packageName || selected.name || ""
+      );
 
       // Set the original base price (for display and fallback)
       setFieldValue("customer.packageDetails.packageAmount", basePrice);
@@ -475,7 +477,6 @@ export default function CreateUser() {
   //     setFieldValue("customer.packageDetails.packageAmount", "");
   //   }
   // };
-
 
   // validation: focus on required payment fields & some basics
   const validateForm = () => {
@@ -572,7 +573,6 @@ export default function CreateUser() {
     return errors;
   };
 
-
   //handle submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -606,7 +606,6 @@ export default function CreateUser() {
 
       toast.success("Customer created & package assigned successfully!");
       navigate("/user/list");
-
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create customer");
     } finally {
@@ -715,7 +714,6 @@ export default function CreateUser() {
   //   }
   // };
 
-
   const handleClear = () => {
     setFormData(initialForm);
     setFormErrors({});
@@ -795,8 +793,9 @@ export default function CreateUser() {
               <input
                 value={formData.customer.name}
                 onChange={(e) => handleChange(e, "customer.name")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.name"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["customer.name"] ? "border-red-500" : ""
+                }`}
                 placeholder="Name"
               />
               {formErrors["customer.name"] && (
@@ -833,8 +832,9 @@ export default function CreateUser() {
                 type="email"
                 value={formData.customer.email}
                 onChange={(e) => handleChange(e, "customer.email")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.email"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["customer.email"] ? "border-red-500" : ""
+                }`}
                 placeholder="Email"
               />
               {formErrors["customer.email"] && (
@@ -851,9 +851,15 @@ export default function CreateUser() {
               </label>
               <div className="relative">
                 <DatePicker
-                  selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
+                  selected={
+                    formData.additional.dob
+                      ? new Date(formData.additional.dob)
+                      : null
+                  }
                   onChange={(date) => {
-                    const formatted = date ? date.toISOString().split("T")[0] : "";
+                    const formatted = date
+                      ? date.toISOString().split("T")[0]
+                      : "";
                     setFieldValue("additional.dob", formatted);
                   }}
                   dateFormat="dd/MM/yyyy"
@@ -937,8 +943,9 @@ export default function CreateUser() {
               <input
                 value={formData.customer.alternateMobile}
                 onChange={(e) => handleChange(e, "customer.alternateMobile")}
-                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["customer.alternateMobile"] ? "border-red-500" : ""
+                }`}
                 placeholder="Alternate Mobile"
               // onKeyDown={(e) => {
               //   if (!/[0-9]/.test(e.key)) {
@@ -1011,13 +1018,13 @@ export default function CreateUser() {
               {/* CLEAN & MINIMAL MULTI-SELECT DROPDOWN */}
               <div className="relative">
                 <div
-                  onClick={() => setShowDropdown(prev => !prev)}
+                  onClick={() => setShowDropdown((prev) => !prev)}
                   className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
                 >
                   <div className="flex flex-wrap gap-2">
                     {formData.customer.installationBy?.length > 0 ? (
                       formData.customer.installationBy.map((id) => {
-                        const person = staff.find(s => s._id === id);
+                        const person = staff.find((s) => s._id === id);
                         return person ? (
                           <span
                             key={id}
@@ -1028,8 +1035,14 @@ export default function CreateUser() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const updated = formData.customer.installationBy.filter(x => x !== id);
-                                setFieldValue("customer.installationBy", updated);
+                                const updated =
+                                  formData.customer.installationBy.filter(
+                                    (x) => x !== id
+                                  );
+                                setFieldValue(
+                                  "customer.installationBy",
+                                  updated
+                                );
                               }}
                               className="ml-1 hover:text-blue-900"
                             >
@@ -1039,11 +1052,25 @@ export default function CreateUser() {
                         ) : null;
                       })
                     ) : (
-                      <span className="text-gray-500 text-sm">Select installer(s)</span>
+                      <span className="text-gray-500 text-sm">
+                        Select installer(s)
+                      </span>
                     )}
                   </div>
-                  <svg className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className={`w-5 h-5 text-gray-500 transition-transform ${
+                      showDropdown ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </div>
 
@@ -1053,7 +1080,8 @@ export default function CreateUser() {
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {staff.length > 0 ? (
                         staff.map((s) => {
-                          const isChecked = formData.customer.installationBy?.includes(s._id);
+                          const isChecked =
+                            formData.customer.installationBy?.includes(s._id);
                           return (
                             <label
                               key={s._id}
@@ -1064,23 +1092,37 @@ export default function CreateUser() {
                                 type="checkbox"
                                 checked={isChecked || false}
                                 onChange={() => {
-                                  let updated = [...(formData.customer.installationBy || [])];
+                                  let updated = [
+                                    ...(formData.customer.installationBy || []),
+                                  ];
                                   if (isChecked) {
-                                    updated = updated.filter(id => id !== s._id);
+                                    updated = updated.filter(
+                                      (id) => id !== s._id
+                                    );
                                   } else {
                                     updated.push(s._id);
-                                    setFieldValue("customer.installationByName", ""); // Clear manual
+                                    setFieldValue(
+                                      "customer.installationByName",
+                                      ""
+                                    ); // Clear manual
                                   }
-                                  setFieldValue("customer.installationBy", updated);
+                                  setFieldValue(
+                                    "customer.installationBy",
+                                    updated
+                                  );
                                 }}
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                               />
-                              <span className="font-medium text-sm">{s.staffName || s.name}</span>
+                              <span className="font-medium text-sm">
+                                {s.staffName || s.name}
+                              </span>
                             </label>
                           );
                         })
                       ) : (
-                        <div className="px-4 py-3 text-sm text-gray-500">No staff available</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          No staff available
+                        </div>
                       )}
                     </div>
 
@@ -1122,7 +1164,9 @@ export default function CreateUser() {
 
               {/* Error */}
               {formErrors.installationBy && (
-                <p className="mt-2 text-red-600 text-sm">{formErrors.installationBy}</p>
+                <p className="mt-2 text-red-600 text-sm">
+                  {formErrors.installationBy}
+                </p>
               )}
             </div>
             <div>
@@ -1241,7 +1285,9 @@ export default function CreateUser() {
                 value={selectedCreatedFor}
                 onChange={(e) => handleCreatedForChange(e.target.value)}
               >
-                <option value="" disabled selected>Select</option>
+                <option value="" disabled selected>
+                  Select
+                </option>
                 <option value="Admin">Admin</option>
                 <option value="Retailer">Reseller</option>
                 <option value="Lco">Lco</option>
@@ -1250,38 +1296,38 @@ export default function CreateUser() {
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
             {(selectedCreatedFor === "reseller" ||
               selectedCreatedFor === "lco") && (
-                <div>
-                  <label className="block text-sm font-medium">Reseller</label>
-                  <select
-                    name="reseller"
-                    className="mt-1 p-2 border rounded w-full"
-                    value={
-                      selectedCreatedFor === "lco"
-                        ? selectedRetailerForLco
-                        : formData.customer.createdFor.id
+              <div>
+                <label className="block text-sm font-medium">Reseller</label>
+                <select
+                  name="reseller"
+                  className="mt-1 p-2 border rounded w-full"
+                  value={
+                    selectedCreatedFor === "lco"
+                      ? selectedRetailerForLco
+                      : formData.customer.createdFor.id
+                  }
+                  onChange={(e) => {
+                    if (selectedCreatedFor === "lco") {
+                      handleRetailerForLcoChange(e.target.value);
+                    } else {
+                      // if just reseller, set ID directly
+                      setFieldValue("customer.createdFor.id", e.target.value);
                     }
-                    onChange={(e) => {
-                      if (selectedCreatedFor === "lco") {
-                        handleRetailerForLcoChange(e.target.value);
-                      } else {
-                        // if just reseller, set ID directly
-                        setFieldValue("customer.createdFor.id", e.target.value);
-                      }
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select Reseller
-                    </option>
-                    {retailers
-                      .filter((r) => r.resellerName)
-                      .map((r) => (
-                        <option key={r._id} value={r._id}>
-                          {r.resellerName}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
+                  }}
+                >
+                  <option value="" disabled>
+                    Select Reseller
+                  </option>
+                  {retailers
+                    .filter((r) => r.resellerName)
+                    .map((r) => (
+                      <option key={r._id} value={r._id}>
+                        {r.resellerName}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
             {/* LCO Dropdown - Show only if Created For is Lco */}
             {selectedCreatedFor === "lco" && (
               <div>
@@ -1301,7 +1347,6 @@ export default function CreateUser() {
                 </select>
               </div>
             )}
-
           </div>
         </section>
 
@@ -1313,7 +1358,7 @@ export default function CreateUser() {
           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Billing Address */}
             <div className="border rounded p-3">
-              <h3 className="font-semibold mb-2">Billing Address</h3>
+              <h3 className="font-semibold mb-2">Installation Address</h3>
               <label className="text-sm">Address Line 1 *</label>
               <input
                 value={formData.addresses.billing.addressLine1}
@@ -1343,8 +1388,9 @@ export default function CreateUser() {
                   value={formData.addresses.billing.city}
                   onChange={(e) => handleChange(e, "addresses.billing.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.billing.city"] ? "border-red-500" : ""
+                  }`}
                 />
                 {/* {formErrors["addresses.billing.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
@@ -1353,10 +1399,11 @@ export default function CreateUser() {
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.state"]
-                    ? "border-red-500"
-                    : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.billing.state"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {/* {formErrors["addresses.billing.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
@@ -1415,8 +1462,11 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.city}
                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"] ? "border-red-500" : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.permanent.city"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {/* {formErrors["addresses.permanent.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
@@ -1426,10 +1476,11 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.state"]
-                    ? "border-red-500"
-                    : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.permanent.state"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {/* {formErrors["addresses.permanent.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
@@ -1459,7 +1510,7 @@ export default function CreateUser() {
 
             {/* Installation Address */}
             <div className="border rounded p-3">
-              <h3 className="font-semibold mb-2">Installation Address</h3>
+              <h3 className="font-semibold mb-2">Billing Address</h3>
               <label className="inline-flex items-center text-sm">
                 <input
                   type="checkbox"
@@ -1469,7 +1520,7 @@ export default function CreateUser() {
                   }
                   className="mr-2"
                 />
-                Different as Billing address
+                Different as Installation address
               </label>
 
               {!formData.addresses.installation.sameAsBilling && (
@@ -1581,14 +1632,14 @@ export default function CreateUser() {
                 <input
                   type="text"
                   value={formData.customer.customArea || ""}
-                  onChange={(e) => setFieldValue("customer.customArea", e.target.value)}
+                  onChange={(e) =>
+                    setFieldValue("customer.customArea", e.target.value)
+                  }
                   placeholder="e.g. Shivaji Nagar, Near Temple"
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 />
               </div>
             </div>
-
-
           </div>
         </section>
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
@@ -1637,12 +1688,18 @@ export default function CreateUser() {
               <div className="mt-4">
                 <label className="block text-sm font-medium">
                   Package Price <span className="text-red-500">*</span>
-                  {customPackagePrice && formData.customer.packageDetails.packageAmount !== customPackagePrice && (
-                    <span className="text-xs text-orange-600 ml-2">(Customized)</span>
-                  )}
+                  {customPackagePrice &&
+                    formData.customer.packageDetails.packageAmount !==
+                      customPackagePrice && (
+                      <span className="text-xs text-orange-600 ml-2">
+                        (Customized)
+                      </span>
+                    )}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">₹</span>
+                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
+                    ₹
+                  </span>
                   <input
                     type="number"
                     value={customPackagePrice}
@@ -1650,7 +1707,10 @@ export default function CreateUser() {
                       const value = e.target.value;
                       setCustomPackagePrice(value);
                       // Update the form data so it gets submitted
-                      setFieldValue("customer.packageDetails.packageAmount", value);
+                      setFieldValue(
+                        "customer.packageDetails.packageAmount",
+                        value
+                      );
                     }}
                     className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
                     placeholder="Enter custom price"
@@ -1665,10 +1725,12 @@ export default function CreateUser() {
                 )}
                 {formData.customer.packageDetails.packageAmount && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Original price: ₹{formData.customer.packageDetails.packageAmount}
-                    {customPackagePrice && customPackagePrice !== formData.customer.packageDetails.packageAmount &&
-                      ` → Now: ₹${customPackagePrice}`
-                    }
+                    Original price: ₹
+                    {formData.customer.packageDetails.packageAmount}
+                    {customPackagePrice &&
+                      customPackagePrice !==
+                        formData.customer.packageDetails.packageAmount &&
+                      ` → Now: ₹${customPackagePrice}`}
                   </p>
                 )}
               </div>

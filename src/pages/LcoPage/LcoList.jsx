@@ -423,6 +423,7 @@ export default function LcoList() {
                 <tr>
                   <th className="px-2 py-2 text-left">S.No</th>
                   <th className="px-2 py-2 text-left">Name</th>
+                  <th className="px-2 py-2 text-left">Reseller Name</th>
                   <th className="px-2 py-2 text-left">Email</th>
                   <th className="px-2 py-2 text-left">Phone No</th>
                   <th className="px-2 py-2 text-left">Address</th>
@@ -443,6 +444,7 @@ export default function LcoList() {
                         {lco.lcoName}
                       </span>
                     </td>
+                    <td className="px-2 py-2">{lco.retailerId.resellerName ||  "—"}</td>
                     <td className="px-2 py-2">{lco.email || "—"}</td>
                     <td className="px-2 py-2">{lco.mobileNo}</td>
                     <td className="px-2 py-2">{lco.address || "—"}</td>

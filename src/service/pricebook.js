@@ -44,7 +44,7 @@ export const createPriceBook = async (priceBookData) => {
 
 // Update price book
 export const updatePriceBook = async (id, priceBookData) => {
-  const res = await fetch(`${BASE_URL}/priceBook/${id}`, {
+  const res = await fetch(`${BASE_URL}/priceBook/update/${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
