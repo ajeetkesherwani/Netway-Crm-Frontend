@@ -136,16 +136,14 @@ export default function PriceBookList() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800 leading-tight">
+            {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="text-xl font-semibold text-gray-800 leading-tight whitespace-nowrap">
             Price Book
-            
           </h1>
-        </div>
 
-        {/* Search + Buttons */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Search bar next to title */}
           <div className="flex items-center bg-white rounded-md shadow-sm border border-gray-300">
             <input
               type="text"
@@ -153,7 +151,7 @@ export default function PriceBookList() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search price books..."
-              className="px-4 py-2 text-sm outline-none min-w-64"
+              className="px-4 py-2 text-sm outline-none w-64"
             />
             <button
               onClick={handleSearch}
@@ -162,24 +160,25 @@ export default function PriceBookList() {
               <FaSearch />
             </button>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3">
+        {/* Action buttons on the right */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportToExcel}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+          >
+            Download as Excel
+          </button>
+
+          <ProtectedAction module="pricebook" action="create">
             <button
-              onClick={exportToExcel}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+              onClick={() => navigate("/pricebook/create")}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
             >
-              Download as Excel
+              Add Price Book
             </button>
-
-            <ProtectedAction module="pricebook" action="create">
-              <button
-                onClick={() => navigate("/pricebook/create")}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
-              >
-                Add Price Book
-              </button>
-            </ProtectedAction>
-          </div>
+          </ProtectedAction>
         </div>
       </div>
 
@@ -217,7 +216,7 @@ export default function PriceBookList() {
                         {(page - 1) * limit + index + 1}
                       </td>
                       <td
-                        className="px-6 py-4 font-medium text-blue-600 hover:underline cursor-pointer"
+                        className="px-6 py-4 font-medium text-gray-600 hover:underline cursor-pointer"
                         onClick={() => handleView(pb._id)}
                       >
                         {pb.priceBookName}

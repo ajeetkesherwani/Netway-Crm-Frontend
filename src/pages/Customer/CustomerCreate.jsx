@@ -9,6 +9,15 @@ import { getStaffList } from "../../service/ticket";
 import { getAllPackageList } from "../../service/package";
 import { assignPackageToUser } from "../../service/userPackage";
 import DatePicker from "react-datepicker";
+import { characterValidate } from "../../validations/characterValidate";
+import { emailValidate } from "../../validations/emailValidate";
+import { mobileValidate } from "../../validations/mobileValidate";
+import { checkAlternateSameAsMobile } from "../../validations/validateAlternateMobile";
+import { pincodeValidate } from "../../validations/pincodeValidate";
+import { cityValidate } from "../../validations/cityValidate";
+import { stateValidate } from "../../validations/stateValidate";
+
+
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreateUser() {
@@ -45,6 +54,8 @@ export default function CreateUser() {
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
   const serviceOpted = ["intercom", "broadband", "corporate"]
+  const indianStates = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+
 
 
   const initialForm = {
@@ -209,11 +220,11 @@ export default function CreateUser() {
       cur[keys[keys.length - 1]] = value;
       return next;
     });
-    setFormErrors((prev) => {
-      const c = { ...prev };
-      delete c[path];
-      return c;
-    });
+    // setFormErrors((prev) => {
+    //   const c = { ...prev };
+    //   delete c[path];
+    //   return c;
+    // });
   };
 
   // Areas dynamic add/remove
@@ -229,6 +240,157 @@ export default function CreateUser() {
 
   const handleChange = (e, path) => {
     const { value, type, checked, files } = e.target;
+
+
+    if (path === "customer.name") {
+      const error = characterValidate(value);
+
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+    //  Email validation
+    if (path === "customer.email") {
+      const error = emailValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+    // Mobile validation
+    if (path === "customer.mobile") {
+      let value = e.target.value;
+
+      // remove alphabets
+      value = value.replace(/\D/g, "");
+
+      // limit to 10 digits
+      if (value.length > 10) {
+        value = value.slice(0, 10);
+      }
+
+
+      setFieldValue(path, value);
+
+      // validation
+      const error = mobileValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+
+      return;
+    }
+
+
+    // Alternative mobile number validation
+    if (path === "customer.alternateMobile") {
+      let value = e.target.value;
+
+      // ✅ Remove alphabets & special characters
+      value = value.replace(/\D/g, "");
+
+      // ✅ Limit to 10 digits
+      if (value.length > 10) {
+        value = value.slice(0, 10);
+      }
+
+      // ✅ Update field value (IMPORTANT)
+      setFieldValue(path, value);
+
+      const trimmedValue = value.trim();
+      const primaryMobile = formData.customer.mobile?.trim() || "";
+
+      // Validate only if user entered something
+      const formatError = trimmedValue ? mobileValidate(trimmedValue) : "";
+
+      // Check same as primary mobile
+      const sameError = checkAlternateSameAsMobile(
+        primaryMobile,
+        trimmedValue
+      );
+
+      const finalError = sameError || formatError;
+
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: finalError,
+      }));
+
+      return;
+    }
+
+
+    //  Pincode
+    if (path === "addresses.billing.pincode" || path === "addresses.permanent.pincode") {
+      let value = e.target.value;
+      // value = value.replace(/\D/g, "");
+
+
+      if (value.length > 6) {
+        return;
+      }
+      const error = pincodeValidate(value);
+      setFormErrors((prev) => ({ ...prev, [path]: error }));
+    }
+
+    if (path === "addresses.billing.city" || path === "addresses.permanent.city") {
+      const error = cityValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+    if (path === "addresses.billing.state" || path === "addresses.permanent.state") {
+      const error = stateValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+
+    // if (path.includes("state")) {
+    //   const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, ""); // Remove anything that's not letter or space
+    //   setFieldValue(path, sanitizedValue);
+
+    //   // Optional: Clear error if exists
+    //   setFormErrors((prev) => {
+    //     const newErrors = { ...prev };
+    //     delete newErrors[path];
+    //     return newErrors;
+    //   });
+    //   return;
+    // }
+
+
+    const addressPaths = [
+      "addresses.billing.addressLine1",
+
+
+
+
+
+
+      "addresses.permanent.addressLine1",
+
+
+
+    ];
+
+    if (addressPaths.includes(path)) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[path];
+        return newErrors;
+      });
+    }
+
+
+
     if (type === "checkbox") setFieldValue(path, checked);
     else if (type === "file") {
       if (path === "documents") {
@@ -320,6 +482,12 @@ export default function CreateUser() {
     const errors = {};
     const c = formData.customer;
     const p = formData.payment;
+    const perm = formData.addresses.permanent;
+    // Name - Required
+    const name = (c.name || "").trim();
+    if (!name) {
+      errors["customer.name"] = "Name is required";
+    }
 
     // email
     const email = (c.email || "").trim();
@@ -329,7 +497,7 @@ export default function CreateUser() {
 
     // mobile
     const mobile = (c.mobile || "").trim();
-    if (!mobile) errors["customer.mobile"] = "Mobile is required";
+    if (!mobile) errors["customer.mobile"] = "Mobile Number is required";
     else if (!/^\d{10,}$/.test(mobile))
       errors["customer.mobile"] = "Enter valid mobile (10+ digits)";
 
@@ -343,16 +511,63 @@ export default function CreateUser() {
     if (aadhar && !/^\d{12}$/.test(aadhar))
       errors["customer.aadharNo"] = "Aadhar must be 12 digits";
 
+    // if (!c.packageDetails.packageId || !c.packageDetails.packageId.trim()) {
+    //   errors["packageDetails.packageId"] = "Package detail is required";
+    // }
+
+    // const packagePrice = c.packageDetails.packageAmount;
+    // if (!packagePrice || packagePrice <= 0) {
+    //   errors["packageDetails.packageAmount"] = "Package price is required";
+    // }
+
     // Payment - all required
     if (!p.paymentMode) errors["payment.paymentMode"] = "Payment mode required";
+    // Zone validation
+    // if (!selectedArea || selectedArea.trim() === "") {
+    //   errors["zone"] = "Zone is required";
+    // }
 
     // addresses: billing must have pincode & state & city & area
     const bill = formData.addresses.billing;
+    const billCity = (formData.addresses.billing.city || "").trim();
+    const permCity = (formData.addresses.permanent.city || "").trim();
+    const billState = (formData.addresses.billing.state || "").trim();
+    const permState = (formData.addresses.permanent.State || "").trim();
+
+    if (!bill.addressLine1)
+      errors["addresses.billing.addressLine1"] = "Billing address line 1 required";
+
     if (!bill.state)
       errors["addresses.billing.state"] = "Billing state required";
-    if (!bill.city) errors["addresses.billing.city"] = "Billing city required";
+    if (!billCity) {
+      errors["addresses.billing.city"] = "Billing city is required";
+    } else {
+      const err = cityValidate(billCity);
+      if (err) errors["addresses.billing.city"] = err;
+    }
+    if (!billState) {
+      errors["addresses.billing.state"] = "Billing state is required";
+    } else {
+      const err = stateValidate(billState);
+      if (err) errors["addresses.billing.state"] = err;
+    }
     if (!bill.pincode)
       errors["addresses.billing.pincode"] = "Billing pincode required";
+    if (!perm.addressLine1)
+      errors["addresses.permanent.addressLine1"] = "Permanent address line 1 required";
+    if (!permCity) {
+      errors["addresses.permanent.city"] = "Permanent city is required";
+    } else {
+      const err = cityValidate(permCity);
+      if (err) errors["addresses.permanent.city"] = err;
+    }
+    if (!permState) {
+      errors["addresses.permanent.state"] = "Permanent state is required";
+    } else {
+      const err = stateValidate(permState);
+      if (err) errors["addresses.permanent.state"] = err;
+    }
+    if (!perm.pincode) errors["addresses.permanent.pincode"] = "Permanent pincode required";
 
     return errors;
   };
@@ -509,14 +724,14 @@ export default function CreateUser() {
   };
 
   const documentTypes = [
-    "Address Proof", 
-    "Profile Photo", 
-    "Addhar Card", 
-    "Passport", 
+    "Address Proof",
+    "Profile Photo",
+    "Addhar Card",
+    "Passport",
     "Signature",
-    "Pan Card", 
-    "Driving Licence", 
-    "GST", 
+    "Pan Card",
+    "Driving Licence",
+    "GST",
     "Other"
     // "ID proof",
     // "Profile Id",
@@ -629,58 +844,58 @@ export default function CreateUser() {
               )}
             </div>
 
-               {/* dob */}
-               <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Date of Birth
-  </label>
-  <div className="relative">
-    <DatePicker
-      selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
-      onChange={(date) => {
-        const formatted = date ? date.toISOString().split("T")[0] : "";
-        setFieldValue("additional.dob", formatted);
-      }}
-      dateFormat="dd/MM/yyyy"
-      placeholderText="dd/mm/yyyy"
-      className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
-      showMonthDropdown
-      showYearDropdown
-      dropdownMode="select"
-      maxDate={new Date()}
-      yearDropdownItemNumber={80}
-      scrollableYearDropdown
-      popperPlacement="bottom-start"
-      // This allows clicking the icon to open calendar
-      onClickOutside={() => {}}
-      // Ensures calendar opens on icon click
-      showPopperArrow={false}
-    />
+            {/* dob */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth
+              </label>
+              <div className="relative">
+                <DatePicker
+                  selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
+                  onChange={(date) => {
+                    const formatted = date ? date.toISOString().split("T")[0] : "";
+                    setFieldValue("additional.dob", formatted);
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="dd/mm/yyyy"
+                  className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  maxDate={new Date()}
+                  yearDropdownItemNumber={80}
+                  scrollableYearDropdown
+                  popperPlacement="bottom-start"
+                  // This allows clicking the icon to open calendar
+                  onClickOutside={() => { }}
+                  // Ensures calendar opens on icon click
+                  showPopperArrow={false}
+                />
 
-    {/* Calendar Icon Inside Input - Clickable */}
-    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          // Trigger the DatePicker to open
-          document.querySelector('.react-datepicker__input-container input')?.focus();
-        }}
-        className="text-gray-400 hover:text-gray-600 focus:outline-none"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      </button>
-    </div>
-  </div>
-</div>
+                {/* Calendar Icon Inside Input - Clickable */}
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Trigger the DatePicker to open
+                      document.querySelector('.react-datepicker__input-container input')?.focus();
+                    }}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
             {/* <div>
               <label className="block text-sm">DOB</label>
               <input
@@ -696,6 +911,14 @@ export default function CreateUser() {
               <input
                 value={formData.customer.mobile}
                 onChange={(e) => handleChange(e, "customer.mobile")}
+                // onKeyDown={(e) => {
+                //   if (!/[0-9]/.test(e.key)) {
+                //     e.preventDefault(); // Block alphabets & special characters
+                //   }
+                // }}
+
+
+
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Mobile Number"
@@ -717,6 +940,13 @@ export default function CreateUser() {
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Alternate Mobile"
+              // onKeyDown={(e) => {
+              //   if (!/[0-9]/.test(e.key)) {
+              //     e.preventDefault(); // Block alphabets & special characters
+              //   }
+              // }}
+
+
               />
               {formErrors["customer.alternateMobile"] && (
                 <p className="text-red-500 text-sm">
@@ -1090,11 +1320,16 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.billing.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
-                  ? "border-red-500"
-                  : ""
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"] ? "border-red-500" : ""
                   }`}
+                placeholder="Address Line 1 (Required)"
               />
+
+              {formErrors["addresses.billing.addressLine1"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["addresses.billing.addressLine1"]}
+                </p>
+              )}
               <label className="text-sm mt-2">Address Line 2</label>
               <input
                 value={formData.addresses.billing.addressLine2}
@@ -1111,6 +1346,9 @@ export default function CreateUser() {
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
                     }`}
                 />
+                {/* {formErrors["addresses.billing.city"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
+                )} */}
                 <input
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
@@ -1120,17 +1358,29 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
+                {/* {formErrors["addresses.billing.state"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
+                )} */}
               </div>
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.billing.pincode}
+
                   onChange={(e) => handleChange(e, "addresses.billing.pincode")}
                   placeholder="Pincode *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"]
-                    ? "border-red-500"
-                    : ""
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault(); // Blocks any non-digit key
+                    }
+                  }}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"] ? "border-red-500" : ""
                     }`}
                 />
+                {formErrors["addresses.billing.pincode"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["addresses.billing.pincode"]}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1142,11 +1392,16 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.permanent.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
-                  ? "border-red-500"
-                  : ""
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.permanent.addressLine1"] ? "border-red-500" : ""
                   }`}
+                placeholder="Address Line 1 (Required)"
               />
+
+              {formErrors["addresses.permanent.addressLine1"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["addresses.permanent.addressLine1"]}
+                </p>
+              )}
               <label className="text-sm mt-2">Address Line 2</label>
               <input
                 value={formData.addresses.permanent.addressLine2}
@@ -1163,6 +1418,10 @@ export default function CreateUser() {
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"] ? "border-red-500" : ""
                     }`}
                 />
+                {/* {formErrors["addresses.permanent.city"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
+                )} */}
+
                 <input
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
@@ -1172,17 +1431,29 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
+                {/* {formErrors["addresses.permanent.state"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
+                )} */}
               </div>
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.permanent.pincode}
+
                   onChange={(e) => handleChange(e, "addresses.permanent.pincode")}
                   placeholder="Pincode *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"]
-                    ? "border-red-500"
-                    : ""
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault(); // Blocks any non-digit key
+                    }
+                  }}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"] ? "border-red-500" : ""
                     }`}
                 />
+                {formErrors["addresses.permanent.pincode"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["addresses.permanent.pincode"]}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1295,12 +1566,17 @@ export default function CreateUser() {
                     </option>
                   ))}
                 </select>
+                {formErrors["zone"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["zone"]}
+                  </p>
+                )}
               </div>
 
               {/* Right: Custom Area Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-              Area 
+                  Area
                 </label>
                 <input
                   type="text"
@@ -1341,6 +1617,11 @@ export default function CreateUser() {
                   </option>
                 ))}
               </select>
+              {formErrors["packageDetails.packageId"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["packageDetails.packageId"]}
+                </p>
+              )}
 
               {/* <div className="mt-4">
                 <label className="block text-sm font-medium">
@@ -1377,6 +1658,11 @@ export default function CreateUser() {
                     step="1"
                   />
                 </div>
+                {formErrors["packageDetails.packageAmount"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["packageDetails.packageAmount"]}
+                  </p>
+                )}
                 {formData.customer.packageDetails.packageAmount && (
                   <p className="text-xs text-gray-500 mt-1">
                     Original price: ₹{formData.customer.packageDetails.packageAmount}
