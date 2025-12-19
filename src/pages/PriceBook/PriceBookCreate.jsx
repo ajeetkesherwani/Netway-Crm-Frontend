@@ -9,7 +9,8 @@ export default function PriceBookCreate() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     priceBookName: "",
-    fromDate: "",
+    // fromDate: "",
+    fromDate: new Date().toISOString().slice(0, 16),
     toDate: "",
     status: "active",
     description: "",
@@ -193,7 +194,7 @@ export default function PriceBookCreate() {
       assignedTo: formData.priceBookFor === "Lco" ? selectedLcos : selectedResellers,
     };
     // Validate required fields
-    if (!payload.priceBookName || !payload.fromDate || !payload.toDate || !payload.status || !payload.priceBookFor) {
+    if (!payload.priceBookName ||  !payload.status || !payload.priceBookFor) {
       toast.error("Please fill all required fields ❌");
       setLoading(false);
       return;
