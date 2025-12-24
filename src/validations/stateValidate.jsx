@@ -1,16 +1,16 @@
-export const stateValidate = (city) => {
-  const trimmed = (city || "").trim();
+export const stateValidate = (state) => {
+  const trimmed = (state || "").trim();
 
   if (!trimmed) {
-    return "City is required";
+    return "state is required";
   }
 
-  if (!/^[A-Za-z\s]+$/.test(trimmed)) {
-    return "City can contain only alphabets";
-  }
+  // if (!/^[A-Za-z\s]+$/.test(trimmed)) {
+  //   return "state can contain only alphabets";
+  // }
 
-  if (trimmed.length > 10) {
-    return "City should not exceed 30 characters";
+  if (trimmed.length > 35) {
+    return "state should not exceed 35 characters";
   }
 
   return "";

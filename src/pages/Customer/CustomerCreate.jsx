@@ -20,6 +20,8 @@ import { checkAlternateSameAsMobile } from "../../validations/validateAlternateM
 import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
+import { addressValidate } from "../../validations/addressValidate";
+
 
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -56,7 +58,7 @@ export default function CreateUser() {
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
   const serviceOpted = ["intercom", "broadband", "corporate"]
-  const indianStates = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
+ 
 
 
 
@@ -369,29 +371,38 @@ export default function CreateUser() {
     // }
 
 
-    const addressPaths = [
-      "addresses.billing.addressLine1",
+    // const addressPaths = [
+    //   "addresses.billing.addressLine1",
 
 
 
 
 
 
-      "addresses.permanent.addressLine1",
+    //   "addresses.permanent.addressLine1",
 
 
 
-    ];
+    // ];
 
-    if (addressPaths.includes(path)) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[path];
-        return newErrors;
-      });
+    // if (addressPaths.includes(path)) {
+    //   setFormErrors((prev) => {
+    //     const newErrors = { ...prev };
+    //     delete newErrors[path];
+    //     return newErrors;
+    //   });
+    // }
+
+    if (
+      path === "addresses.billing.addressLine1" ||
+      path === "addresses.permanent.addressLine1"
+    ) {
+      const error = addressValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
     }
-
-
 
     if (type === "checkbox") setFieldValue(path, checked);
     else if (type === "file") {
@@ -483,7 +494,7 @@ export default function CreateUser() {
     const errors = {};
     const c = formData.customer;
     const p = formData.payment;
-    const perm = formData.addresses.permanent;
+    // const perm = formData.addresses.permanent;
     // Name - Required
     const name = (c.name || "").trim();
     if (!name) {
@@ -530,16 +541,40 @@ export default function CreateUser() {
 
     // addresses: billing must have pincode & state & city & area
     const bill = formData.addresses.billing;
+
+    const perm = formData.addresses.permanent;
+
     const billCity = (formData.addresses.billing.city || "").trim();
     const permCity = (formData.addresses.permanent.city || "").trim();
     const billState = (formData.addresses.billing.state || "").trim();
-    const permState = (formData.addresses.permanent.State || "").trim();
+    const permState = (formData.addresses.permanent.state || "").trim();
 
-    if (!bill.addressLine1)
-      errors["addresses.billing.addressLine1"] = "Billing address line 1 required";
+    const billAddr1 = (bill.addressLine1 || "").trim();
+    if (!billAddr1) {
+      errors["addresses.billing.addressLine1"] = "Billing address line 1 is required";
+    } else {
+      const err = addressValidate(billAddr1);
+      if (err) {
+        errors["addresses.billing.addressLine1"] = err;
+      }
+    }
+
+    // Permanent Address Line 1
+    const permAddr1 = (perm.addressLine1 || "").trim();
+    if (!permAddr1) {
+      errors["addresses.permanent.addressLine1"] = "Permanent address line 1 is required";
+    } else {
+      const err = addressValidate(permAddr1);
+      if (err) {
+        errors["addresses.permanent.addressLine1"] = err;
+      }
+    }
+
 
     if (!bill.state)
       errors["addresses.billing.state"] = "Billing state required";
+
+
     if (!billCity) {
       errors["addresses.billing.city"] = "Billing city is required";
     } else {
@@ -581,7 +616,24 @@ export default function CreateUser() {
     const errors = validateForm();
     if (Object.keys(errors).length) {
       setFormErrors(errors);
-      toast.error("Please fix form errors");
+      toast.error("Please correct the errors highlighted in red.");
+      setTimeout(() => {
+        // Find the first input/select/textarea that has an error
+        const firstErrorElement = document.querySelector(
+          '[class*="border-red-500"]' // we already apply border-red-500 on error
+        );
+
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center', // centers the field in viewport
+          });
+
+          // Optional: give focus to the first error field
+          firstErrorElement.focus?.();
+        }
+      }, 100); // small delay to ensure DOM has updated with error classes
+
       setLoading(false);
       return;
     }
@@ -793,9 +845,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.name}
                 onChange={(e) => handleChange(e, "customer.name")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.name"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.name"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Name"
               />
               {formErrors["customer.name"] && (
@@ -832,9 +883,8 @@ export default function CreateUser() {
                 type="email"
                 value={formData.customer.email}
                 onChange={(e) => handleChange(e, "customer.email")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.email"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.email"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Email"
               />
               {formErrors["customer.email"] && (
@@ -943,9 +993,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.alternateMobile}
                 onChange={(e) => handleChange(e, "customer.alternateMobile")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.alternateMobile"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Alternate Mobile"
               // onKeyDown={(e) => {
               //   if (!/[0-9]/.test(e.key)) {
@@ -1058,9 +1107,8 @@ export default function CreateUser() {
                     )}
                   </div>
                   <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform ${
-                      showDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1296,38 +1344,38 @@ export default function CreateUser() {
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
             {(selectedCreatedFor === "reseller" ||
               selectedCreatedFor === "lco") && (
-              <div>
-                <label className="block text-sm font-medium">Reseller</label>
-                <select
-                  name="reseller"
-                  className="mt-1 p-2 border rounded w-full"
-                  value={
-                    selectedCreatedFor === "lco"
-                      ? selectedRetailerForLco
-                      : formData.customer.createdFor.id
-                  }
-                  onChange={(e) => {
-                    if (selectedCreatedFor === "lco") {
-                      handleRetailerForLcoChange(e.target.value);
-                    } else {
-                      // if just reseller, set ID directly
-                      setFieldValue("customer.createdFor.id", e.target.value);
+                <div>
+                  <label className="block text-sm font-medium">Reseller</label>
+                  <select
+                    name="reseller"
+                    className="mt-1 p-2 border rounded w-full"
+                    value={
+                      selectedCreatedFor === "lco"
+                        ? selectedRetailerForLco
+                        : formData.customer.createdFor.id
                     }
-                  }}
-                >
-                  <option value="" disabled>
-                    Select Reseller
-                  </option>
-                  {retailers
-                    .filter((r) => r.resellerName)
-                    .map((r) => (
-                      <option key={r._id} value={r._id}>
-                        {r.resellerName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
+                    onChange={(e) => {
+                      if (selectedCreatedFor === "lco") {
+                        handleRetailerForLcoChange(e.target.value);
+                      } else {
+                        // if just reseller, set ID directly
+                        setFieldValue("customer.createdFor.id", e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select Reseller
+                    </option>
+                    {retailers
+                      .filter((r) => r.resellerName)
+                      .map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.resellerName}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
             {/* LCO Dropdown - Show only if Created For is Lco */}
             {selectedCreatedFor === "lco" && (
               <div>
@@ -1388,9 +1436,8 @@ export default function CreateUser() {
                   value={formData.addresses.billing.city}
                   onChange={(e) => handleChange(e, "addresses.billing.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.city"] ? "border-red-500" : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.billing.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
@@ -1399,11 +1446,10 @@ export default function CreateUser() {
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.billing.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
@@ -1462,11 +1508,10 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.city}
                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.city"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.permanent.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
@@ -1476,11 +1521,10 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.permanent.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
@@ -1690,7 +1734,7 @@ export default function CreateUser() {
                   Package Price <span className="text-red-500">*</span>
                   {customPackagePrice &&
                     formData.customer.packageDetails.packageAmount !==
-                      customPackagePrice && (
+                    customPackagePrice && (
                       <span className="text-xs text-orange-600 ml-2">
                         (Customized)
                       </span>
@@ -1729,7 +1773,7 @@ export default function CreateUser() {
                     {formData.customer.packageDetails.packageAmount}
                     {customPackagePrice &&
                       customPackagePrice !==
-                        formData.customer.packageDetails.packageAmount &&
+                      formData.customer.packageDetails.packageAmount &&
                       ` → Now: ₹${customPackagePrice}`}
                   </p>
                 )}

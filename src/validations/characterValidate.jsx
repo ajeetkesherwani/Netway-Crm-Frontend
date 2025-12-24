@@ -6,8 +6,8 @@ export const characterValidate = (name) => {
     return "Only alphabets are allowed";
   }
 
-  if (name.length > 30) {
-    return "Name should not exceed 30 characters";
+  if (name.length > 10) {
+    return "Name should not exceed 10 characters";
   }
 
   return "";

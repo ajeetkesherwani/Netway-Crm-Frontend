@@ -4,12 +4,18 @@ import { toast } from "react-toastify";
 import { createStaff } from "../../service/staffService";
 import { getAllRolesList } from "../../service/ticket";
 import { getAllZoneList } from "../../service/staffService";
+// Import validation functions
+import { characterValidate } from "../../validations/characterValidate";
+import { emailValidate } from "../../validations/emailValidate";
+import { mobileValidate } from "../../validations/mobileValidate";
 
 export default function StaffCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState([]);
   const [zoneList, setZoneList] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
+
   const initialFormData = {
     name: "",
     email: "",
@@ -24,43 +30,25 @@ export default function StaffCreate() {
     comment: "",
     area: "",
     staffIp: "",
-    status: "true",
+    status: "true", // default Active
     resetOtpExpires: "",
   };
-  const [formData, setFormData] = useState(initialFormData);
 
-  // useEffect(() => {
-  //   const fetchRoles = async () => {
-  //     const res = await getAllRolesList();
-  //     if (res.status && res.data?.length) {
-  //       setRoles(res.data);
-  //       const staffRole = res.data.find(
-  //         (r) => r.roleName?.toLowerCase() === "staff"
-  //       );
-  //       if (staffRole)
-  //         setFormData((prev) => ({ ...prev, role: staffRole._id }));
-  //     } else {
-  //       toast.error("Failed to load roles ❌");
-  //     }
-  //   };
-  //   fetchRoles();
-  // }, []);
+  const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [rolesData, zoneData] =
-          await Promise.allSettled([
-            getAllRolesList(),
-            getAllZoneList(),
-          ]);
-
-        console.log("rolesData", rolesData);
-        console.log("zoneData", zoneData);
-        if (rolesData.status === "fulfilled" && rolesData.value?.status)
+        const [rolesData, zoneData] = await Promise.allSettled([
+          getAllRolesList(),
+          getAllZoneList(),
+        ]);
+        if (rolesData.status === "fulfilled" && rolesData.value?.status) {
           setRoles(rolesData.value.data);
-        if (zoneData.status === "fulfilled" && zoneData.value?.status)
+        }
+        if (zoneData.status === "fulfilled" && zoneData.value?.status) {
           setZoneList(zoneData.value.data);
+        }
       } catch (err) {
         console.error("fetch error", err);
       }
@@ -68,54 +56,145 @@ export default function StaffCreate() {
     fetchAll();
   }, []);
 
-  // Handle form input changes
+  // Handle input change with real-time validation
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let error = "";
+
+    if (name === "name") {
+      error = characterValidate(value);
+    } else if (name === "email") {
+      error = emailValidate(value);
+    } else if (name === "phoneNo") {
+      const cleaned = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prev) => ({ ...prev, [name]: cleaned }));
+      error = mobileValidate(cleaned);
+      setFormErrors((prev) => ({ ...prev, [name]: error }));
+      return;
+    } else if (name === "logId") {
+      if (!value.trim()) {
+        error = "User ID is required";
+      } else if (value.length < 3) {
+        error = "User ID must be at least 3 characters";
+      }
+    } 
+    // ── Password validation ──
+    else if (name === "password") {
+      if (!value.trim()) {
+        error = "Password is required";
+      } else if (value.length < 6) {
+        error = "Password must be at least 6 characters";
+      }
+    } 
+    // ── Salary validation ──
+    else if (name === "salary") {
+      if (!value.trim()) {
+        error = "Salary is required";
+      } else if (isNaN(value) || Number(value) <= 0) {
+        error = "Salary must be a positive number";
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: error }));
   };
 
-  // Handle form submission
+  // Full form validation on submit
+  const validateForm = () => {
+    const errors = {};
+
+    // Name
+    if (!formData.name.trim()) {
+      errors.name = "Staff name is required";
+    } else {
+      const nameError = characterValidate(formData.name);
+      if (nameError) errors.name = nameError;
+    }
+
+    // Email
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else {
+      const emailError = emailValidate(formData.email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Phone Number
+    if (!formData.phoneNo.trim()) {
+      errors.phoneNo = "Phone number is required";
+    } else {
+      const mobileError = mobileValidate(formData.phoneNo);
+      if (mobileError) errors.phoneNo = mobileError;
+    }
+
+    // Password
+    if (!formData.password.trim()) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    // Salary
+    if (!formData.salary.trim()) {
+      errors.salary = "Salary is required";
+    } else if (isNaN(formData.salary) || Number(formData.salary) <= 0) {
+      errors.salary = "Salary must be a positive number";
+    }
+
+    // User ID
+    if (!formData.logId.trim()) {
+      errors.logId = "User ID is required";
+    } else if (formData.logId.length < 3) {
+      errors.logId = "User ID must be at least 3 characters";
+    }
+
+    // Role
+    if (!formData.role) {
+      errors.role = "Role is required";
+    }
+
+    // Status
+    if (!formData.status) {
+      errors.status = "Status is required";
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const errors = validateForm();
 
-    // Validate phoneNo format
-    const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.phoneNo)) {
-      toast.error("Phone number must be 10 digits ❌");
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      toast.error("Please correct the errors highlighted in red.");
       setLoading(false);
       return;
     }
 
-    // Construct payload
     const payload = {
       ...formData,
-      // Only include resetOtpExpires if provided
       ...(formData.resetOtpExpires && {
         resetOtpExpires: new Date(formData.resetOtpExpires).toISOString(),
       }),
     };
+
     try {
       await createStaff(payload);
-      toast.success("Staff created successfully ✅");
+      toast.success("Staff created successfully");
       navigate("/staff/list");
     } catch (err) {
       console.error("Create Staff Error:", err);
-      toast.error(err.message || "Failed to create staff ❌");
+      toast.error(err.message || "Failed to create staff");
     } finally {
       setLoading(false);
     }
   };
-  console.log("roles", roles);
 
-  // Handle form clear
   const handleClear = () => {
     setFormData(initialFormData);
-    // Reset role to "Staff" if available
-    const staffRole = roles.find((role) => role.roleName === "Staff");
-    if (staffRole) {
-      setFormData((prev) => ({ ...prev, role: staffRole._id }));
-    }
+    setFormErrors({});
   };
 
   return (
@@ -123,33 +202,24 @@ export default function StaffCreate() {
       <h2 className="text-2xl font-bold mb-6">Create Staff</h2>
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
-
         {/* Staff Name */}
-        {/* <div>
-          <label className="block font-medium">Staff Name *</label>
-          <input
-            type="text"
-            name="staffName"
-            value={formData.staffName}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
-        {/* Name */}
         <div>
-          <label className="block font-medium"> Staff Name *</label>
+          <label className="block font-medium">Staff Name *</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.name ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.name && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+          )}
         </div>
 
         {/* Email */}
@@ -160,9 +230,13 @@ export default function StaffCreate() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.email ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.email && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+          )}
         </div>
 
         {/* Phone Number */}
@@ -173,16 +247,18 @@ export default function StaffCreate() {
             name="phoneNo"
             value={formData.phoneNo}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
             placeholder="10-digit number"
-            maxLength={10} // max 10 digits
-            pattern="\d{10}" // exactly 10 digits only
-            title="Phone number must be 10 digits"
+            maxLength={10}
+            className={`border p-2 w-full rounded ${
+              formErrors.phoneNo ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.phoneNo && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.phoneNo}</p>
+          )}
         </div>
 
-        {/* Password */}
+        {/* Password - REQUIRED */}
         <div>
           <label className="block font-medium">Password *</label>
           <input
@@ -190,12 +266,16 @@ export default function StaffCreate() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.password ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.password && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+          )}
         </div>
 
-        {/* Log ID */}
+        {/* User ID */}
         <div>
           <label className="block font-medium">User ID *</label>
           <input
@@ -203,37 +283,27 @@ export default function StaffCreate() {
             name="logId"
             value={formData.logId}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.logId ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.logId && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.logId}</p>
+          )}
         </div>
-        {/* Role */}
-        {/* <div>
-          <label className="block font-medium">Role *</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          >
-            <option value="">Select Role</option>
-            <option key={roles._id} value={roles._id}>
-              {roles.roleName}
-            </option>
-          </select>
-        </div> */}
 
+        {/* Role */}
         <div>
           <label className="block font-medium">Role *</label>
           <select
             name="role"
             value={formData.role}
             onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.role ? "border-red-500" : ""
+            }`}
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               Select Role
             </option>
             {roles.map((role) => (
@@ -242,103 +312,47 @@ export default function StaffCreate() {
               </option>
             ))}
           </select>
+          {formErrors.role && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.role}</p>
+          )}
         </div>
 
         {/* Status */}
         <div>
-          <label className="block font-medium">Status</label>
+          <label className="block font-medium">Status *</label>
           <select
             name="status"
             value={formData.status}
             onChange={handleChange}
-            className="border p-2 w-full rounded"
+            className={`border p-2 w-full rounded ${
+              formErrors.status ? "border-red-500" : ""
+            }`}
           >
             <option value="true">Active</option>
             <option value="false">Inactive</option>
           </select>
+          {formErrors.status && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.status}</p>
+          )}
         </div>
 
-        {/* Address */}
-        {/* <div>
-          <label className="block font-medium">Address</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
-        {/* Area */}
-        {/* <div>
-          <label className="block font-medium">Area</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          >
-            <option value="" disabled selected>
-              Select Role
-            </option>
-            {zoneList.map((zone) => (
-              <option key={zone._id} value={zone._id}>
-                {zone.zoneName}
-              </option>
-            ))}
-          </select>
-        </div> */}
-
-        {/* Salary */}
+        {/* Salary - REQUIRED */}
         <div>
-          <label className="block font-medium">Salary</label>
+          <label className="block font-medium">Salary *</label>
           <input
             type="number"
             name="salary"
             value={formData.salary}
             onChange={handleChange}
-            className="border p-2 w-full rounded"
-            min="0"
+            min="1" // prevents negative/zero in browser
+            className={`border p-2 w-full rounded ${
+              formErrors.salary ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.salary && (
+            <p className="text-red-500 text-sm mt-1">{formErrors.salary}</p>
+          )}
         </div>
-
-        {/* Staff IP */}
-        {/* <div>
-          <label className="block font-medium">Staff IP</label>
-          <input
-            type="text"
-            name="staffIp"
-            value={formData.staffIp}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-            placeholder="e.g., 192.168.1.1"
-          />
-        </div> */}
-
-        {/* Reset OTP Expires */}
-        {/* <div>
-          <label className="block font-medium">Reset OTP Expires</label>
-          <input
-            type="datetime-local"
-            name="resetOtpExpires"
-            value={formData.resetOtpExpires}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
-        {/* Bio */}
-        {/* <div className="col-span-2">
-          <label className="block font-medium">Bio</label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            className="border p-2 w-full rounded h-24"
-          />
-        </div> */}
 
         {/* Comment */}
         <div className="col-span-2">
@@ -363,7 +377,7 @@ export default function StaffCreate() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 disabled:opacity-60"
           >
             {loading ? "Saving..." : "Submit"}
           </button>
