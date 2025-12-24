@@ -144,6 +144,8 @@ import UserLogs from "./pages/UserProfile/AcitivityLog";
 import UserProfile from "./pages/UserProfile/UserProfileDetails";
 import ConnectionRequestList from "./pages/connectionRequest/connectionRequestList";
 import PackageUpdate from "./pages/Package/PackageUpdate";
+import InvoicePage from "./pages/Invoice/InvoicePage";
+// import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
 
@@ -416,10 +418,9 @@ export default function App() {
               element={<PurchasedPlanList />}
             />
             <Route path="/invoice/ott-recharge" element={<OttPackageList />} />
-            <Route
-              path="/invoice/iptv-recharge"
-              element={<IptvPackageList />}
-            />
+            <Route path="/invoice/iptv-recharge" element={<IptvPackageList />} />
+            {/* <Route path="/invoice/:id" element={<InvoiceDetails/>} /> */}
+            <Route path="/invoice/details/:id" element={<InvoicePage/>}  />
 
             {/*-------------------------------------------------------------------------config list ------------------------------------------------------------------------- */}
             <Route path="/config/list" element={<RoleConfigList />} />
