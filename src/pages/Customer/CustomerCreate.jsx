@@ -1294,20 +1294,20 @@ export default function CreateUser() {
               </select>
             </div>
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
-            {(selectedCreatedFor === "reseller" ||
-              selectedCreatedFor === "lco") && (
+            {(selectedCreatedFor === "Retailer" ||
+              selectedCreatedFor === "Lco") && (
               <div>
                 <label className="block text-sm font-medium">Reseller</label>
                 <select
                   name="reseller"
                   className="mt-1 p-2 border rounded w-full"
                   value={
-                    selectedCreatedFor === "lco"
+                    selectedCreatedFor === "Lco"
                       ? selectedRetailerForLco
                       : formData.customer.createdFor.id
                   }
                   onChange={(e) => {
-                    if (selectedCreatedFor === "lco") {
+                    if (selectedCreatedFor === "Lco") {
                       handleRetailerForLcoChange(e.target.value);
                     } else {
                       // if just reseller, set ID directly
@@ -1329,7 +1329,7 @@ export default function CreateUser() {
               </div>
             )}
             {/* LCO Dropdown - Show only if Created For is Lco */}
-            {selectedCreatedFor === "lco" && (
+            {selectedCreatedFor === "Lco" && (
               <div>
                 <label className="block text-sm font-medium">Lco</label>
                 <select
