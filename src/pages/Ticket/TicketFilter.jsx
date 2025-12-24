@@ -67,7 +67,6 @@
 //     r.resellerName?.toLowerCase().includes(resellerText.toLowerCase())
 //   );
 
-
 //   const filteredZones = zones.filter(z =>
 //     z.zoneName?.toLowerCase().includes(zoneText.toLowerCase())
 //   );
@@ -156,7 +155,6 @@
 //   />
 // </div>
 
-
 //         {/* ───────────── ZONE SEARCHABLE ───────────── */}
 //         <div ref={zoneRef} className="relative">
 //           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -201,8 +199,6 @@
 //           )}
 //         </div>
 
-
-
 //         {/* Resolved By */}
 //         <div>
 //           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -216,7 +212,6 @@
 //             <option value="">Please Select</option>
 //           </select>
 //         </div>
-
 
 //         {/* ───────────── CATEGORY SEARCHABLE ───────────── */}
 //         <div ref={categoryRef} className="relative">
@@ -262,8 +257,6 @@
 //           )}
 //         </div>
 
-
-
 //         {/* Assigned To */}
 //         <div>
 //           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -277,7 +270,6 @@
 //             <option value="">Please Select</option>
 //           </select>
 //         </div>
-
 
 //         {/* Call Source */}
 //         <div>
@@ -392,10 +384,6 @@
 
 //       </div>
 
-
-
-
-
 //       {/* Buttons */}
 //       <div className="flex justify-end gap-4 mt-6">
 //         <button
@@ -416,8 +404,6 @@
 //   );
 // }
 
-
-
 import { FaSearch, FaSync } from "react-icons/fa";
 import { MdArrowDropDown } from "react-icons/md";
 import { useEffect, useRef, useState } from "react";
@@ -428,7 +414,12 @@ import { getCategoryList } from "../../service/category";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-export default function TicketFilter({ filters, onFilterChange, onSearch, onReset }) {
+export default function TicketFilter({
+  filters,
+  onFilterChange,
+  onSearch,
+  onReset,
+}) {
   const handleChange = (key, value) => {
     onFilterChange(key, value);
   };
@@ -462,44 +453,52 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
 
   /* ───────────── FETCH DATA ───────────── */
   useEffect(() => {
-    getAllLco().then(res => setLcos(res?.data || []));
-    getRetailer().then(res => setResellers(res?.data || []));
-    getZones().then(res => setZones(res?.data || res || []));
-    getCategoryList().then(res => setCatagoryes(res?.data || []));
+    getAllLco().then((res) => setLcos(res?.data || []));
+    getRetailer().then((res) => setResellers(res?.data || []));
+    getZones().then((res) => setZones(res?.data || res || []));
+    getCategoryList().then((res) => setCatagoryes(res?.data || []));
   }, []);
 
   /* ───────────── OUTSIDE CLICK CLOSE ───────────── */
   useEffect(() => {
     const handleClick = (e) => {
-      if (lcoRef.current && !lcoRef.current.contains(e.target)) setShowLco(false);
-      if (resellerRef.current && !resellerRef.current.contains(e.target)) setShowReseller(false);
-      if (zoneRef.current && !zoneRef.current.contains(e.target)) setShowZone(false);
-      if (categoryRef.current && !categoryRef.current.contains(e.target)) setShowCatagory(false);
+      if (lcoRef.current && !lcoRef.current.contains(e.target))
+        setShowLco(false);
+      if (resellerRef.current && !resellerRef.current.contains(e.target))
+        setShowReseller(false);
+      if (zoneRef.current && !zoneRef.current.contains(e.target))
+        setShowZone(false);
+      if (categoryRef.current && !categoryRef.current.contains(e.target))
+        setShowCatagory(false);
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const filteredLcos = lcos.filter(l =>
+  const filteredLcos = lcos.filter((l) =>
     l.lcoName?.toLowerCase().includes(lcoText.toLowerCase())
   );
 
-  const filteredResellers = resellers.filter(r =>
+  const filteredResellers = resellers.filter((r) =>
     r.resellerName?.toLowerCase().includes(resellerText.toLowerCase())
   );
 
-  const filteredZones = zones.filter(z =>
+  const filteredZones = zones.filter((z) =>
     z.zoneName?.toLowerCase().includes(zoneText.toLowerCase())
   );
 
-  const filteredCategoryes = categoryes.filter(c =>
+  const filteredCategoryes = categoryes.filter((c) =>
     c.name?.toLowerCase().includes(categoryText.toLowerCase())
   );
+
+  const handleOnReset = () => {
+    
+    onReset();
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-
         {/* UNIFIED USER SEARCH FIELD — LOOKS EXACTLY LIKE YOUR OLD ONE */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -539,8 +538,12 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
               setFromDate(date);
               if (date) {
                 // Use UTC to prevent timezone shift
-                const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-                const formatted = new Date(utcDate).toISOString().split('T')[0];
+                const utcDate = Date.UTC(
+                  date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate()
+                );
+                const formatted = new Date(utcDate).toISOString().split("T")[0];
                 handleChange("fromDate", formatted);
               } else {
                 handleChange("fromDate", "");
@@ -563,8 +566,12 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
               setToDate(date);
               if (date) {
                 // Use UTC to prevent timezone shift
-                const utcDate = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-                const formatted = new Date(utcDate).toISOString().split('T')[0];
+                const utcDate = Date.UTC(
+                  date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate()
+                );
+                const formatted = new Date(utcDate).toISOString().split("T")[0];
                 handleChange("toDate", formatted);
               } else {
                 handleChange("toDate", "");
@@ -592,7 +599,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
             onChange={(e) => {
               setZoneText(e.target.value);
               setShowZone(true);
-              handleChange("area", e.target.value);
+              // handleChange("area", e.target.value);
             }}
           />
 
@@ -608,7 +615,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
                     key={zone._id}
                     onClick={() => {
                       setZoneText(zone.zoneName);
-                      handleChange("area", zone.zoneName);
+                      handleChange("area", zone._id);
                       setShowZone(false);
                     }}
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
@@ -622,7 +629,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
         </div>
 
         {/* Resolved By */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Resolved By
           </label>
@@ -633,7 +640,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
             onChange={(e) => handleChange("resolvedBy", e.target.value)}
             placeholder="Enter name"
           />
-        </div>
+        </div> */}
 
         {/* ───────────── CATEGORY SEARCHABLE ───────────── */}
         {/* <div ref={categoryRef} className="relative">
@@ -679,65 +686,65 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
           )}
         </div> */}
         {/* ───────────── CATEGORY SEARCHABLE ───────────── */}
-<div ref={categoryRef} className="relative">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Select Category
-  </label>
+        <div ref={categoryRef} className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Category
+          </label>
 
-  <input
-    type="text"
-    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    placeholder="Select Category"
-    value={categoryText}
-    onFocus={() => setShowCatagory(true)}
-    onChange={(e) => {
-      setCategoryText(e.target.value);
-      setShowCatagory(true);
-      // Do NOT send anything on typing — only for local search
-      // handleChange("category", ""); // ← Remove this line
-    }}
-  />
-
-  <MdArrowDropDown className="absolute right-3 top-9 text-gray-500 pointer-events-none" />
-
-  {showCategory && (
-    <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
-      {filteredCategoryes.length === 0 ? (
-        <div className="px-4 py-2 text-gray-500">No Category found</div>
-      ) : (
-        filteredCategoryes.map((cat) => (
-          <div
-            key={cat._id}
-            onClick={() => {
-              setCategoryText(cat.name);
-              handleChange("category", cat._id);  // ← Send only ID
-              setShowCatagory(false);
+          <input
+            type="text"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Select Category"
+            value={categoryText}
+            onFocus={() => setShowCatagory(true)}
+            onChange={(e) => {
+              setCategoryText(e.target.value);
+              setShowCatagory(true);
+              // Do NOT send anything on typing — only for local search
+              // handleChange("category", ""); // ← Remove this line
             }}
-            className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-          >
-            {cat.name}
-          </div>
-        ))
-      )}
-      {/* Optional: Clear selection */}
-      {categoryText && (
-        <div
-          onClick={() => {
-            setCategoryText("");
-            handleChange("category", "");
-            setShowCatagory(false);
-          }}
-          className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer border-t"
-        >
-          Clear Category
+          />
+
+          <MdArrowDropDown className="absolute right-3 top-9 text-gray-500 pointer-events-none" />
+
+          {showCategory && (
+            <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
+              {filteredCategoryes.length === 0 ? (
+                <div className="px-4 py-2 text-gray-500">No Category found</div>
+              ) : (
+                filteredCategoryes.map((cat) => (
+                  <div
+                    key={cat._id}
+                    onClick={() => {
+                      setCategoryText(cat.name);
+                      handleChange("category", cat._id); // ← Send only ID
+                      setShowCatagory(false);
+                    }}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                  >
+                    {cat.name}
+                  </div>
+                ))
+              )}
+              {/* Optional: Clear selection */}
+              {categoryText && (
+                <div
+                  onClick={() => {
+                    setCategoryText("");
+                    handleChange("category", "");
+                    setShowCatagory(false);
+                  }}
+                  className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer border-t"
+                >
+                  Clear Category
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  )}
-</div>
 
         {/* Assigned To */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Assigned To
           </label>
@@ -748,7 +755,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
             onChange={(e) => handleChange("assignedTo", e.target.value)}
             placeholder="Enter name"
           />
-        </div>
+        </div> */}
 
         {/* Call Source */}
         <div>
@@ -790,7 +797,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
 
           {showLco && (
             <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
-              {filteredLcos.map(lco => (
+              {filteredLcos.map((lco) => (
                 <div
                   key={lco._id}
                   onClick={() => {
@@ -829,7 +836,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
 
           {showReseller && (
             <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
-              {filteredResellers.map(res => (
+              {filteredResellers.map((res) => (
                 <div
                   key={res._id}
                   onClick={() => {
@@ -847,7 +854,7 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
         </div>
 
         {/* Select Area */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select Zones
           </label>
@@ -858,14 +865,13 @@ export default function TicketFilter({ filters, onFilterChange, onSearch, onRese
           >
             <option value="">Select Area</option>
           </select>
-        </div>
-
+        </div> */}
       </div>
 
       {/* Buttons */}
       <div className="flex justify-end gap-4 mt-6">
         <button
-          onClick={onReset}
+          onClick={handleOnReset}
           className="px-6 py-3 bg-gray-200 rounded-lg flex items-center gap-2"
         >
           <FaSync /> Reset
