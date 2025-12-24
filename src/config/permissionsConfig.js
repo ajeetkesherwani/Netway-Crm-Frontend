@@ -176,6 +176,8 @@ export const permissionsConfig = [
             "packageRechargeRemove",
             "ottRecharge",
             "iptvRecharge",
+            "invoiceDownload",
+            "packageRechargeRefund"
         ],
     },
     {
