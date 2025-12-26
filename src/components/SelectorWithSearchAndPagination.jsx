@@ -11,6 +11,7 @@ const SelectorWithSearchAndPagination = ({
   placeholder = "Select...",
   valKey = "",
   cancelClassName = "",
+  inputClassName = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState([]);
@@ -68,7 +69,7 @@ const SelectorWithSearchAndPagination = ({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <div
-        className="border p-1 rounded cursor-pointer"
+        className={`border p-1 rounded cursor-pointer ${inputClassName}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         {selected && selected[valKey] ? selected[valKey] : placeholder}

@@ -244,23 +244,23 @@
 //   );
 // }
 
-
-import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { getAllTicketList, updateTicket } from "../../service/ticket";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getAllTicketListWithFilter, updateTicket } from "../../service/ticket";
 import { FaEllipsisV, FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import ProtectedAction from "../../components/ProtectedAction";
+import { getSearchParamsVal } from "./getSearchParamsVal";
+import TicketFilter from "./TicketFilter";
 
 export default function ApprovalTicket() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [menuOpen, setMenuOpen] = useState(null);
-
-  const limit = 10;
   const navigate = useNavigate();
   const menuRefs = useRef({});
 
@@ -278,12 +278,15 @@ export default function ApprovalTicket() {
     });
   };
 
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAllTicketList(page, limit, "", "Fixed");
+      const searchParamsVal = getSearchParamsVal(searchParams);
+      const queryParams = new URLSearchParams(searchParamsVal);
+      queryParams.set("filter", "Fixed");
+      const res = await getAllTicketListWithFilter(queryParams.toString());
 
-      let ticketData =
+      const ticketData =
         res?.data?.data?.fixedTickets ||
         res?.data?.fixedTickets ||
         res?.fixedTickets ||
@@ -301,10 +304,12 @@ export default function ApprovalTicket() {
         category: t.category?.name || "—",
         createdAt: t.createdAt || "",
         callSource: t.callSource || "—",
-        assignToName: t.assignToId?.staffName ||
-                      t.assignToId?.resellerName ||
-                      t.assignToId?.lcoName ||
-                      t.assignToId?.name || "—",
+        assignToName:
+          t.assignToId?.staffName ||
+          t.assignToId?.resellerName ||
+          t.assignToId?.lcoName ||
+          t.assignToId?.name ||
+          "—",
         fixedBy:
           typeof t.fixedBy === "object" && t.fixedBy !== null
             ? t.fixedBy.staffName ||
@@ -319,22 +324,25 @@ export default function ApprovalTicket() {
       }));
 
       setTickets(cleaned);
-      setTotalPages(Math.ceil(totalCount / limit));
+      setTotalPages(Math.ceil(totalCount / searchParamsVal.limit));
     } catch (err) {
       console.error("Error fetching Fixed tickets:", err);
       setError("Failed to load Fixed tickets.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     loadTickets();
-  }, [page]);
+  }, [loadTickets]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".action-menu") && !e.target.closest(".action-toggle")) {
+      if (
+        !e.target.closest(".action-menu") &&
+        !e.target.closest(".action-toggle")
+      ) {
         setMenuOpen(null);
       }
     };
@@ -372,157 +380,187 @@ export default function ApprovalTicket() {
     }
   };
 
-  const handlePrevPage = () => page > 1 && setPage(page - 1);
-  const handleNextPage = () => page < totalPages && setPage(page + 1);
+  const handlePrevPage = () => {
+    if (page > 1) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page - 1);
+      setSearchParams(sp);
+    }
+  };
 
-  if (loading) {
-    return (
-      <p className="text-center py-16 text-gray-500 text-lg animate-pulse">
-        Loading Approval Tickets (Fixed)...
-      </p>
-    );
-  }
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page + 1);
+      setSearchParams(sp);
+    }
+  };
 
   if (error) {
-    return <p className="text-center py-16 text-red-600 font-medium">{error}</p>;
+    return (
+      <p className="text-center py-16 text-red-600 font-medium">{error}</p>
+    );
   }
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Approval Tickets (Fixed)</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Approval Tickets (Fixed)
+        </h1>
       </div>
 
-      <div className="bg-white-500 shadow-lg rounded-lg border relative z-1">
-        {/* Header */}
-        <div className="hidden md:grid grid-cols-11 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
-          <div>S.No</div>
-          <div>Ticket No</div>
-          <div>User Name</div>
-          <div>Category</div>
-          <div>Ticket Date/Time</div>
-          <div>Resolution</div>
-          <div>Call Source</div>
-          <div>Assigned To</div>
-          <div>Resolved By</div>
-          <div>Resolved Date/Time</div>
-          <div className="text-center">Status / Action</div>
-        </div>
+      <TicketFilter setSearchParams={setSearchParams} />
 
-        {/* Rows */}
-        {tickets.length > 0 ? (
-          tickets.map((ticket, index) => (
-            <div
-              key={ticket._id}
-              className="grid grid-cols-2 md:grid-cols-11 items-center text-sm text-gray-700 border-b last:border-b-0 hover:bg-gray-50 px-4 md:px-6 py-4 gap-4 transition relative"
-            >
-              {/* S.No */}
-              <div className="font-medium">{(page - 1) * limit + index + 1}</div>
+      {loading ? (
+        <p className="text-center py-16 text-gray-500 text-lg animate-pulse">
+          Loading Approval Tickets (Fixed)...
+        </p>
+      ) : (
+        <>
+          <div className="bg-white-500 shadow-lg rounded-lg border relative z-1">
+            {/* Header */}
+            <div className="hidden md:grid grid-cols-11 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
+              <div>S.No</div>
+              <div>Ticket No</div>
+              <div>User Name</div>
+              <div>Category</div>
+              <div>Ticket Date/Time</div>
+              <div>Resolution</div>
+              <div>Call Source</div>
+              <div>Assigned To</div>
+              <div>Resolved By</div>
+              <div>Resolved Date/Time</div>
+              <div className="text-center">Status / Action</div>
+            </div>
 
-              {/* Ticket No */}
-              <button
-                onClick={() => handleViewTicket(ticket._id)}
-                className="text-blue-600 font-semibold hover:underline truncate"
-              >
-                {ticket.ticketNumber}
-              </button>
+            {/* Rows */}
+            {tickets.length > 0 ? (
+              tickets.map((ticket, index) => (
+                <div
+                  key={ticket._id}
+                  className="grid grid-cols-2 md:grid-cols-11 items-center text-sm text-gray-700 border-b last:border-b-0 hover:bg-gray-50 px-4 md:px-6 py-4 gap-4 transition relative"
+                >
+                  {/* S.No */}
+                  <div className="font-medium">
+                    {(page - 1) * limit + index + 1}
+                  </div>
 
-              {/* User Name */}
-              <div className="truncate">{ticket.personName}</div>
-
-              {/* Category */}
-              <div>{ticket.category}</div>
-
-              {/* Ticket Date */}
-              <div className="text-xs">{formatDateTime(ticket.createdAt)}</div>
-
-              {/* Resolution */}
-              <div className="text-gray-500">—</div>
-
-              {/* Call Source */}
-              <div>{ticket.callSource}</div>
-
-              {/* Assigned To */}
-              <div>{ticket.assignToName}</div>
-
-              {/* Resolved By */}
-              <div>{ticket.fixedBy}</div>
-
-              {/* Resolved Date */}
-              <div className="text-xs">{formatDateTime(ticket.fixedAt)}</div>
-
-              {/* Status + Action */}
-              <div className="flex justify-between md:justify-center items-center gap-3">
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                  Fixed
-                </span>
-
-                <div className="relative">
+                  {/* Ticket No */}
                   <button
-                    ref={(el) => (menuRefs.current[ticket._id] = el)}
-                    onClick={() => handleMenuToggle(ticket._id)}
-                    className="p-2 hover:bg-gray-200 rounded-full action-toggle transition"
+                    onClick={() => handleViewTicket(ticket._id)}
+                    className="text-blue-600 font-semibold hover:underline truncate"
                   >
-                    <FaEllipsisV className="text-gray-600" />
+                    {ticket.ticketNumber}
                   </button>
 
-                  {menuOpen === ticket._id && (
-                    <div className="absolute top-8 right-0 bg-white border rounded-lg shadow-xl w-56 z-50 action-menu">
-                      <ProtectedAction module="tickets" action="approvalTicketApprove">
-                        <button
-                          onClick={() => handleApprove(ticket._id)}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-green-50 w-full text-left text-green-700 text-sm transition"
-                        >
-                          <FaCheckCircle />
-                          Approve (Close Ticket)
-                        </button>
-                      </ProtectedAction>
+                  {/* User Name */}
+                  <div className="truncate">{ticket.personName}</div>
 
-                      <ProtectedAction module="tickets" action="approvalTicketDisapprove">
-                        <button
-                          onClick={() => handleDisapprove(ticket._id)}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 w-full text-left text-red-700 text-sm transition"
-                        >
-                          <FaTimesCircle />
-                          Disapprove (Reopen)
-                        </button>
-                      </ProtectedAction>
+                  {/* Category */}
+                  <div>{ticket.category}</div>
+
+                  {/* Ticket Date */}
+                  <div className="text-xs">
+                    {formatDateTime(ticket.createdAt)}
+                  </div>
+
+                  {/* Resolution */}
+                  <div className="text-gray-500">—</div>
+
+                  {/* Call Source */}
+                  <div>{ticket.callSource}</div>
+
+                  {/* Assigned To */}
+                  <div>{ticket.assignToName}</div>
+
+                  {/* Resolved By */}
+                  <div>{ticket.fixedBy}</div>
+
+                  {/* Resolved Date */}
+                  <div className="text-xs">
+                    {formatDateTime(ticket.fixedAt)}
+                  </div>
+
+                  {/* Status + Action */}
+                  <div className="flex justify-between md:justify-center items-center gap-3">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                      Fixed
+                    </span>
+
+                    <div className="relative">
+                      <button
+                        ref={(el) => (menuRefs.current[ticket._id] = el)}
+                        onClick={() => handleMenuToggle(ticket._id)}
+                        className="p-2 hover:bg-gray-200 rounded-full action-toggle transition"
+                      >
+                        <FaEllipsisV className="text-gray-600" />
+                      </button>
+
+                      {menuOpen === ticket._id && (
+                        <div className="absolute top-8 right-0 bg-white border rounded-lg shadow-xl w-56 z-50 action-menu">
+                          <ProtectedAction
+                            module="tickets"
+                            action="approvalTicketApprove"
+                          >
+                            <button
+                              onClick={() => handleApprove(ticket._id)}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-green-50 w-full text-left text-green-700 text-sm transition"
+                            >
+                              <FaCheckCircle />
+                              Approve (Close Ticket)
+                            </button>
+                          </ProtectedAction>
+
+                          <ProtectedAction
+                            module="tickets"
+                            action="approvalTicketDisapprove"
+                          >
+                            <button
+                              onClick={() => handleDisapprove(ticket._id)}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 w-full text-left text-red-700 text-sm transition"
+                            >
+                              <FaTimesCircle />
+                              Disapprove (Reopen)
+                            </button>
+                          </ProtectedAction>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-16 text-gray-500 text-lg">
+                No Fixed tickets pending approval
               </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-16 text-gray-500 text-lg">
-            No Fixed tickets pending approval
+            )}
           </div>
-        )}
-      </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-6 mt-8">
+              <button
+                onClick={handlePrevPage}
+                disabled={page === 1}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
+              >
+                Previous
+              </button>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-6 mt-8">
-          <button
-            onClick={handlePrevPage}
-            disabled={page === 1}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
-          >
-            Previous
-          </button>
+              <span className="text-lg font-semibold text-gray-700">
+                Page {page} of {totalPages}
+              </span>
 
-          <span className="text-lg font-semibold text-gray-700">
-            Page {page} of {totalPages}
-          </span>
-
-          <button
-            onClick={handleNextPage}
-            disabled={page === totalPages}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
-          >
-            Next
-          </button>
-        </div>
+              <button
+                onClick={handleNextPage}
+                disabled={page === totalPages}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

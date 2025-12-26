@@ -287,13 +287,12 @@
 //   );
 // }
 
-
 // // 2.
 // import { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { getAllTicketList, deleteTicket } from "../../service/ticket";
 // import { FaEllipsisV, FaTrash } from "react-icons/fa";
-// import TicketFilter from "../Ticket/TicketFilter"; 
+// import TicketFilter from "../Ticket/TicketFilter";
 // import ProtectedAction from "../../components/ProtectedAction";
 
 // export default function AllTicket() {
@@ -641,7 +640,6 @@
 //   );
 // }
 
-
 // import { useEffect, useState } from "react";
 // import { useNavigate } from "react-router-dom";
 // import { getAllTicketListWithFilter, deleteTicket } from "../../service/ticket";
@@ -916,48 +914,25 @@
 //   );
 // }
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllTicketListWithFilter, deleteTicket } from "../../service/ticket";
-import { FaEllipsisV, FaTrash, FaSearch, FaDownload } from "react-icons/fa";
+import { FaEllipsisV, FaTrash, FaDownload } from "react-icons/fa";
 import TicketFilter from "../Ticket/TicketFilter";
 import ProtectedAction from "../../components/ProtectedAction";
+import { getSearchParamsVal } from "./getSearchParamsVal";
 
 export default function AllTicket() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [menuOpen, setMenuOpen] = useState(null);
 
   // Unified search input at the top
-  const [quickSearch, setQuickSearch] = useState("");
-
-  // Updated filters — using userSearch for unified search
-  const [filters, setFilters] = useState({
-    userSearch: "",           // ← unified: name / mobile / email
-    ticketNo: "",
-    fromDate: "",
-    toDate: "",
-    area: "",
-    closeBy: "",
-    resolvedBy: "",
-    category: "",
-    assignedTo: "",
-    priority: "",
-    status: "",
-    serverZone: "",
-    callSource: "",
-    reseller: "",
-    type: "",
-    role: "",
-    ticketLevel: "",
-    lcoId: "",
-    resellerId: "",
-  });
-
-  const limit = 10;
+  // const [quickSearch, setQuickSearch] = useState("");
   const navigate = useNavigate();
 
   const formatDateTime = (dateString) => {
@@ -972,117 +947,66 @@ export default function AllTicket() {
     });
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleQuickSearchChange = (e) => {
-    const value = e.target.value;
-    setQuickSearch(value);
-    // Auto-apply to filters
-    setFilters((prev) => ({ ...prev, userSearch: value }));
-  };
-
-  const handleSearch = () => {
-    setPage(1);
-    loadTickets();
-  };
-
-  const handleReset = () => {
-    setFilters({
-      userSearch: "",
-      ticketNo: "",
-      fromDate: "",
-      toDate: "",
-      area: "",
-      closeBy: "",
-      resolvedBy: "",
-      category: "",
-      assignedTo: "",
-      priority: "",
-      status: "",
-      serverZone: "",
-      callSource: "",
-      reseller: "",
-      type: "",
-      role: "",
-      ticketLevel: "",
-      lcoId: "",
-      resellerId: "",
-    });
-    setQuickSearch(""); // Also clear quick search
-    setPage(1);
-    loadTickets();
-  };
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams({
-        page,
-        limit,
-        ...(filters.userSearch && { userSearch: filters.userSearch }),
-        ...(filters.ticketNo && { ticketNumber: filters.ticketNo }),
-        ...(filters.fromDate && { createdFrom: filters.fromDate }),
-        ...(filters.toDate && { createdTo: filters.toDate }),
-        ...(filters.area && { zoneName: filters.area }),
-        ...(filters.resolvedBy && { fixedBy: filters.resolvedBy }),
-        ...(filters.category && { category: filters.category }),
-        ...(filters.assignedTo && { assignTo: filters.assignedTo }),
-        ...(filters.callSource && { callSource: filters.callSource }),
-        ...(filters.lcoId && { lcoId: filters.lcoId }),
-        ...(filters.resellerId && { resellerId: filters.resellerId }),
-        ...(filters.status && { filter: filters.status }),
-      }).toString();
+      const searchParamsVal = getSearchParamsVal(searchParams);
+      const queryParamsString = new URLSearchParams(searchParamsVal).toString();
 
-      const res = await getAllTicketListWithFilter(queryParams);
+      const res = await getAllTicketListWithFilter(queryParamsString);
 
-      console.log("Raw API Response:", res);
+      const ticketData =
+        res?.data?.data?.allTickets ||
+        res?.data?.allTickets ||
+        res?.allTickets ||
+        [];
 
-      let ticketData = res?.data?.data?.allTickets || res?.data?.allTickets || res?.allTickets || [];
-
-      const totalCount = res?.data?.data?.totalCount || res?.data?.totalCount || res?.total || ticketData.length;
+      const totalCount =
+        res?.data?.data?.totalCount ||
+        res?.data?.totalCount ||
+        res?.total ||
+        ticketData.length;
 
       const cleaned = ticketData.map((t) => ({
         _id: t._id,
         ticketNumber: t.ticketNumber || "—",
         personName: t.personName || "N/A",
-        category: t.category?.name || "—",
+        category: t.category || "—",
         createdAt: t.createdAt || "",
         callSource: t.callSource || "—",
         assignToName: t.assignToId || "—",
         assignedAt: t.assignedAt || t.createdAt || "—",
         fixedBy: t.fixedBy || "—",
-        fixedAt: t.fixedAt || "—",
+        fixedAt: formatDateTime(t.fixedAt) || "—",
         status: t.status || "Open",
       }));
 
       setTickets(cleaned);
-      setTotalPages(Math.ceil(totalCount / limit));
+      setTotalPages(Math.ceil(totalCount / searchParamsVal.limit));
     } catch (err) {
       console.error("Error fetching tickets:", err);
       setError("Failed to load tickets");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     loadTickets();
-  }, [page]);
+  }, [loadTickets]);
 
   // Clear filters on page refresh
-  useEffect(() => {
-    const clearOnRefresh = () => {
-      handleReset();
-    };
-    window.addEventListener("beforeunload", clearOnRefresh);
-    return () => window.removeEventListener("beforeunload", clearOnRefresh);
-  }, []);
+  // useEffect(() => {
+  //   window.addEventListener("beforeunload", clearOnRefresh);
+  //   return () => window.removeEventListener("beforeunload", clearOnRefresh);
+  // }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".action-menu") && !e.target.closest(".action-toggle")) {
+      if (
+        !e.target.closest(".action-menu") &&
+        !e.target.closest(".action-toggle")
+      ) {
         setMenuOpen(null);
       }
     };
@@ -1097,7 +1021,9 @@ export default function AllTicket() {
   };
 
   const handleRemove = async (id) => {
-    if (window.confirm("Are you sure you want to permanently delete this ticket?")) {
+    if (
+      window.confirm("Are you sure you want to permanently delete this ticket?")
+    ) {
       try {
         const res = await deleteTicket(id);
         if (res.status || res.success) {
@@ -1115,11 +1041,19 @@ export default function AllTicket() {
   };
 
   const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
+    if (page > 1) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page - 1);
+      setSearchParams(sp);
+    }
   };
 
   const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
+    if (page < totalPages) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page + 1);
+      setSearchParams(sp);
+    }
   };
 
   // Function to download current tickets as Excel (CSV format)
@@ -1140,7 +1074,7 @@ export default function AllTicket() {
       "Assigned To",
       "Resolved By",
       "Resolved Date/Time",
-      "Status"
+      "Status",
     ];
 
     // Map tickets to rows
@@ -1154,13 +1088,13 @@ export default function AllTicket() {
       ticket.assignToName,
       ticket.fixedBy,
       formatDateTime(ticket.fixedAt),
-      ticket.status
+      ticket.status,
     ]);
 
     // Create CSV content
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(","))
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
     ].join("\n");
 
     // Create blob and download
@@ -1168,14 +1102,19 @@ export default function AllTicket() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `tickets_page_${page}_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `tickets_page_${page}_${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  if (loading) return <p className="text-center py-16 text-gray-500 text-lg animate-pulse">Loading tickets...</p>;
-  if (error) return <p className="text-center py-16 text-red-600 font-medium">{error}</p>;
+  if (error)
+    return (
+      <p className="text-center py-16 text-red-600 font-medium">{error}</p>
+    );
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
@@ -1184,7 +1123,7 @@ export default function AllTicket() {
 
         {/* Quick Search + Download Button */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-grow">
+          {/* <div className="relative flex-grow">
             <input
               type="text"
               value={quickSearch}
@@ -1193,90 +1132,148 @@ export default function AllTicket() {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
+          </div> */}
 
-          <button
+          {/* <button
             onClick={handleSearch}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium flex items-center justify-center gap-2"
           >
             <FaSearch /> Search
-          </button>
+          </button> */}
 
           <button
             onClick={downloadExcel}
             disabled={tickets.length === 0}
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            <FaDownload /> Downalod
+            <FaDownload /> Download
           </button>
         </div>
       </div>
 
-      <TicketFilter
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearch={handleSearch}
-        onReset={handleReset}
-      />
+      <TicketFilter setSearchParams={setSearchParams} />
 
-      <div className="bg-white shadow-lg rounded-lg border overflow-hidden">
-        <div className="hidden md:grid grid-cols-12 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
-          <div>S.No</div>
-          <div>Ticket No</div>
-          <div>User Name</div>
-          <div>Category</div>
-          <div className="col-span-2">Ticket Date/Time</div>
-          <div>Resolution</div>
-          <div>Call Source</div>
-          <div>Assigned To</div>
-          <div>Resolved By</div>
-          <div>Resolved Date/Time</div>
-          <div className="text-center">Status / Action</div>
-        </div>
-
-        {tickets.length > 0 ? (
-          tickets.map((ticket, index) => (
-            <div key={ticket._id} className="grid grid-cols-2 md:grid-cols-12 items-center text-sm text-gray-700 border-b last:border-b-0 hover:bg-gray-50 px-4 md:px-6 py-4 gap-4 transition">
-              <div className="font-medium">{(page - 1) * limit + index + 1}</div>
-              <button onClick={() => handleViewTicket(ticket._id)} className="text-blue-600 font-semibold hover:underline truncate">{ticket.ticketNumber}</button>
-              <div className="truncate">{ticket.personName}</div>
-              <div>{ticket.category}</div>
-              <div className="text-xs col-span-2">{formatDateTime(ticket.createdAt)}</div>
-              <div className="text-gray-500">—</div>
-              <div>{ticket.callSource}</div>
-              <div>{ticket.assignToName}</div>
-              <div>{ticket.fixedBy}</div>
-              <div className="text-xs">{formatDateTime(ticket.fixedAt)}</div>
-              <div className="flex justify-between md:justify-center items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${ticket.status === "Closed" ? "bg-green-100 text-green-800" : ticket.status === "Fixed" ? "bg-blue-100 text-blue-800" : ticket.status === "Assigned" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"}`}>{ticket.status}</span>
-                <div className="relative">
-                  <button onClick={(e) => { e.stopPropagation(); handleMenuToggle(ticket._id); }} className="p-2 hover:bg-gray-200 rounded-full action-toggle transition">
-                    <FaEllipsisV className="text-gray-600" />
-                  </button>
-                  {menuOpen === ticket._id && (
-                    <div className="action-menu absolute -top-8 right-0 bg-white border rounded-lg shadow-xl w-40 z-50">
-                      <ProtectedAction module="tickets" action="allTicketReomve">
-                        <button onClick={(e) => { e.stopPropagation(); handleRemove(ticket._id); }} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 w-full text-left text-red-600 text-sm transition">
-                          <FaTrash className="text-sm" /> Delete Ticket
-                        </button>
-                      </ProtectedAction>
-                    </div>
-                  )}
-                </div>
-              </div>
+      {loading ? (
+        <p className="text-center py-16 text-gray-500 text-lg animate-pulse">
+          Loading tickets...
+        </p>
+      ) : (
+        <>
+          <div className="bg-white shadow-lg rounded-lg border overflow-hidden">
+            <div className="hidden md:grid grid-cols-12 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
+              <div>S.No</div>
+              <div>Ticket No</div>
+              <div>User Name</div>
+              <div>Category</div>
+              <div className="col-span-2">Ticket Date/Time</div>
+              <div>Resolution</div>
+              <div>Call Source</div>
+              <div>Assigned To</div>
+              <div>Resolved By</div>
+              <div>Resolved Date/Time</div>
+              <div className="text-center">Status / Action</div>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-16 text-gray-500 text-lg">No tickets found</div>
-        )}
-      </div>
 
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-6 mt-8">
-          <button onClick={handlePrevPage} disabled={page === 1} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium">Previous</button>
-          <span className="text-lg font-semibold text-gray-700">Page {page} of {totalPages}</span>
-          <button onClick={handleNextPage} disabled={page === totalPages} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium">Next</button>
-        </div>
+            {tickets.length > 0 ? (
+              tickets.map((ticket, index) => (
+                <div
+                  key={ticket._id}
+                  className="grid grid-cols-2 md:grid-cols-12 items-center text-sm text-gray-700 border-b last:border-b-0 hover:bg-gray-50 px-4 md:px-6 py-4 gap-4 transition"
+                >
+                  <div className="font-medium">
+                    {(page - 1) * limit + index + 1}
+                  </div>
+                  <button
+                    onClick={() => handleViewTicket(ticket._id)}
+                    className="text-blue-600 font-semibold hover:underline truncate"
+                  >
+                    {ticket.ticketNumber}
+                  </button>
+                  <div className="truncate">{ticket.personName}</div>
+                  <div>{ticket.category}</div>
+                  <div className="text-xs col-span-2">
+                    {formatDateTime(ticket.createdAt)}
+                  </div>
+                  <div className="text-gray-500">—</div>
+                  <div>{ticket.callSource}</div>
+                  <div>{ticket.assignToName}</div>
+                  <div>{ticket.fixedBy}</div>
+                  <div className="text-xs">{ticket.fixedAt}</div>
+                  <div className="flex justify-between md:justify-center items-center gap-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        ticket.status === "Closed"
+                          ? "bg-green-100 text-green-800"
+                          : ticket.status === "Fixed"
+                          ? "bg-blue-100 text-blue-800"
+                          : ticket.status === "Assigned"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {ticket.status}
+                    </span>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMenuToggle(ticket._id);
+                        }}
+                        className="p-2 hover:bg-gray-200 rounded-full action-toggle transition"
+                      >
+                        <FaEllipsisV className="text-gray-600" />
+                      </button>
+                      {menuOpen === ticket._id && (
+                        <div className="action-menu absolute -top-8 right-0 bg-white border rounded-lg shadow-xl w-40 z-50">
+                          <ProtectedAction
+                            module="tickets"
+                            action="allTicketReomve"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemove(ticket._id);
+                              }}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 w-full text-left text-red-600 text-sm transition"
+                            >
+                              <FaTrash className="text-sm" /> Delete Ticket
+                            </button>
+                          </ProtectedAction>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-16 text-gray-500 text-lg">
+                No tickets found
+              </div>
+            )}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-6 mt-8">
+              <button
+                onClick={handlePrevPage}
+                disabled={page === 1}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
+              >
+                Previous
+              </button>
+              <span className="text-lg font-semibold text-gray-700">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={page === totalPages}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition font-medium"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

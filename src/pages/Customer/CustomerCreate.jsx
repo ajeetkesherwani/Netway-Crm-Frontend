@@ -21,7 +21,6 @@ import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
 
-
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreateUser() {
@@ -55,10 +54,45 @@ export default function CreateUser() {
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
-  const serviceOpted = ["intercom", "broadband", "corporate"]
-  const indianStates = ["Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal"];
-
-
+  const serviceOpted = ["intercom", "broadband", "corporate"];
+  const indianStates = [
+    "Andaman and Nicobar Islands",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chandigarh",
+    "Chhattisgarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jammu and Kashmir",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Ladakh",
+    "Lakshadweep",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Puducherry",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+  ];
 
   const initialForm = {
     customer: {
@@ -243,7 +277,6 @@ export default function CreateUser() {
   const handleChange = (e, path) => {
     const { value, type, checked, files } = e.target;
 
-
     if (path === "customer.name") {
       const error = characterValidate(value);
 
@@ -273,7 +306,6 @@ export default function CreateUser() {
         value = value.slice(0, 10);
       }
 
-
       setFieldValue(path, value);
 
       // validation
@@ -285,7 +317,6 @@ export default function CreateUser() {
 
       return;
     }
-
 
     // Alternative mobile number validation
     if (path === "customer.alternateMobile") {
@@ -309,10 +340,7 @@ export default function CreateUser() {
       const formatError = trimmedValue ? mobileValidate(trimmedValue) : "";
 
       // Check same as primary mobile
-      const sameError = checkAlternateSameAsMobile(
-        primaryMobile,
-        trimmedValue
-      );
+      const sameError = checkAlternateSameAsMobile(primaryMobile, trimmedValue);
 
       const finalError = sameError || formatError;
 
@@ -324,12 +352,13 @@ export default function CreateUser() {
       return;
     }
 
-
     //  Pincode
-    if (path === "addresses.billing.pincode" || path === "addresses.permanent.pincode") {
+    if (
+      path === "addresses.billing.pincode" ||
+      path === "addresses.permanent.pincode"
+    ) {
       let value = e.target.value;
       // value = value.replace(/\D/g, "");
-
 
       if (value.length > 6) {
         return;
@@ -338,7 +367,10 @@ export default function CreateUser() {
       setFormErrors((prev) => ({ ...prev, [path]: error }));
     }
 
-    if (path === "addresses.billing.city" || path === "addresses.permanent.city") {
+    if (
+      path === "addresses.billing.city" ||
+      path === "addresses.permanent.city"
+    ) {
       const error = cityValidate(value);
       setFormErrors((prev) => ({
         ...prev,
@@ -346,14 +378,16 @@ export default function CreateUser() {
       }));
     }
 
-    if (path === "addresses.billing.state" || path === "addresses.permanent.state") {
+    if (
+      path === "addresses.billing.state" ||
+      path === "addresses.permanent.state"
+    ) {
       const error = stateValidate(value);
       setFormErrors((prev) => ({
         ...prev,
         [path]: error,
       }));
     }
-
 
     // if (path.includes("state")) {
     //   const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, ""); // Remove anything that's not letter or space
@@ -368,19 +402,10 @@ export default function CreateUser() {
     //   return;
     // }
 
-
     const addressPaths = [
       "addresses.billing.addressLine1",
 
-
-
-
-
-
       "addresses.permanent.addressLine1",
-
-
-
     ];
 
     if (addressPaths.includes(path)) {
@@ -390,8 +415,6 @@ export default function CreateUser() {
         return newErrors;
       });
     }
-
-
 
     if (type === "checkbox") setFieldValue(path, checked);
     else if (type === "file") {
@@ -533,10 +556,11 @@ export default function CreateUser() {
     const billCity = (formData.addresses.billing.city || "").trim();
     const permCity = (formData.addresses.permanent.city || "").trim();
     const billState = (formData.addresses.billing.state || "").trim();
-    const permState = (formData.addresses.permanent.State || "").trim();
+    const permState = (formData.addresses.permanent.state || "").trim();
 
     if (!bill.addressLine1)
-      errors["addresses.billing.addressLine1"] = "Billing address line 1 required";
+      errors["addresses.billing.addressLine1"] =
+        "Billing address line 1 required";
 
     if (!bill.state)
       errors["addresses.billing.state"] = "Billing state required";
@@ -555,7 +579,8 @@ export default function CreateUser() {
     if (!bill.pincode)
       errors["addresses.billing.pincode"] = "Billing pincode required";
     if (!perm.addressLine1)
-      errors["addresses.permanent.addressLine1"] = "Permanent address line 1 required";
+      errors["addresses.permanent.addressLine1"] =
+        "Permanent address line 1 required";
     if (!permCity) {
       errors["addresses.permanent.city"] = "Permanent city is required";
     } else {
@@ -568,7 +593,8 @@ export default function CreateUser() {
       const err = stateValidate(permState);
       if (err) errors["addresses.permanent.state"] = err;
     }
-    if (!perm.pincode) errors["addresses.permanent.pincode"] = "Permanent pincode required";
+    if (!perm.pincode)
+      errors["addresses.permanent.pincode"] = "Permanent pincode required";
 
     return errors;
   };
@@ -581,6 +607,7 @@ export default function CreateUser() {
     const errors = validateForm();
     if (Object.keys(errors).length) {
       setFormErrors(errors);
+      console.log("Erros - ", errors);
       toast.error("Please fix form errors");
       setLoading(false);
       return;
@@ -730,7 +757,7 @@ export default function CreateUser() {
     "Pan Card",
     "Driving Licence",
     "GST",
-    "Other"
+    "Other",
     // "ID proof",
     // "Profile Id",
     // "Aadhar Card",
@@ -873,7 +900,7 @@ export default function CreateUser() {
                   scrollableYearDropdown
                   popperPlacement="bottom-start"
                   // This allows clicking the icon to open calendar
-                  onClickOutside={() => { }}
+                  onClickOutside={() => {}}
                   // Ensures calendar opens on icon click
                   showPopperArrow={false}
                 />
@@ -886,11 +913,20 @@ export default function CreateUser() {
                       e.preventDefault();
                       e.stopPropagation();
                       // Trigger the DatePicker to open
-                      document.querySelector('.react-datepicker__input-container input')?.focus();
+                      document
+                        .querySelector(
+                          ".react-datepicker__input-container input"
+                        )
+                        ?.focus();
                     }}
                     className="text-gray-400 hover:text-gray-600 focus:outline-none"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -923,10 +959,9 @@ export default function CreateUser() {
                 //   }
                 // }}
 
-
-
-                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["customer.mobile"] ? "border-red-500" : ""
+                }`}
                 placeholder="Mobile Number"
               />
               {formErrors["customer.mobile"] && (
@@ -947,13 +982,11 @@ export default function CreateUser() {
                   formErrors["customer.alternateMobile"] ? "border-red-500" : ""
                 }`}
                 placeholder="Alternate Mobile"
-              // onKeyDown={(e) => {
-              //   if (!/[0-9]/.test(e.key)) {
-              //     e.preventDefault(); // Block alphabets & special characters
-              //   }
-              // }}
-
-
+                // onKeyDown={(e) => {
+                //   if (!/[0-9]/.test(e.key)) {
+                //     e.preventDefault(); // Block alphabets & special characters
+                //   }
+                // }}
               />
               {formErrors["customer.alternateMobile"] && (
                 <p className="text-red-500 text-sm">
@@ -1365,8 +1398,11 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.billing.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["addresses.billing.addressLine1"]
+                    ? "border-red-500"
+                    : ""
+                }`}
                 placeholder="Address Line 1 (Required)"
               />
 
@@ -1412,7 +1448,6 @@ export default function CreateUser() {
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.billing.pincode}
-
                   onChange={(e) => handleChange(e, "addresses.billing.pincode")}
                   placeholder="Pincode *"
                   onKeyPress={(e) => {
@@ -1420,8 +1455,11 @@ export default function CreateUser() {
                       e.preventDefault(); // Blocks any non-digit key
                     }
                   }}
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"] ? "border-red-500" : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.billing.pincode"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {formErrors["addresses.billing.pincode"] && (
                   <p className="text-red-500 text-sm mt-1">
@@ -1439,8 +1477,11 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.permanent.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.permanent.addressLine1"] ? "border-red-500" : ""
-                  }`}
+                className={`mt-1 p-2 border rounded w-full ${
+                  formErrors["addresses.permanent.addressLine1"]
+                    ? "border-red-500"
+                    : ""
+                }`}
                 placeholder="Address Line 1 (Required)"
               />
 
@@ -1489,16 +1530,20 @@ export default function CreateUser() {
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.permanent.pincode}
-
-                  onChange={(e) => handleChange(e, "addresses.permanent.pincode")}
+                  onChange={(e) =>
+                    handleChange(e, "addresses.permanent.pincode")
+                  }
                   placeholder="Pincode *"
                   onKeyPress={(e) => {
                     if (!/[0-9]/.test(e.key)) {
                       e.preventDefault(); // Blocks any non-digit key
                     }
                   }}
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"] ? "border-red-500" : ""
-                    }`}
+                  className={`p-2 border rounded w-1/2 ${
+                    formErrors["addresses.permanent.pincode"]
+                      ? "border-red-500"
+                      : ""
+                  }`}
                 />
                 {formErrors["addresses.permanent.pincode"] && (
                   <p className="text-red-500 text-sm mt-1">

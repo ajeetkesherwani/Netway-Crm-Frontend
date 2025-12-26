@@ -1,21 +1,26 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getReassignTicketList, deleteTicket } from "../../service/ticket";
 import ProtectedAction from "../../components/ProtectedAction";
+import { getSearchParamsVal } from "./getSearchParamsVal";
+import TicketFilter from "./TicketFilter";
 
 export default function ReassignTicketList() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [openMenuId, setOpenMenuId] = useState(null);
-  const limit = 10;
   const navigate = useNavigate();
+  const totalPages = Math.ceil(total / limit);
 
   // ✅ Fetch Tickets
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
-      const res = await getReassignTicketList(page, limit);
+      const searchParamsVal = getSearchParamsVal(searchParams);
+      const queryParamString = new URLSearchParams(searchParamsVal).toString();
+      const res = await getReassignTicketList(queryParamString.toString());
       if (res.status) {
         setTickets(res.data.tickets || []);
         setTotal(res.data.total || 0);
@@ -23,11 +28,11 @@ export default function ReassignTicketList() {
     } catch (err) {
       console.error("Error fetching reassign tickets:", err);
     }
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     fetchTickets();
-  }, [page]);
+  }, [fetchTickets]);
 
   // ✅ Close menu when clicking outside
   useEffect(() => {
@@ -77,10 +82,21 @@ export default function ReassignTicketList() {
     setOpenMenuId(null);
   };
 
-  // ✅ Pagination
-  const totalPages = Math.ceil(total / limit);
-  const handlePrev = () => page > 1 && setPage(page - 1);
-  const handleNext = () => page < totalPages && setPage(page + 1);
+  const handlePrevPage = () => {
+    if (page > 1) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page - 1);
+      setSearchParams(sp);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page + 1);
+      setSearchParams(sp);
+    }
+  };
 
   return (
     <div className="p-5 bg-[#edf2f7] min-h-screen">
@@ -93,6 +109,8 @@ export default function ReassignTicketList() {
           </span>
         </h1>
       </div>
+
+      <TicketFilter setSearchParams={setSearchParams} />
 
       {/* Table */}
       <div className="overflow-x-auto bg-white shadow-md rounded-md border">
@@ -136,10 +154,9 @@ export default function ReassignTicketList() {
                           "px-3 py-1 border font-semibold " +
                           (allowed
                             ? "text-blue-600 cursor-pointer hover:underline"
-                            : "text-gray-400 cursor-not-allowed opacity-60"
-                          )
+                            : "text-gray-400 cursor-not-allowed opacity-60")
                         }
-                        onClick={() => {  
+                        onClick={() => {
                           if (allowed) {
                             navigate(`/ticket/view/${ticket._id}`);
                           }
@@ -175,7 +192,7 @@ export default function ReassignTicketList() {
                     ).toLocaleString()}
                   </td>
                   <td className="px-3 py-1 border text-gray-700">
-                    {ticket.currentAssignee.id || "N/A"}
+                    {ticket.currentAssignee.name || "N/A"}
                   </td>
                   <td className="px-3 py-1 border text-gray-700">
                     {"Reassign Ticket"}
@@ -183,12 +200,13 @@ export default function ReassignTicketList() {
                   <td className="px-3 py-1 border relative">
                     <div className="flex items-center justify-between">
                       <span
-                        className={`px-2 py-1 text-xs rounded font-medium ${ticket.currentAssignee.currentStatus === "Open"
+                        className={`px-2 py-1 text-xs rounded font-medium ${
+                          ticket.currentAssignee.currentStatus === "Open"
                             ? "bg-green-100 text-green-700"
                             : ticket.currentAssignee.currentStatus === "Closed"
-                              ? "bg-gray-200 text-gray-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                            ? "bg-gray-200 text-gray-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
                       >
                         {ticket.currentAssignee.currentStatus}
                       </span>
@@ -208,7 +226,10 @@ export default function ReassignTicketList() {
 
                         {openMenuId === ticket._id && (
                           <div className="absolute right-0 top-6 w-36 bg-white border shadow-md rounded z-20 text-left action-menu">
-                            <ProtectedAction module="tickets" action="renewalTicketRemove">
+                            <ProtectedAction
+                              module="tickets"
+                              action="renewalTicketRemove"
+                            >
                               <button
                                 onClick={() => handleRemove(ticket._id)}
                                 className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-red-600"
@@ -216,7 +237,10 @@ export default function ReassignTicketList() {
                                 Remove
                               </button>
                             </ProtectedAction>
-                            <ProtectedAction module="tickets" action="renewalTicketResolve">
+                            <ProtectedAction
+                              module="tickets"
+                              action="renewalTicketResolve"
+                            >
                               <button
                                 onClick={() => handleResolve(ticket._id)}
                                 className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
@@ -224,7 +248,10 @@ export default function ReassignTicketList() {
                                 Resolve
                               </button>
                             </ProtectedAction>
-                            <ProtectedAction module="tickets" action="renewalTicketHistory">
+                            <ProtectedAction
+                              module="tickets"
+                              action="renewalTicketHistory"
+                            >
                               <button
                                 onClick={() => handleHistory(ticket._id)}
                                 className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
@@ -247,7 +274,7 @@ export default function ReassignTicketList() {
       {/* Pagination */}
       <div className="flex justify-between items-center mt-3 text-sm">
         <button
-          onClick={handlePrev}
+          onClick={handlePrevPage}
           disabled={page === 1}
           className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
         >
@@ -257,7 +284,7 @@ export default function ReassignTicketList() {
           Page {page} of {totalPages}
         </span>
         <button
-          onClick={handleNext}
+          onClick={handleNextPage}
           disabled={page === totalPages}
           className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
         >
