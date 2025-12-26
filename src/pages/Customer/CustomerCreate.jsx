@@ -467,8 +467,6 @@ export default function CreateUser() {
     const selected = packageList.find((p) => p._id === packageId);
     if (selected) {
       const basePrice = selected.basePrice || selected.price || "";
-      const startDate = selected.fromDate;
-      const endDate = selected.toDate;
 
       // Save package ID and name
       setFieldValue("customer.packageDetails.packageId", selected._id);
@@ -558,7 +556,7 @@ export default function CreateUser() {
     const billCity = (formData.addresses.billing.city || "").trim();
     const permCity = (formData.addresses.permanent.city || "").trim();
     const billState = (formData.addresses.billing.state || "").trim();
-    const permState = (formData.addresses.permanent.State || "").trim();
+    const permState = (formData.addresses.permanent.state || "").trim();
 
     if (!bill.addressLine1)
       errors["addresses.billing.addressLine1"] =
@@ -609,6 +607,7 @@ export default function CreateUser() {
     const errors = validateForm();
     if (Object.keys(errors).length) {
       setFormErrors(errors);
+      console.log("Erros - ", errors);
       toast.error("Please fix form errors");
       setLoading(false);
       return;

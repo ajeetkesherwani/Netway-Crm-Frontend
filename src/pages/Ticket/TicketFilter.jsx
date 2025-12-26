@@ -406,38 +406,19 @@
 
 import { FaSearch, FaSync } from "react-icons/fa";
 import { MdArrowDropDown } from "react-icons/md";
-import { useEffect, useRef, useState } from "react";
-import { getAllLco } from "../../service/lco";
-import { getRetailer } from "../../service/retailer";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getLcos } from "../../service/lco";
+import { getRetailers } from "../../service/retailer";
 import { getZones } from "../../service/apiClient";
 import { getCategoryList } from "../../service/category";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import SelectorWithSearchAndPagination from "../../components/SelectorWithSearchAndPagination";
+import { convertUTCDateToYYYYMMDD } from "../../utils/convertUTCtoLocalDate";
 
-export default function TicketFilter({
-  filters,
-  onFilterChange,
-  onSearch,
-  onReset,
-}) {
-  const handleChange = (key, value) => {
-    onFilterChange(key, value);
-  };
-
+export default function TicketFilter({ setSearchParams }) {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
-
-  /* ───────────── LCO STATES ───────────── */
-  const [lcos, setLcos] = useState([]);
-  const [lcoText, setLcoText] = useState("");
-  const [showLco, setShowLco] = useState(false);
-  const lcoRef = useRef(null);
-
-  /* ───────────── RESELLER STATES ───────────── */
-  const [resellers, setResellers] = useState([]);
-  const [resellerText, setResellerText] = useState("");
-  const [showReseller, setShowReseller] = useState(false);
-  const resellerRef = useRef(null);
 
   /* ───────────── ZONE STATES ───────────── */
   const [zones, setZones] = useState([]);
@@ -451,10 +432,19 @@ export default function TicketFilter({
   const [showCategory, setShowCatagory] = useState(false);
   const categoryRef = useRef(null);
 
+  const [search, setSearch] = useState("");
+  const [ticketNumber, setTicketNumber] = useState("");
+  const [callSource, setCallSource] = useState("");
+
+  const [selectedLco, setSelectedLco] = useState(null);
+  const [selectedReseller, setSelectedReseller] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedZone, setSelectedZone] = useState(null);
+
   /* ───────────── FETCH DATA ───────────── */
   useEffect(() => {
-    getAllLco().then((res) => setLcos(res?.data || []));
-    getRetailer().then((res) => setResellers(res?.data || []));
+    // getAllLco().then((res) => setLcos(res?.data || []));
+    // getRetailer().then((res) => setResellers(res?.data || []));
     getZones().then((res) => setZones(res?.data || res || []));
     getCategoryList().then((res) => setCatagoryes(res?.data || []));
   }, []);
@@ -462,10 +452,6 @@ export default function TicketFilter({
   /* ───────────── OUTSIDE CLICK CLOSE ───────────── */
   useEffect(() => {
     const handleClick = (e) => {
-      if (lcoRef.current && !lcoRef.current.contains(e.target))
-        setShowLco(false);
-      if (resellerRef.current && !resellerRef.current.contains(e.target))
-        setShowReseller(false);
       if (zoneRef.current && !zoneRef.current.contains(e.target))
         setShowZone(false);
       if (categoryRef.current && !categoryRef.current.contains(e.target))
@@ -475,13 +461,13 @@ export default function TicketFilter({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const filteredLcos = lcos.filter((l) =>
-    l.lcoName?.toLowerCase().includes(lcoText.toLowerCase())
-  );
+  // const filteredLcos = lcos.filter((l) =>
+  //   l.lcoName?.toLowerCase().includes(lcoText.toLowerCase())
+  // );
 
-  const filteredResellers = resellers.filter((r) =>
-    r.resellerName?.toLowerCase().includes(resellerText.toLowerCase())
-  );
+  // const filteredResellers = resellers.filter((r) =>
+  //   r.resellerName?.toLowerCase().includes(resellerText.toLowerCase())
+  // );
 
   const filteredZones = zones.filter((z) =>
     z.zoneName?.toLowerCase().includes(zoneText.toLowerCase())
@@ -492,13 +478,111 @@ export default function TicketFilter({
   );
 
   const handleOnReset = () => {
-    
-    onReset();
+    setSelectedCategory(null);
+    setSelectedLco(null);
+    setSelectedZone(null);
+    setSelectedReseller(null);
+    setCallSource("");
+    setCategoryText("");
+    setFromDate(null);
+    setToDate(null);
+    setSearch("");
+    setTicketNumber("");
+    setZoneText("");
+
+    const sp = new URLSearchParams();
+    sp.delete("fromDate");
+    sp.delete("toDate");
+    sp.delete("userSearch");
+    sp.delete("ticketNumber");
+    sp.delete("category");
+    sp.delete("zoneId");
+    sp.delete("lcoId");
+    sp.delete("resellerId");
+    sp.delete("callSource");
+
+    setSearchParams(sp);
+  };
+
+  const loadLcos = useCallback(async ({ search = "", page = 1, limit = 7 }) => {
+    try {
+      const res = await getLcos({
+        search,
+        page,
+        limit,
+      });
+      return res.data || [];
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  const loadResellers = useCallback(
+    async ({ search = "", page = 1, limit = 7 }) => {
+      try {
+        const res = await getRetailers({
+          search,
+          page,
+          limit,
+        });
+        return res.data || [];
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    []
+  );
+
+  // const loadCategories = useCallback(
+  //   async ({ search = "", page = 1, limit = 7 }) => {
+  //     try {
+  //       const res = await getCategoryList({
+  //         search,
+  //         page,
+  //         limit,
+  //       });
+  //       return res.data || [];
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   },
+  //   []
+  // );
+
+  const handleOnSelectLco = (lco) => {
+    setSelectedLco(lco);
+  };
+
+  const handleOnSelectReseller = (reseller) => {
+    setSelectedReseller(reseller);
+  };
+
+  // const handleOnSelectCategory = (category) => {
+  //   setSelectedCategory(category);
+  // };
+
+  const handleOnSelectZone = (zone) => {
+    setSelectedZone(zone);
+  };
+
+  const handleOnSearch = () => {
+    const sp = new URLSearchParams();
+    if (fromDate) sp.set("fromDate", convertUTCDateToYYYYMMDD(fromDate));
+    if (toDate) sp.set("toDate", convertUTCDateToYYYYMMDD(toDate));
+    if (search.trim()) sp.set("userSearch", search.trim());
+    if (ticketNumber.trim()) sp.set("ticketNumber", ticketNumber.trim());
+    if (selectedCategory) sp.set("category", selectedCategory._id);
+    if (selectedZone) sp.set("zoneId", selectedZone?._id);
+    if (selectedLco) sp.set("lcoId", selectedLco?._id);
+    if (selectedReseller) sp.set("resellerId", selectedReseller?._id);
+    if (callSource.trim()) sp.set("callSource", callSource.trim());
+
+    setSearchParams(sp);
   };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-2 md:grid-3 lg:grid-cols-4 xl:grid-6 gap-4">
         {/* UNIFIED USER SEARCH FIELD — LOOKS EXACTLY LIKE YOUR OLD ONE */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -507,8 +591,8 @@ export default function TicketFilter({
           <input
             type="text"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={filters.userSearch || ""}
-            onChange={(e) => handleChange("userSearch", e.target.value)}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             placeholder="Type name, mobile or email..."
           />
         </div>
@@ -521,8 +605,8 @@ export default function TicketFilter({
           <input
             type="text"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            value={filters.ticketNo || ""}
-            onChange={(e) => handleChange("ticketNo", e.target.value)}
+            value={ticketNumber}
+            onChange={(e) => setTicketNumber(e.target.value)}
             placeholder="Please Select"
           />
         </div>
@@ -536,18 +620,18 @@ export default function TicketFilter({
             selected={fromDate}
             onChange={(date) => {
               setFromDate(date);
-              if (date) {
-                // Use UTC to prevent timezone shift
-                const utcDate = Date.UTC(
-                  date.getFullYear(),
-                  date.getMonth(),
-                  date.getDate()
-                );
-                const formatted = new Date(utcDate).toISOString().split("T")[0];
-                handleChange("fromDate", formatted);
-              } else {
-                handleChange("fromDate", "");
-              }
+              // if (date) {
+              //   // Use UTC to prevent timezone shift
+              //   const utcDate = Date.UTC(
+              //     date.getFullYear(),
+              //     date.getMonth(),
+              //     date.getDate()
+              //   );
+              //   const formatted = new Date(utcDate).toISOString().split("T")[0];
+              //   handleChange("fromDate", formatted);
+              // } else {
+              //   handleChange("fromDate", "");
+              // }
             }}
             dateFormat="dd/MM/yyyy"
             placeholderText="DD/MM/YYYY"
@@ -564,18 +648,18 @@ export default function TicketFilter({
             selected={toDate}
             onChange={(date) => {
               setToDate(date);
-              if (date) {
-                // Use UTC to prevent timezone shift
-                const utcDate = Date.UTC(
-                  date.getFullYear(),
-                  date.getMonth(),
-                  date.getDate()
-                );
-                const formatted = new Date(utcDate).toISOString().split("T")[0];
-                handleChange("toDate", formatted);
-              } else {
-                handleChange("toDate", "");
-              }
+              // if (date) {
+              //   // Use UTC to prevent timezone shift
+              //   const utcDate = Date.UTC(
+              //     date.getFullYear(),
+              //     date.getMonth(),
+              //     date.getDate()
+              //   );
+              //   const formatted = new Date(utcDate).toISOString().split("T")[0];
+              //   handleChange("toDate", formatted);
+              // } else {
+              //   handleChange("toDate", "");
+              // }
             }}
             dateFormat="dd/MM/yyyy"
             placeholderText="DD/MM/YYYY"
@@ -599,7 +683,6 @@ export default function TicketFilter({
             onChange={(e) => {
               setZoneText(e.target.value);
               setShowZone(true);
-              // handleChange("area", e.target.value);
             }}
           />
 
@@ -615,8 +698,8 @@ export default function TicketFilter({
                     key={zone._id}
                     onClick={() => {
                       setZoneText(zone.zoneName);
-                      handleChange("area", zone._id);
                       setShowZone(false);
+                      handleOnSelectZone(zone);
                     }}
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
                   >
@@ -700,8 +783,6 @@ export default function TicketFilter({
             onChange={(e) => {
               setCategoryText(e.target.value);
               setShowCatagory(true);
-              // Do NOT send anything on typing — only for local search
-              // handleChange("category", ""); // ← Remove this line
             }}
           />
 
@@ -717,8 +798,8 @@ export default function TicketFilter({
                     key={cat._id}
                     onClick={() => {
                       setCategoryText(cat.name);
-                      handleChange("category", cat._id); // ← Send only ID
                       setShowCatagory(false);
+                      setSelectedCategory(cat);
                     }}
                     className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
                   >
@@ -731,8 +812,8 @@ export default function TicketFilter({
                 <div
                   onClick={() => {
                     setCategoryText("");
-                    handleChange("category", "");
                     setShowCatagory(false);
+                    setSelectedCategory(null);
                   }}
                   className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer border-t"
                 >
@@ -742,6 +823,22 @@ export default function TicketFilter({
             </div>
           )}
         </div>
+
+        {/* <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Category
+          </label>
+          <SelectorWithSearchAndPagination
+            valKey="name"
+            placeholder="Select Category..."
+            selected={selectedCategory}
+            onSelect={handleOnSelectCategory}
+            getDetails={loadResellers}
+            className="text-sm min-w-52"
+            cancelClassName="p-[1px]"
+            inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
+          />
+        </div> */}
 
         {/* Assigned To */}
         {/* <div>
@@ -764,8 +861,8 @@ export default function TicketFilter({
           </label>
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-            value={filters.callSource || ""}
-            onChange={(e) => handleChange("callSource", e.target.value)}
+            value={callSource}
+            onChange={(e) => setCallSource(e.target.value)}
           >
             <option value="">Please Select</option>
             <option>Phone</option>
@@ -776,7 +873,7 @@ export default function TicketFilter({
         </div>
 
         {/* ───────────── LCO SEARCHABLE (UI SAME) ───────────── */}
-        <div ref={lcoRef} className="relative">
+        {/* <div ref={lcoRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select LCO
           </label>
@@ -812,10 +909,10 @@ export default function TicketFilter({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* ───────────── RESELLER SEARCHABLE (UI SAME) ───────────── */}
-        <div ref={resellerRef} className="relative">
+        {/* <div ref={resellerRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select Reseller
           </label>
@@ -851,6 +948,37 @@ export default function TicketFilter({
               ))}
             </div>
           )}
+        </div> */}
+
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select LCO
+          </label>
+          <SelectorWithSearchAndPagination
+            valKey="lcoName"
+            placeholder="Select LCO..."
+            selected={selectedLco}
+            onSelect={handleOnSelectLco}
+            getDetails={loadLcos}
+            className="text-sm min-w-52"
+            cancelClassName="p-[1px]"
+            inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
+          />
+        </div>
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Reseller
+          </label>
+          <SelectorWithSearchAndPagination
+            valKey="resellerName"
+            placeholder="Select Reseller..."
+            selected={selectedReseller}
+            onSelect={handleOnSelectReseller}
+            getDetails={loadResellers}
+            className="text-sm min-w-52"
+            cancelClassName="p-[1px]"
+            inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
+          />
         </div>
 
         {/* Select Area */}
@@ -878,7 +1006,7 @@ export default function TicketFilter({
         </button>
 
         <button
-          onClick={onSearch}
+          onClick={handleOnSearch}
           className="px-6 py-3 bg-blue-600 text-white rounded-lg flex items-center gap-2"
         >
           <FaSearch /> Search

@@ -6,7 +6,13 @@ async function parseResponse(res) {
   const text = await res.text().catch(() => null);
   try {
     const data = text ? JSON.parse(text) : null;
-    if (!res.ok) throw new Error(data?.message || data?.error || text || `Request failed with ${res.status}`);
+    if (!res.ok)
+      throw new Error(
+        data?.message ||
+          data?.error ||
+          text ||
+          `Request failed with ${res.status}`
+      );
     return data;
   } catch (err) {
     if (!res.ok) throw new Error(text || `Request failed with ${res.status}`);

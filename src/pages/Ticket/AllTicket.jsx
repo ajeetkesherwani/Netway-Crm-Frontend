@@ -640,45 +640,22 @@
 //   );
 // }
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllTicketListWithFilter, deleteTicket } from "../../service/ticket";
 import { FaEllipsisV, FaTrash } from "react-icons/fa";
 import TicketFilter from "../Ticket/TicketFilter";
 import ProtectedAction from "../../components/ProtectedAction";
+import { getSearchParamsVal } from "./getSearchParamsVal";
 
 export default function AllTicket() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [menuOpen, setMenuOpen] = useState(null);
-
-  // Updated filters — using userSearch for unified search
-  const [filters, setFilters] = useState({
-    userSearch: "", // ← unified: name / mobile / email
-    ticketNo: "",
-    fromDate: "",
-    toDate: "",
-    area: "",
-    closeBy: "",
-    resolvedBy: "",
-    category: "",
-    assignedTo: "",
-    priority: "",
-    status: "",
-    serverZone: "",
-    callSource: "",
-    reseller: "",
-    type: "",
-    role: "",
-    ticketLevel: "",
-    lcoId: "",
-    resellerId: "",
-  });
-
-  const limit = 10;
   const navigate = useNavigate();
 
   const formatDateTime = (dateString) => {
@@ -693,66 +670,15 @@ export default function AllTicket() {
     });
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSearch = () => {
-    setPage(1);
-    loadTickets();
-  };
-
-  const handleReset = () => {
-    setFilters({
-      userSearch: "",
-      ticketNo: "",
-      fromDate: "",
-      toDate: "",
-      area: "",
-      closeBy: "",
-      resolvedBy: "",
-      category: "",
-      assignedTo: "",
-      priority: "",
-      status: "",
-      serverZone: "",
-      callSource: "",
-      reseller: "",
-      type: "",
-      role: "",
-      ticketLevel: "",
-      lcoId: "",
-      resellerId: "",
-    });
-    setPage(1);
-    loadTickets();
-  };
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const queryParams = new URLSearchParams({
-        page,
-        limit,
-        ...(filters.userSearch && { userSearch: filters.userSearch }), // ← unified search
-        ...(filters.ticketNo && { ticketNumber: filters.ticketNo }),
-        ...(filters.fromDate && { createdFrom: filters.fromDate }),
-        ...(filters.toDate && { createdTo: filters.toDate }),
-        ...(filters.area && { zoneId: filters.area }),
-        ...(filters.resolvedBy && { fixedBy: filters.resolvedBy }),
-        ...(filters.category && { category: filters.category }),
-        ...(filters.assignedTo && { assignTo: filters.assignedTo }),
-        ...(filters.callSource && { callSource: filters.callSource }),
-        ...(filters.lcoId && { lcoId: filters.lcoId }),
-        ...(filters.resellerId && { resellerId: filters.resellerId }),
-        ...(filters.status && { filter: filters.status }),
-      }).toString();
+      const searchParamsVal = getSearchParamsVal(searchParams);
+      const queryParamsString = new URLSearchParams(searchParamsVal).toString();
 
-      const res = await getAllTicketListWithFilter(queryParams);
+      const res = await getAllTicketListWithFilter(queryParamsString);
 
-      console.log("Raw API Response:", res);
-
-      let ticketData =
+      const ticketData =
         res?.data?.data?.allTickets ||
         res?.data?.allTickets ||
         res?.allTickets ||
@@ -779,27 +705,24 @@ export default function AllTicket() {
       }));
 
       setTickets(cleaned);
-      setTotalPages(Math.ceil(totalCount / limit));
+      setTotalPages(Math.ceil(totalCount / searchParamsVal.limit));
     } catch (err) {
       console.error("Error fetching tickets:", err);
       setError("Failed to load tickets");
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams]);
 
   useEffect(() => {
     loadTickets();
-  }, [page]);
+  }, [loadTickets]);
 
   // Clear filters on page refresh
-  useEffect(() => {
-    const clearOnRefresh = () => {
-      handleReset();
-    };
-    window.addEventListener("beforeunload", clearOnRefresh);
-    return () => window.removeEventListener("beforeunload", clearOnRefresh);
-  }, []);
+  // useEffect(() => {
+  //   window.addEventListener("beforeunload", clearOnRefresh);
+  //   return () => window.removeEventListener("beforeunload", clearOnRefresh);
+  // }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -841,11 +764,19 @@ export default function AllTicket() {
   };
 
   const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
+    if (page > 1) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page - 1);
+      setSearchParams(sp);
+    }
   };
 
   const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
+    if (page < totalPages) {
+      const sp = new URLSearchParams(searchParams);
+      sp.set("page", page + 1);
+      setSearchParams(sp);
+    }
   };
 
   if (error)
@@ -859,12 +790,7 @@ export default function AllTicket() {
         <h1 className="text-2xl font-bold text-gray-800">All Tickets</h1>
       </div>
 
-      <TicketFilter
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearch={handleSearch}
-        onReset={handleReset}
-      />
+      <TicketFilter setSearchParams={setSearchParams} />
 
       {loading ? (
         <p className="text-center py-16 text-gray-500 text-lg animate-pulse">
