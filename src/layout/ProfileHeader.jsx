@@ -224,6 +224,13 @@ const ProfileHeader = () => {
       module: "customer",
       action: "rechargePackageList",
     },
+    {
+      id: "assigned-stock",
+      label: "Assigned Stock",
+      path: `/user/profile/${id}/assigned-stock`,
+      module: "customer",
+      action: "assignedStockView",
+    }
   ];
 
   useEffect(() => {

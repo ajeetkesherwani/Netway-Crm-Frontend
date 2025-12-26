@@ -572,6 +572,13 @@ const UserRechargePackage = () => {
     fetchWalletBalance();
   }, [userId]);
 
+
+  useEffect(() => {
+  if (userId) {
+    openPurchaseModal(); // Opens the "Purchase New Plan" modal automatically
+  }
+}, [userId]);
+
   const fetchCurrentPlan = async () => {
     try {
       setLoading(true);

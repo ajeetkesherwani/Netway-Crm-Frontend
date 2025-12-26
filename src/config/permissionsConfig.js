@@ -100,7 +100,10 @@ export const permissionsConfig = [
             "logs",
             "rechargePackageList",
             "purchasedNewPackage",
-            "renewPackage"
+            "renewPackage",
+            "assignedStockView",
+            "viewReceipt",
+            "deleteReceipt"
         ],
     },
     {

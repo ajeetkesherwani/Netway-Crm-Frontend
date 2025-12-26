@@ -249,3 +249,30 @@ export const getLcoByRetailer = async (retailerId) => {
 
   return await res.json();
 };
+
+//reset password
+export const resetUserPassword = async (userId, newPassword) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/userManage/password-reset/${userId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ password: newPassword }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(data.message || "Failed to reset password");
+    }
+
+    return data;
+  } catch (err) {
+    throw err;
+  }
+};
