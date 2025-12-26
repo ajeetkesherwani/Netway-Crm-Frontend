@@ -203,3 +203,30 @@ export const getInvoiceDetails = async (id) => {
     throw err;
   }
 };
+
+//get invoice by userId
+ export const getUserInvoices = async (userId) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/common/user/invoice/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok || !data.status) {
+      throw new Error(data.message || "Failed to fetch user invoices");
+    }
+
+    return data.data;
+  } catch (err) {
+    console.error("Error fetching user invoices:", err);
+    throw err;
+  }
+};

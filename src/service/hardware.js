@@ -112,3 +112,16 @@ export async function getAllUserList() {
   if (!res.ok) throw new Error("Failed to fetch user");
   return res.json();
 }
+
+// Get assigned hardware for a user
+export async function getAssignedHardwareByUserId(userId) {
+  const res = await fetch(`${BASE_URL}/common/user/hardware/${userId}`, { 
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+  return parseResponse(res, "Failed to fetch assigned hardware");
+}
+

@@ -1,49 +1,104 @@
 // import { useEffect, useState, useRef } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { FaEllipsisV, FaEdit, FaTrash, FaEye } from "react-icons/fa";
-// import { deleteUser, getAllUserList, updateUserStatus } from "../../service/user";
+// import { useNavigate, useSearchParams } from "react-router-dom";
+// import {
+//   FaEllipsisV,
+//   FaEdit,
+//   FaTrash,
+//   FaKey,
+//   FaTicketAlt,
+//   FaSync,
+//   FaUserAlt,
+//   FaEye,
+// } from "react-icons/fa";
+// import { FiToggleLeft, FiToggleRight } from "react-icons/fi";
+// import {
+//   deleteUser,
+//   getAllUserList,
+//   updateUserStatus,
+// } from "../../service/user";
 // import { toast } from "react-toastify";
 // import ProtectedAction from "../../components/ProtectedAction";
+// import { useDebounce } from "../../hooks/useDebounce";
+// import CustomerFilters from "./components/CustomerFilters";
 
 // export default function UserList() {
 //   const [users, setUsers] = useState([]);
-
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState("");
 //   const [openMenuId, setOpenMenuId] = useState(null);
 //   const [openStatusModalId, setOpenStatusModalId] = useState(null);
 //   const [newStatus, setNewStatus] = useState("");
 //   const navigate = useNavigate();
-//   const menuRef = useRef(null);
+//   const [searchParams, setSearchParams] = useSearchParams();
 
-//   // Fetch users
-//   useEffect(() => {
-//     const loadUsers = async () => {
-//       try {
-//         const res = await getAllUserList();
-//         setUsers(res.data || []);
-//       } catch (err) {
-//         console.error("Error fetching users:", err);
-//         setError("Failed to load users");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     loadUsers();
-//   }, []);
+//   const filters = {
+//     searchQuery: searchParams.get("searchQuery") || "",
+//     status: searchParams.get("status") || "",
+//     area: searchParams.get("area") || "",
+//     ekyc: searchParams.get("ekyc") || "",
+//     serviceOpted: searchParams.get("serviceOpted") || "",
+//     startDate: searchParams.get("startDate") || "",
+//     endDate: searchParams.get("endDate") || "",
+//     reseller: searchParams.get("reseller") || "",
+//     lco: searchParams.get("lco") || "",
+//   };
 
-//   // Close dropdown when clicked outside
+//   const debouncedSearch = useDebounce(filters.searchQuery, 500);
+
+//   const menuRefs = useRef({});
+
+//   // Close menu when clicking outside
 //   useEffect(() => {
 //     const handleClickOutside = (event) => {
-//       if (menuRef.current && !menuRef.current.contains(event.target)) {
-//         setOpenMenuId(null);
+//       if (openMenuId) {
+//         const ref = menuRefs.current[openMenuId];
+//         if (ref && !ref.contains(event.target)) {
+//           setOpenMenuId(null);
+//         }
 //       }
 //     };
 //     document.addEventListener("mousedown", handleClickOutside);
 //     return () => document.removeEventListener("mousedown", handleClickOutside);
-//   }, []);
+//   }, [openMenuId]);
 
-//   // Handlers
+//   // Fetch users
+//   const loadUsers = async () => {
+//     try {
+//       const res = await getAllUserList({ ...filters });
+//       setUsers(res.data || []);
+//     } catch (err) {
+//       console.error("Error fetching users:", err);
+//       setError("Failed to load users");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     loadUsers();
+//   }, [
+//     debouncedSearch,
+//     filters.status,
+//     filters.area,
+//     filters.ekyc,
+//     filters.serviceOpted,
+//     filters.startDate,
+//     filters.endDate,
+//     filters.reseller,
+//     filters.lco,
+//   ]);
+
+//   const toggleMenu = (userId) => {
+//     setOpenMenuId(openMenuId === userId ? null : userId);
+//   };
+
+//   const toggleStatus = (userId, currentStatus) => {
+//     setNewStatus(currentStatus); // preselect current status
+//     setOpenStatusModalId(userId);
+//     setOpenMenuId(null);
+//   };
+
+//   // FIX: Correct view route
 //   const handleView = (id) => {
 //     navigate(`/user/${id}`);
 //     setOpenMenuId(null);
@@ -54,33 +109,49 @@
 //     setOpenMenuId(null);
 //   };
 
+//   // FIX: Delete + Refresh full list
 //   const handleDelete = async (id) => {
 //     if (window.confirm("Are you sure you want to delete this user?")) {
 //       try {
 //         await deleteUser(id);
-//         setUsers(users.filter((u) => u._id !== id));
-//         setOpenMenuId(null);
 //         toast.success("User deleted successfully ✅");
+//         await loadUsers(); // refresh list
+//         setOpenMenuId(null);
 //       } catch (err) {
-//         console.error("Error deleting user:", err);
-//         setError("Failed to delete user");
-//         toast.error(err.message || "Failed to delete user ❌");
+//         toast.error(err.response?.data?.message || "Failed to delete user ❌");
 //       }
 //     }
 //   };
 
-//   const handleUpdateStatus = async (id, newStatus) => {
+//   const handleUpdateStatus = async (id, status) => {
 //     try {
-//       await updateUserStatus(id, newStatus);
+//       await updateUserStatus(id, status);
 //       toast.success("User status updated successfully ✅");
-//       // Refresh user list
-//       const res = await getAllUserList();
-//       setUsers(res.data || []);
+//       await loadUsers();
 //       setOpenStatusModalId(null);
 //     } catch (err) {
-//       console.error("Error updating user status:", err);
-//       toast.error(err.message || "Failed to update user status ❌");
+//       toast.error(
+//         err.response?.data?.message || "Failed to update user status ❌"
+//       );
 //     }
+//   };
+
+//   const handleChangePassword = (id) => {
+//     navigate(`/user/change-password/${id}`);
+//     setOpenMenuId(null);
+//   };
+
+//   const handleCreateTicket = (id) => {
+//     navigate(`/ticket/create?userId=${id}`);
+//     setOpenMenuId(null);
+//   };
+
+// const handleRechargePackage = (userId) => {
+//   navigate(`/user/profile/${userId}/recharge-package`);
+//   setOpenMenuId(null);
+// };
+//   const handleLoginAsCustomer = () => {
+//     toast.info("Login as customer - coming soon");
 //   };
 
 //   if (loading) return <p className="p-4">Loading users...</p>;
@@ -88,23 +159,25 @@
 
 //   return (
 //     <div className="p-6">
+//       <CustomerFilters filters={filters} setSearchParams={setSearchParams} />
 //       <div className="flex items-center justify-between mb-4">
 //         <h1 className="text-xl font-semibold">Customer List</h1>
+
 //         <ProtectedAction module="users" action="create">
 //           <button
 //             onClick={() => navigate("/user/create")}
-//             className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none"
-//             aria-label="Add User"
+//             className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
 //           >
 //             Add Customer
 //           </button>
 //         </ProtectedAction>
 //       </div>
+
 //       {users.length === 0 ? (
 //         <p className="text-gray-500">No users found.</p>
 //       ) : (
 //         <>
-//           {/* Desktop Table View */}
+//           {/* Desktop */}
 //           <div className="hidden md:block overflow-x-auto">
 //             <table className="min-w-[800px] w-full border border-gray-200 divide-y divide-gray-200 text-[13px]">
 //               <thead className="bg-gray-100">
@@ -121,140 +194,178 @@
 
 //               <tbody className="divide-y divide-gray-200">
 //                 {users.map((user, index) => (
-//                   <tr key={user._id} className="hover:bg-gray-50 relative">
+//                   <tr key={user._id} className="hover:bg-gray-50">
 //                     <td className="px-[2px] py-[2px]">{index + 1}</td>
-//                     <td className="px-[2px] py-[2px] hover:cursor-pointer hover:underline"
-//                       //  onClick={() => handleView(user._id)}
+
+//                     <td
+//                       className="px-[2px] py-[2px] hover:underline cursor-pointer"
 //                       onClick={() => navigate(`/user/profile/${user._id}`)}
 //                     >
-//                       {user.generalInformation?.name}</td>
-//                     <td className="px-[2px] py-[2px]">{user.generalInformation?.email}</td>
-//                     <td className="px-[2px] py-[2px]">{user.generalInformation?.phone}</td>
-//                     <td className="px-[2px] py-[2px]">{user.addressDetails ? user.addressDetails.permanentAddress.addressine1 : "--"}</td>
-//                     <td className="px-[2px] py-[2px]">
-//                       {user.status || "inActive"}
-//                       <button
-//                         onClick={() => setOpenStatusModalId(user._id)}
-//                         className="ml-2 text-white hover:text-gray-800 bg-blue-600 text-sm p-1 rounded"
-//                       >
-//                         Update
-//                       </button>
+//                       {user.generalInformation?.name}
 //                     </td>
-//                     <td className="px-[2px] py-[2px] text-right relative">
-//                       <div className="flex items-center gap-3">
-//                         <ProtectedAction module="customer" action="view">
-//                           <button
-//                             onClick={() => handleView(user._id)}
-//                             className="p-1 text-blue-600 hover:bg-gray-100 focus:outline-none"
-//                             title="View"
-//                             aria-label="View"
-//                           >
-//                             <FaEye />
-//                           </button>
-//                         </ProtectedAction>
 
-//                         <ProtectedAction module="customer" action="edit">
-//                           <button
-//                             onClick={() => handleEdit(user._id)}
-//                             className="p-1 text-green-600 hover:bg-gray-100 focus:outline-none"
-//                             title="Edit"
-//                             aria-label="Edit"
-//                           >
-//                             <FaEdit />
-//                           </button>
-//                         </ProtectedAction>
+//                     <td className="px-[2px] py-[2px]">
+//                       {user.generalInformation?.email}
+//                     </td>
+//                     <td className="px-[2px] py-[2px]">
+//                       {user.generalInformation?.phone}
+//                     </td>
 
-//                         <ProtectedAction module="customer" action="delete">
-//                           <button
-//                             onClick={() => handleDelete(user._id)}
-//                             className="p-1 text-red-600 hover:bg-gray-100 focus:outline-none"
-//                             title="Delete"
-//                             aria-label="Delete"
-//                           >
-//                             <FaTrash />
-//                           </button>
-//                         </ProtectedAction>
-//                       </div>
+//                     <td className="px-[2px] py-[2px]">
+//                       {user.addressDetails?.permanentAddress?.addressine1 ||
+//                         "--"}
+//                     </td>
+
+//                     <td className="px-[2px] py-[2px]">
+//                       <span
+//                         className={`px-2 py-1 rounded text-xs ${user.status === "active"
+//                             ? "bg-green-100 text-green-700"
+//                             : "bg-red-100 text-red-700"
+//                           }`}
+//                       >
+//                         {user.status}
+//                       </span>
+//                     </td>
+
+//                     {/* ACTION MENU */}
+//                     <td className="px-[2px] py-[2px] relative text-center">
+//                       <button
+//                         onClick={(e) => {
+//                           e.stopPropagation();
+//                           toggleMenu(user._id);
+//                         }}
+//                         className="p-2 hover:bg-gray-100 rounded-full"
+//                       >
+//                         <FaEllipsisV />
+//                       </button>
+
+//                       {openMenuId === user._id && (
+//                         <div
+//                           ref={(el) => (menuRefs.current[user._id] = el)}
+//                           className="absolute right-0 mt-2 w-60 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+//                         >
+//                           <ul className="py-2 text-sm">
+//                             {/* Status */}
+//                             <li>
+//                               <button
+//                                 onClick={() =>
+//                                   toggleStatus(user._id, user.status)
+//                                 }
+//                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
+//                               >
+//                                 {user.status === "active" ? (
+//                                   <FiToggleRight className="text-green-600" />
+//                                 ) : (
+//                                   <FiToggleLeft className="text-red-600" />
+//                                 )}
+//                                 Change Status
+//                               </button>
+//                             </li>
+
+//                             {/* Change Password */}
+//                             <li>
+//                               <button
+//                                 onClick={() => handleChangePassword(user._id)}
+//                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
+//                               >
+//                                 <FaKey /> Change Password
+//                               </button>
+//                             </li>
+
+//                             {/* View */}
+//                             <ProtectedAction module="customer" action="view">
+//                               <li>
+//                                 <button
+//                                   onClick={() => handleView(user._id)}
+//                                   className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
+//                                 >
+//                                   <FaEye /> View
+//                                 </button>
+//                               </li>
+//                             </ProtectedAction>
+
+//                             {/* Edit */}
+//                             <ProtectedAction module="customer" action="edit">
+//                               <li>
+//                                 <button
+//                                   onClick={() => handleEdit(user._id)}
+//                                   className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-green-600"
+//                                 >
+//                                   <FaEdit /> Edit
+//                                 </button>
+//                               </li>
+//                             </ProtectedAction>
+
+//                             {/* Create Ticket */}
+//                             <li>
+//                               <button
+//                                 onClick={() => handleCreateTicket(user._id)}
+//                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
+//                               >
+//                                 <FaTicketAlt /> Create Ticket
+//                               </button>
+//                             </li>
+
+//                             {/* Recharge */}
+//                             <li>
+//                               <button
+//                                 onClick={() => handleRechargePackage(user._id)}
+//                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
+//                               >
+//                                 <FaSync /> Recharge Package
+//                               </button>
+//                             </li>
+
+
+//                             {/* Login as Customer */}
+//                             <li>
+//                               <button
+//                                 onClick={handleLoginAsCustomer}
+//                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
+//                               >
+//                                 <FaUserAlt /> Login as Customer
+//                               </button>
+//                             </li>
+
+//                             {/* Delete */}
+//                             <ProtectedAction module="customer" action="delete">
+//                               <li>
+//                                 <button
+//                                   onClick={() => handleDelete(user._id)}
+//                                   className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-red-600"
+//                                 >
+//                                   <FaTrash /> Remove
+//                                 </button>
+//                               </li>
+//                             </ProtectedAction>
+//                           </ul>
+//                         </div>
+//                       )}
 //                     </td>
 //                   </tr>
 //                 ))}
 //               </tbody>
 //             </table>
 //           </div>
-
-//           {/* Mobile Card View */}
-//           <div className="space-y-4 md:hidden">
-//             {users.map((user, index) => (
-//               <div
-//                 key={user._id}
-//                 className="p-4 border rounded-lg shadow-sm bg-white"
-//               >
-//                 <p className="text-sm text-gray-500">#{index + 1}</p>
-//                 <h2 className="text-lg font-medium">
-//                   {user.generalInformation?.name}
-//                 </h2>
-//                 <p className="text-sm">{user.generalInformation?.email}</p>
-//                 <p className="text-sm">{user.generalInformation?.phone}</p>
-//                 <p className="text-sm">{user.generalInformation?.address}</p>
-//                 <p className="text-sm font-medium">
-//                   Status: {user.status || "inActive"}
-//                   <button
-//                     onClick={() => setOpenStatusModalId(user._id)}
-//                     className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
-//                   >
-//                     Update
-//                   </button>
-//                 </p>
-
-//                 <div className="flex justify-end space-x-3 mt-3">
-//                   <ProtectedAction module="customer" action="view">
-//                     <button
-//                       onClick={() => handleView(user._id)}
-//                       className="px-2 py-1 text-sm text-blue-600 rounded hover:bg-gray-100 flex items-center"
-//                       aria-label="View"
-//                     >
-//                       <FaEye className="mr-1" size={14} /> View
-//                     </button>
-//                   </ProtectedAction>
-//                   <ProtectedAction module="customer" action="edit">
-//                     <button
-//                       onClick={() => handleEdit(user._id)}
-//                       className="px-2 py-1 text-sm text-green-600 rounded hover:bg-gray-100 flex items-center"
-//                       aria-label="Edit"
-//                     >
-//                       <FaEdit className="mr-1" size={14} /> Edit
-//                     </button>
-//                   </ProtectedAction>
-//                   <ProtectedAction module="customer" action="delete">
-//                     <button
-//                       onClick={() => handleDelete(user._id)}
-//                       className="px-2 py-1 text-sm text-red-600 rounded hover:bg-gray-100 flex items-center"
-//                       aria-label="Delete"
-//                     >
-//                       <FaTrash className="mr-1" size={14} /> Delete
-//                     </button>
-//                   </ProtectedAction>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
 //         </>
 //       )}
-//       {/* Status Update Modal (unchanged) */}
+
+//       {/* STATUS MODAL */}
 //       {openStatusModalId && (
-//         <div className="fixed inset-0 flex items-center justify-center bg-black/60 bg-opacity-50 z-50">
+//         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
 //           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
 //             <h3 className="text-lg font-semibold mb-4">Update Status</h3>
+
 //             <select
 //               value={newStatus}
 //               onChange={(e) => setNewStatus(e.target.value)}
 //               className="border p-2 w-full rounded mb-4"
 //             >
-//               <option value="">Select Status</option>
 //               <option value="active">Active</option>
 //               <option value="Inactive">Inactive</option>
 //               <option value="Suspend">Suspend</option>
 //             </select>
+
 //             <div className="flex justify-end gap-3">
 //               <button
 //                 onClick={() => setOpenStatusModalId(null)}
@@ -264,10 +375,9 @@
 //               </button>
 //               <button
 //                 onClick={() => handleUpdateStatus(openStatusModalId, newStatus)}
-//                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-//                 disabled={!newStatus || loading}
+//                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
 //               >
-//                 {loading ? "Updating..." : "Update"}
+//                 Update
 //               </button>
 //             </div>
 //           </div>
@@ -276,6 +386,7 @@
 //     </div>
 //   );
 // }
+
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -294,6 +405,7 @@ import {
   deleteUser,
   getAllUserList,
   updateUserStatus,
+  resetUserPassword, // Import from your service
 } from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -307,6 +419,12 @@ export default function UserList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [openStatusModalId, setOpenStatusModalId] = useState(null);
   const [newStatus, setNewStatus] = useState("");
+
+  // NEW: Password change modal states
+  const [openPasswordModalId, setOpenPasswordModalId] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -415,9 +533,28 @@ export default function UserList() {
     }
   };
 
+  // NEW: Open password change modal
   const handleChangePassword = (id) => {
-    navigate(`/user/change-password/${id}`);
+    setOpenPasswordModalId(id);
+    setNewPassword("");
+    setPasswordError("");
     setOpenMenuId(null);
+  };
+
+  // NEW: Submit password change
+  const handlePasswordSubmit = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      await resetUserPassword(openPasswordModalId, newPassword);
+      toast.success("Password changed successfully!");
+      setOpenPasswordModalId(null);
+    } catch (err) {
+      toast.error(err.message || "Failed to change password");
+    }
   };
 
   const handleCreateTicket = (id) => {
@@ -425,8 +562,8 @@ export default function UserList() {
     setOpenMenuId(null);
   };
 
-  const handleRechargePackage = () => {
-    navigate(`/purchasedPlan/create`);
+  const handleRechargePackage = (userId) => {
+    navigate(`/user/profile/${userId}/recharge-package`);
     setOpenMenuId(null);
   };
 
@@ -591,7 +728,7 @@ export default function UserList() {
                             <li>
                               <button
                                 onClick={() => handleRechargePackage(user._id)}
-                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
                               >
                                 <FaSync /> Recharge Package
                               </button>
@@ -627,9 +764,6 @@ export default function UserList() {
               </tbody>
             </table>
           </div>
-
-          {/* MOBILE VIEW — unchanged */}
-          {/* (kept same as your original UI) */}
         </>
       )}
 
@@ -661,6 +795,47 @@ export default function UserList() {
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PASSWORD CHANGE MODAL */}
+      {openPasswordModalId && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                  placeholder="Enter new password"
+                />
+              </div>
+
+              {passwordError && (
+                <p className="text-red-600 text-sm">{passwordError}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setOpenPasswordModalId(null)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordSubmit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save
               </button>
             </div>
           </div>
