@@ -1904,7 +1904,7 @@ export default function CreateUser() {
                 value={formData.additional.dob}
                 onChange={(e) => handleChange(e, "additional.dob")}
                 className="mt-1 p-2 border rounded w-full"
-              />
+              />  
             </div> */}
 
             <div>

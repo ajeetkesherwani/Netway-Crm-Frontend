@@ -553,6 +553,10 @@ const UserRechargePackage = () => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
 
+  //dropdown search state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const [form, setForm] = useState({
     packageId: "",
     amountPaid: 0,
@@ -566,6 +570,7 @@ const UserRechargePackage = () => {
     paymentRemark: "",
   });
 
+  // open purchase model automatically
   useEffect(() => {
     fetchCurrentPlan();
     fetchPackages();
@@ -574,10 +579,10 @@ const UserRechargePackage = () => {
 
 
   useEffect(() => {
-  if (userId) {
-    openPurchaseModal(); // Opens the "Purchase New Plan" modal automatically
-  }
-}, [userId]);
+    if (userId) {
+      openPurchaseModal();
+    }
+  }, [userId]);
 
   const fetchCurrentPlan = async () => {
     try {
@@ -621,6 +626,13 @@ const UserRechargePackage = () => {
     }
   };
 
+  //serach tearms filtering
+  const filteredPackages = searchTerm.trim()
+    ? packages.filter(pkg =>
+      pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    : packages;
+
   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
 
   const fetchWalletBalance = async () => {
@@ -654,7 +666,7 @@ const UserRechargePackage = () => {
     setShowModal(true);
   };
 
-  // RENEW BUTTON 100% WORKING - FIXED
+  // RENEW BUTTON 
   const openRenewModal = (planToRenew = currentPlan) => {
     if (!planToRenew) {
       toast.error("No active plan to renew");
@@ -918,7 +930,59 @@ const UserRechargePackage = () => {
               <div className="grid grid-cols-2 gap-6">
                 {/* LEFT COLUMN */}
                 <div className="space-y-2.5">
-                  <div className="flex items-center gap-3">
+
+                  {/* serachable dropdown for packages */}
+                  <div className="flex items-center gap-3 relative">
+                    <label className="w-36 font-semibold">Current Plan :</label>
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none bg-white"
+                        placeholder="Search package..."
+                        value={searchTerm || (selectedPackage ? selectedPackage.packageName : "")}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setShowDropdown(true);
+                          // If user types something new, clear previous selection
+                          if (e.target.value !== selectedPackage?.packageName) {
+                            setSelectedPackage(null);
+                            setForm({ ...form, packageId: "" });
+                          }
+                        }}
+                        onFocus={() => setShowDropdown(true)}
+                        onBlur={() => {
+                          // Small delay so click on item registers
+                          setTimeout(() => setShowDropdown(false), 200);
+                        }}
+                        disabled={isRenew}
+                      />
+
+                      {showDropdown && (
+                        <ul
+                          className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs"
+                        >
+                          {filteredPackages.length > 0 ? (
+                            filteredPackages.map((pkg) => (
+                              <li
+                                key={pkg._id}
+                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
+                                onClick={() => {
+                                  handlePackageChange(pkg._id);
+                                  setSearchTerm(pkg.packageName);
+                                  setShowDropdown(false);
+                                }}
+                              >
+                                {pkg.packageName}
+                              </li>
+                            ))
+                          ) : (
+                            <li className="px-3 py-2 text-gray-500">No matching packages</li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                  {/* <div className="flex items-center gap-3">
                     <label className="w-36 font-semibold">Current Plan :</label>
                     <select
                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none"
@@ -933,7 +997,7 @@ const UserRechargePackage = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">MRP :</label>
@@ -955,12 +1019,12 @@ const UserRechargePackage = () => {
                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0.0" readOnly />
                   </div>
 
-                  
+
                   <div className="flex items-center gap-3">
                     <label className="w-36">Wallet Balance :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold" 
-                    value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
-                     readOnly />
+                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
+                      value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
+                      readOnly />
                   </div>
 
                   <div className="flex items-center gap-3">
