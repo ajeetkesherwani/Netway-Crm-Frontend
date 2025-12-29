@@ -950,6 +950,22 @@ export default function TicketFilter({ setSearchParams }) {
           )}
         </div> */}
 
+          <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Reseller
+          </label>
+          <SelectorWithSearchAndPagination
+            valKey="resellerName"
+            placeholder="Select Reseller..."
+            selected={selectedReseller}
+            onSelect={handleOnSelectReseller}
+            getDetails={loadResellers}
+            className="text-sm min-w-52"
+            cancelClassName="p-[1px]"
+            inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
+          />
+        </div>
+
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select LCO
@@ -965,21 +981,7 @@ export default function TicketFilter({ setSearchParams }) {
             inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
           />
         </div>
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Select Reseller
-          </label>
-          <SelectorWithSearchAndPagination
-            valKey="resellerName"
-            placeholder="Select Reseller..."
-            selected={selectedReseller}
-            onSelect={handleOnSelectReseller}
-            getDetails={loadResellers}
-            className="text-sm min-w-52"
-            cancelClassName="p-[1px]"
-            inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
-          />
-        </div>
+      
 
         {/* Select Area */}
         {/* <div>

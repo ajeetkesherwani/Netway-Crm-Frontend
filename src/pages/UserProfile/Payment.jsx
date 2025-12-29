@@ -207,8 +207,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaEllipsisV, FaEye, FaEdit, FaTrashAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-import { getUserFullDetails } from "../../service/user"; // Adjust if needed
-import ProtectedAction from "../../components/ProtectedAction"; // If you have permission system
+import { getUserFullDetails } from "../../service/user"; 
+import ProtectedAction from "../../components/ProtectedAction"; 
 
 const UserPayments = () => {
   const { id } = useParams();
@@ -323,9 +323,8 @@ const UserPayments = () => {
                 {payments.map((pay, index) => (
                   <tr
                     key={pay._id}
-                    className={`hover:bg-gray-50 border-b border-gray-200 ${
-                      index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    }`}
+                    className={`hover:bg-gray-50 border-b border-gray-200 ${index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      }`}
                   >
                     <td className="px-4 py-4 font-semibold text-gray-800 border-r border-gray-200">
                       {pay.ReceiptNo || "—"}
@@ -355,13 +354,12 @@ const UserPayments = () => {
 
                     <td className="px-4 py-4 border-r border-gray-200">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                          pay.paymentStatus === "Completed"
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${pay.paymentStatus === "Completed"
                             ? "bg-green-100 text-green-800"
                             : pay.paymentStatus === "Pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
                       >
                         {pay.paymentStatus || "Unknown"}
                       </span>
@@ -400,7 +398,7 @@ const UserPayments = () => {
                             </button>
                           </ProtectedAction>
 
-                          {/* <ProtectedAction module="payment" action="edit">
+                          {/* <ProtectedAction module="payment" action="editReceipt">
                             <button
                               onClick={() => handleEditPayment(pay._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -417,6 +415,7 @@ const UserPayments = () => {
                               <FaTrashAlt className="mr-2" /> Delete
                             </button>
                           </ProtectedAction>
+
                         </div>
                       )}
                     </td>

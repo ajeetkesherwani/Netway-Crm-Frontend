@@ -102,8 +102,6 @@ export const permissionsConfig = [
             "purchasedNewPackage",
             "renewPackage",
             "assignedStockView",
-            "viewReceipt",
-            "deleteReceipt"
         ],
     },
     {
@@ -189,6 +187,9 @@ export const permissionsConfig = [
         permissions: [
             "success",
             "failed",
+            "viewReceipt",
+            "editReceipt",
+            "deleteReceipt"
         ],
     },
     {
