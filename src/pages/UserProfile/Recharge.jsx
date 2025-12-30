@@ -530,32 +530,34 @@
 // export default UserRechargePackage;
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   getCurrentPlan,
   createPurchasedPlan,
   renewPurchasedPlan,
   getAssignedPackageList,
-  getWalletBalance
+  getWalletBalance,
 } from "../../service/recharge";
 import ProtectedAction from "../../components/ProtectedAction";
 import { toast } from "react-toastify";
 
 const UserRechargePackage = () => {
   const { id: userId } = useParams();
-
+  const [searchParams] = useSearchParams();
   const [plans, setPlans] = useState([]);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [isRenew, setIsRenew] = useState(false);
+  const [isRenew, setIsRenew] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
+  const isModalInactive = searchParams.get("hidden") === "true";
 
   //dropdown search state
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isDisable, setIsDisable] = useState(false);
 
   const [form, setForm] = useState({
     packageId: "",
@@ -577,9 +579,8 @@ const UserRechargePackage = () => {
     fetchWalletBalance();
   }, [userId]);
 
-
   useEffect(() => {
-    if (userId) {
+    if (userId && !isModalInactive) {
       openPurchaseModal();
     }
   }, [userId]);
@@ -615,9 +616,10 @@ const UserRechargePackage = () => {
       const res = await getAssignedPackageList(userId);
       if (res.status && res.data) {
         // IMPORTANT: Convert ObjectId to string for safe comparison
-        const normalized = res.data.map(pkg => ({
+        const normalized = res.data.map((pkg) => ({
           ...pkg,
-          packageIdStr: pkg.packageId?._id?.toString() || pkg.packageId?.toString() || ""
+          packageIdStr:
+            pkg.packageId?._id?.toString() || pkg.packageId?.toString() || "",
         }));
         setPackages(normalized);
       }
@@ -628,9 +630,9 @@ const UserRechargePackage = () => {
 
   //serach tearms filtering
   const filteredPackages = searchTerm.trim()
-    ? packages.filter(pkg =>
-      pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    ? packages.filter((pkg) =>
+        pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : packages;
 
   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
@@ -648,7 +650,8 @@ const UserRechargePackage = () => {
   };
 
   const openPurchaseModal = () => {
-    setIsRenew(false);
+    // setIsRenew(false);
+    setIsDisable(false);
     const today = new Date().toISOString().split("T")[0];
     setForm({
       packageId: "",
@@ -666,17 +669,20 @@ const UserRechargePackage = () => {
     setShowModal(true);
   };
 
-  // RENEW BUTTON 
+  // RENEW BUTTON
   const openRenewModal = (planToRenew = currentPlan) => {
     if (!planToRenew) {
       toast.error("No active plan to renew");
       return;
     }
+    setIsDisable(true);
 
     // Convert both IDs to string for comparison
-    const planPkgId = planToRenew.packageId?._id?.toString() || planToRenew.packageId?.toString();
+    const planPkgId =
+      planToRenew.packageId?._id?.toString() ||
+      planToRenew.packageId?.toString();
 
-    const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
+    const assignedPkg = packages.find((p) => p.packageIdStr === planPkgId);
 
     if (!assignedPkg) {
       toast.error("Assigned package not found. Please refresh the page.");
@@ -717,9 +723,13 @@ const UserRechargePackage = () => {
     if (!pkg) return;
 
     // Prevent duplicate purchase of active plan
-    const isAlreadyActive = plans.some(plan => {
-      const planPkgId = plan.packageId?._id?.toString() || plan.packageId?.toString();
-      return planPkgId === pkg.packageIdStr && new Date(plan.expiryDate) >= new Date();
+    const isAlreadyActive = plans.some((plan) => {
+      const planPkgId =
+        plan.packageId?._id?.toString() || plan.packageId?.toString();
+      return (
+        planPkgId === pkg.packageIdStr &&
+        new Date(plan.expiryDate) >= new Date()
+      );
     });
 
     if (isAlreadyActive) {
@@ -732,7 +742,8 @@ const UserRechargePackage = () => {
 
     setSelectedPackage(pkg);
 
-    const baseDate = isRenew && currentPlan ? new Date(currentPlan.expiryDate) : new Date();
+    const baseDate =
+      isRenew && currentPlan ? new Date(currentPlan.expiryDate) : new Date();
     const start = new Date(baseDate);
     start.setDate(start.getDate() + (isRenew ? 1 : 0));
 
@@ -767,23 +778,39 @@ const UserRechargePackage = () => {
         paymentReceived: form.paymentReceived,
         paymentMethod: form.paymentMethod,
         paymentStatus: form.paymentReceived === "Yes" ? "paid" : "pending",
-        paymentDate: form.paymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
-        remark: form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
+        paymentDate:
+          form.paymentReceived === "Yes"
+            ? new Date(form.paymentDate).toISOString()
+            : null,
+        remark:
+          form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
         paymentRemark: form.paymentRemark,
+        isRenew,
       };
 
       let res;
-      if (isRenew && currentPlan?._id) {
+      if (
+        isRenew &&
+        currentPlan?._id &&
+        currentPlan?.packageId?._id !== undefined &&
+        selectedPackage?.package?._id !== undefined &&
+        currentPlan?.packageId?._id === selectedPackage?.package?._id
+      ) {
         res = await renewPurchasedPlan(currentPlan._id, payload);
       } else {
         res = await createPurchasedPlan(payload);
       }
 
       if (res.status) {
-        toast.success(isRenew ? "Plan renewed successfully!" : "New plan purchased successfully!", {
-          position: "top-center",
-          autoClose: 4000,
-        });
+        toast.success(
+          isRenew
+            ? "Plan renewed successfully!"
+            : "New plan purchased successfully!",
+          {
+            position: "top-center",
+            autoClose: 4000,
+          }
+        );
         setShowModal(false);
         fetchCurrentPlan();
       }
@@ -807,7 +834,9 @@ const UserRechargePackage = () => {
     <>
       <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-8">
+            User Recharge Management
+          </h2>
 
           <div className="flex justify-end gap-6 mb-8">
             <ProtectedAction module="customer" action="purchasedNewPackage">
@@ -822,7 +851,9 @@ const UserRechargePackage = () => {
 
           {plans.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-              <p className="text-xl text-gray-600">No active plan found for this user.</p>
+              <p className="text-xl text-gray-600">
+                No active plan found for this user.
+              </p>
             </div>
           ) : (
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -852,12 +883,15 @@ const UserRechargePackage = () => {
                 <tbody>
                   {plans.map((plan, index) => {
                     const isLatest = index === 0;
-                    const isCurrentlyActive = new Date(plan.expiryDate) >= new Date();
+                    const isCurrentlyActive =
+                      new Date(plan.expiryDate) >= new Date();
 
                     return (
                       <tr
                         key={plan._id}
-                        className={`hover:bg-gray-50 border-b ${isLatest ? "bg-blue-50 font-bold" : ""}`}
+                        className={`hover:bg-gray-50 border-b ${
+                          isLatest ? "bg-blue-50 font-bold" : ""
+                        }`}
                       >
                         <td className="px-6 py-4">
                           {isLatest && isCurrentlyActive ? (
@@ -874,15 +908,28 @@ const UserRechargePackage = () => {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4">{plan.packageId?.name || "Unknown"}</td>
-                        <td className="px-6 py-4">{formatDate(plan.startDate)}</td>
-                        <td className="px-6 py-4">{formatDate(plan.expiryDate)}</td>
+                        <td className="px-6 py-4">
+                          {plan.packageId?.name || "Unknown"}
+                        </td>
+                        <td className="px-6 py-4">
+                          {formatDate(plan.startDate)}
+                        </td>
+                        <td className="px-6 py-4">
+                          {formatDate(plan.expiryDate)}
+                        </td>
                         <td className="px-6 py-4">₹{plan.amountPaid}</td>
                         <td className="px-6 py-4">
-                          {plan.latestRenewal ? "Yes (Latest)" : plan.isRenewed ? "Yes" : "No"}
+                          {plan.latestRenewal
+                            ? "Yes (Latest)"
+                            : plan.isRenewed
+                            ? "Yes"
+                            : "No"}
                         </td>
 
-                        <ProtectedAction module="customer" action="renewPackage">
+                        <ProtectedAction
+                          module="customer"
+                          action="renewPackage"
+                        >
                           <td className="px-6 py-4">
                             {isCurrentlyActive && (
                               <button
@@ -910,16 +957,27 @@ const UserRechargePackage = () => {
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl border-4 border-blue-500 max-h-screen overflow-y-auto">
             <div className="bg-gray-700 text-white px-5 py-2.5 flex items-center justify-between text-sm sticky top-0 z-10">
               <div className="font-bold text-sm">
-                {isRenew ? "Renew Plan" : "Purchase New Plan"} | User ID: {userId}
+                {isRenew ? "Renew Plan" : "Purchase New Plan"} | User ID:{" "}
+                {userId}
               </div>
               {isRenew && (
                 <div className="flex items-center gap-6 text-xs">
                   <label className="flex items-center gap-1.5">
-                    <input type="radio" checked={true} readOnly className="w-3.5 h-3.5" />
+                    <input
+                      type="radio"
+                      checked={true}
+                      readOnly
+                      className="w-3.5 h-3.5"
+                    />
                     <span>Renew</span>
                   </label>
                   <label className="flex items-center gap-1.5">
-                    <input type="radio" checked={false} readOnly className="w-3.5 h-3.5" />
+                    <input
+                      type="radio"
+                      checked={false}
+                      readOnly
+                      className="w-3.5 h-3.5"
+                    />
                     <span>Upgrade</span>
                   </label>
                 </div>
@@ -930,7 +988,6 @@ const UserRechargePackage = () => {
               <div className="grid grid-cols-2 gap-6">
                 {/* LEFT COLUMN */}
                 <div className="space-y-2.5">
-
                   {/* serachable dropdown for packages */}
                   <div className="flex items-center gap-3 relative">
                     <label className="w-36 font-semibold">Current Plan :</label>
@@ -939,7 +996,10 @@ const UserRechargePackage = () => {
                         type="text"
                         className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none bg-white"
                         placeholder="Search package..."
-                        value={searchTerm || (selectedPackage ? selectedPackage.packageName : "")}
+                        value={
+                          searchTerm ||
+                          (selectedPackage ? selectedPackage.packageName : "")
+                        }
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
                           setShowDropdown(true);
@@ -954,13 +1014,11 @@ const UserRechargePackage = () => {
                           // Small delay so click on item registers
                           setTimeout(() => setShowDropdown(false), 200);
                         }}
-                        disabled={isRenew}
+                        disabled={isDisable}
                       />
 
                       {showDropdown && (
-                        <ul
-                          className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs"
-                        >
+                        <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs">
                           {filteredPackages.length > 0 ? (
                             filteredPackages.map((pkg) => (
                               <li
@@ -976,7 +1034,9 @@ const UserRechargePackage = () => {
                               </li>
                             ))
                           ) : (
-                            <li className="px-3 py-2 text-gray-500">No matching packages</li>
+                            <li className="px-3 py-2 text-gray-500">
+                              No matching packages
+                            </li>
                           )}
                         </ul>
                       )}
@@ -1004,27 +1064,43 @@ const UserRechargePackage = () => {
                     <input
                       type="text"
                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
-                      value={selectedPackage?.customPrice || selectedPackage?.basePrice || "0"}
+                      value={
+                        selectedPackage?.customPrice ||
+                        selectedPackage?.basePrice ||
+                        "0"
+                      }
                       readOnly
                     />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Discount :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0" readOnly />
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+                      value="0"
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Refund Charge :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0.0" readOnly />
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+                      value="0.0"
+                      readOnly
+                    />
                   </div>
-
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Wallet Balance :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
                       value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
-                      readOnly />
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -1041,9 +1117,18 @@ const UserRechargePackage = () => {
                 {/* RIGHT COLUMN */}
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" defaultChecked={isRenew} />
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4"
+                      defaultChecked={isRenew}
+                    />
                     <span className="font-bold text-xs">Advance Renewal</span>
-                    <input type="text" className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs" value="03/01/2026" readOnly />
+                    <input
+                      type="text"
+                      className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs"
+                      value="03/01/2026"
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -1051,24 +1136,41 @@ const UserRechargePackage = () => {
                     <input
                       type="text"
                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
-                      value={`${selectedPackage?.validity?.number || ""} ${selectedPackage?.validity?.unit || ""}`}
+                      value={`${selectedPackage?.validity?.number || ""} ${
+                        selectedPackage?.validity?.unit || ""
+                      }`}
                       readOnly
                     />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Volume Quota :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+                      value="UNLIMITED"
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Time Quota :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+                      value="UNLIMITED"
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">Old Plan Used :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="" readOnly />
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+                      value=""
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -1077,7 +1179,9 @@ const UserRechargePackage = () => {
                       type="text"
                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs"
                       value={form.remark}
-                      onChange={(e) => setForm({ ...form, remark: e.target.value })}
+                      onChange={(e) =>
+                        setForm({ ...form, remark: e.target.value })
+                      }
                       placeholder="Enter remark"
                     />
                   </div>
@@ -1094,7 +1198,13 @@ const UserRechargePackage = () => {
                         type="radio"
                         name="payment"
                         checked={form.paymentReceived === "Yes"}
-                        onChange={() => setForm({ ...form, paymentReceived: "Yes", paymentAmount: form.amountPaid })}
+                        onChange={() =>
+                          setForm({
+                            ...form,
+                            paymentReceived: "Yes",
+                            paymentAmount: form.amountPaid,
+                          })
+                        }
                         className="w-4 h-4"
                       />
                       <span className="font-bold text-sm">Yes</span>
@@ -1104,7 +1214,9 @@ const UserRechargePackage = () => {
                         type="radio"
                         name="payment"
                         checked={form.paymentReceived === "No"}
-                        onChange={() => setForm({ ...form, paymentReceived: "No" })}
+                        onChange={() =>
+                          setForm({ ...form, paymentReceived: "No" })
+                        }
                         className="w-4 h-4"
                       />
                       <span className="font-bold text-sm">No</span>
@@ -1120,7 +1232,9 @@ const UserRechargePackage = () => {
                         type="number"
                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
                         value={form.paymentAmount}
-                        onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, paymentAmount: e.target.value })
+                        }
                       />
                     </div>
                     <div className="flex justify-between items-center">
@@ -1129,7 +1243,9 @@ const UserRechargePackage = () => {
                         type="date"
                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
                         value={form.paymentDate}
-                        onChange={(e) => setForm({ ...form, paymentDate: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, paymentDate: e.target.value })
+                        }
                       />
                     </div>
                     <div className="flex justify-between items-center">
@@ -1137,7 +1253,9 @@ const UserRechargePackage = () => {
                       <select
                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
                         value={form.paymentMethod}
-                        onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, paymentMethod: e.target.value })
+                        }
                       >
                         <option>Cash</option>
                         <option>UPI</option>
@@ -1152,7 +1270,9 @@ const UserRechargePackage = () => {
                         type="text"
                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
                         value={form.paymentRemark}
-                        onChange={(e) => setForm({ ...form, paymentRemark: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, paymentRemark: e.target.value })
+                        }
                         placeholder="e.g. Paid via GPay"
                       />
                     </div>
@@ -1161,10 +1281,46 @@ const UserRechargePackage = () => {
 
                 <div className="border-t border-gray-300 my-2"></div>
                 <div className="grid grid-cols-2 gap-2 text-xs font-bold max-w-4xl mx-auto">
-                  <div className="flex justify-between"><span>Total Payable</span><span className="text-gray-800">₹{form.amountPaid || "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Remaining</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (form.amountPaid - (parseFloat(form.paymentAmount) || 0)).toFixed(2) : form.amountPaid || "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Payment Received</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? form.paymentAmount || "0.00" : "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Wallet After</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (-100 - (form.amountPaid - (parseFloat(form.paymentAmount) || 0))).toFixed(2) : (-100 - form.amountPaid).toFixed(2)}</span></div>
+                  <div className="flex justify-between">
+                    <span>Total Payable</span>
+                    <span className="text-gray-800">
+                      ₹{form.amountPaid || "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Remaining</span>
+                    <span className="text-gray-800">
+                      ₹
+                      {form.paymentReceived === "Yes"
+                        ? (
+                            form.amountPaid -
+                            (parseFloat(form.paymentAmount) || 0)
+                          ).toFixed(2)
+                        : form.amountPaid || "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Payment Received</span>
+                    <span className="text-gray-800">
+                      ₹
+                      {form.paymentReceived === "Yes"
+                        ? form.paymentAmount || "0.00"
+                        : "0.00"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Wallet After</span>
+                    <span className="text-gray-800">
+                      ₹
+                      {form.paymentReceived === "Yes"
+                        ? (
+                            -100 -
+                            (form.amountPaid -
+                              (parseFloat(form.paymentAmount) || 0))
+                          ).toFixed(2)
+                        : (-100 - form.amountPaid).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
 

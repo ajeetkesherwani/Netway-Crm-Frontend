@@ -220,7 +220,7 @@ const ProfileHeader = () => {
     {
       id: "recharge-package",
       label: "Recharge Package",
-      path: `/user/profile/${id}/recharge-package`,
+      path: `/user/profile/${id}/recharge-package?hidden=true`,
       module: "customer",
       action: "rechargePackageList",
     },
@@ -230,7 +230,7 @@ const ProfileHeader = () => {
       path: `/user/profile/${id}/assigned-stock`,
       module: "customer",
       action: "assignedStockView",
-    }
+    },
   ];
 
   useEffect(() => {
