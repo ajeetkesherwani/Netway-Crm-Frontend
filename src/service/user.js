@@ -276,3 +276,36 @@ export const resetUserPassword = async (userId, newPassword) => {
     throw err;
   }
 };
+
+
+//user plan history
+export const getUserPlanHistory = async (userId) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/user/purchedPlan/list/${userId}`, 
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(data.message || "Failed to fetch plan history");
+    }
+
+    return {
+      status: true,
+      data: data.data, 
+    };
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message || "Network error",
+    };
+  }
+};

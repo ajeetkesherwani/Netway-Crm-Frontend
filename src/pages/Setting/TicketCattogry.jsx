@@ -233,11 +233,11 @@ export default function Category() {
             <table className="w-full min-w-[800px] text-sm">
               <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">S.no</th>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">Category Name</th>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">Created By</th>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">Created At</th>
-                  <th className="px-6 py-4 text-center font-bold text-gray-700">Actions</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">S.no</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">Category Name</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">Created By</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">Created At</th>
+                  <th className="px-4 py-2 text-center font-bold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -247,15 +247,15 @@ export default function Category() {
 
                   return (
                     <tr key={id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4 text-gray-600">{i + 1}</td>
+                      <td className="px-4 py-2 text-gray-600">{i + 1}</td>
                       <td
-                        className="px-6 py-4 font-medium text-gray-600 hover:underline cursor-pointer"
+                        className="px-4 py-2 font-medium text-gray-600 hover:underline cursor-pointer"
                         onClick={() => handleView(id)}
                       >
                         {cat.name}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{cat.createdBy || "—"}</td>
-                      <td className="px-6 py-4 text-gray-600">
+                      <td className="px-4 py-2 text-gray-600">{cat.createdBy || "—"}</td>
+                      <td className="px-4 py-2 text-gray-600">
                         {date
                           ? `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
                               hour: "2-digit",
@@ -263,7 +263,7 @@ export default function Category() {
                             })}`
                           : "—"}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-2 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

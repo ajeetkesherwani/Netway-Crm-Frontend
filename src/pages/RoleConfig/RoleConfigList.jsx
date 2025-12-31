@@ -182,11 +182,11 @@ export default function RoleConfigList() {
               <table className="w-full min-w-[800px] text-sm">
                 <thead className="bg-gray-100 border-b">
                   <tr>
-                    <th className="px-6 py-4 text-left font-medium text-gray-700">S.No</th>
-                    <th className="px-6 py-4 text-left font-medium text-gray-700">Type</th>
-                    <th className="px-6 py-4 text-left font-medium text-gray-700">Name / Reseller</th>
-                    <th className="px-6 py-4 text-left font-medium text-gray-700">Created At</th>
-                    <th className="px-6 py-4 text-center font-medium text-gray-700">Actions</th>
+                    <th className="px-4 py-2 text-left font-medium text-gray-700">S.No</th>
+                    <th className="px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                    <th className="px-4 py-2 text-left font-medium text-gray-700">Name / Reseller</th>
+                    <th className="px-4 py-2 text-left font-medium text-gray-700">Created At</th>
+                    <th className="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -199,17 +199,17 @@ export default function RoleConfigList() {
                       >
                         {config.type || "—"}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-2">
                         {config.typeId?.resellerName ||
                           config.generalInformation?.name ||
                           "—"}
                       </td>
-                      <td className="px-6 py-4 text-xs">
+                      <td className="px-4 py-2 text-xs">
                         {config.createdAt
                           ? new Date(config.createdAt).toLocaleDateString()
                           : "—"}
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-2 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

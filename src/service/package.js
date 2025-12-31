@@ -62,3 +62,40 @@ export const updatePackage = async (id, packageData) => {
   return data;
 };
 
+
+//get ott package list
+export const getOttPackageList = async () => {
+  const res = await fetch(`${BASE_URL}/common/filterPackage/list?type=ott`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch OTT packages");
+  }
+
+  return res.json();
+};
+
+
+//get iptv package list
+export const getIptvPackageList = async () => {
+  const res = await fetch(`${BASE_URL}/common/filterPackage/list?type=iptv`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch IPTV packages");
+  }
+
+  return res.json();
+};

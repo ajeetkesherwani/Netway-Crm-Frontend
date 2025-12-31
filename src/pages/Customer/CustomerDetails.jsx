@@ -152,7 +152,6 @@ export default function UserDetails() {
         <div className="grid grid-cols-1 md:grid-cols-2">
           <Row label="Document Type" value={document?.documentType} />
           <Row label="Document Details" value={document?.documentDetails} />
-          {/* <Row label="Document Image" value={document?.documentImage ? <a href={BASE_URL + document.documentImage} target="_blank" rel="noopener noreferrer">View Image</a> : "—"} /> */}
         </div>
       </div>
       {/* System Info */}

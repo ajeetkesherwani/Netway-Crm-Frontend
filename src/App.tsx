@@ -146,6 +146,9 @@ import ConnectionRequestList from "./pages/connectionRequest/connectionRequestLi
 import PackageUpdate from "./pages/Package/PackageUpdate";
 import InvoicePage from "./pages/Invoice/InvoicePage";
 import AssignedStock from "./pages/UserProfile/AssignedStock";
+import OttList from "./pages/Package/OttPackageList";
+import IptvList from "./pages/Package/IptvPackageList";
+import PlanHistoryPage from "./pages/Customer/CustomerPlanHistory";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -338,11 +341,16 @@ export default function App() {
             <Route path="package/update/:id" element={<PackageUpdate />} />
             {/* <Route path="/package/ott-list" element={<Hello />} /> */}
             {/* <Route path="/package/iptv-list" element={< />} /> */}
+
+            <Route path="/package/ott-list" element={<OttList />} />
+            <Route path="/package/iptv-list" element={<IptvList />} />
+
             {/*----------------------------------------------------------------------------------------------Customer Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="user/list" element={<CustomerList />} />
             <Route path="user/create" element={<CreateUser />} />
             <Route path="user/:id" element={<UserDetails />} />
             <Route path="user/update/:id" element={<CustomerUpdate />} />
+            <Route path="/user/plan-history/:id" element={<PlanHistoryPage />} />
             {/* Role Permission */}
             <Route path="role/list" element={<RoleList />} />
             <Route path="/role/create" element={<CreateRole />} />

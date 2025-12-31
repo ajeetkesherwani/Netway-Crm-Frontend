@@ -257,14 +257,14 @@ export default function HardwareList() {
             <table className="w-full min-w-[1000px] text-sm">
               <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">S.No</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Name</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Type</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Brand / Model</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Serial</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Assigned To</th>
-                  <th className="px-6 py-4 text-left font-medium text-gray-700">Status</th>
-                  <th className="px-6 py-4 text-center font-medium text-gray-700">Actions</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">S.No</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Name</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Type</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Brand / Model</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Serial</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Assigned To</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-700">Status</th>
+                  <th className="px-4 py-2 text-center font-medium text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -286,11 +286,11 @@ export default function HardwareList() {
                       >
                         {name}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{type}</td>
-                      <td className="px-6 py-4 text-gray-600">{brandModel}</td>
-                      <td className="px-6 py-4 text-gray-600">{serial}</td>
-                      <td className="px-6 py-4 text-gray-600">{assignedName}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-2 text-gray-600">{type}</td>
+                      <td className="px-4 py-2 text-gray-600">{brandModel}</td>
+                      <td className="px-4 py-2 text-gray-600">{serial}</td>
+                      <td className="px-4 py-2 text-gray-600">{assignedName}</td>
+                      <td className="px-4 py-2">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
                             status === "active" || status === "assigned"
@@ -301,7 +301,7 @@ export default function HardwareList() {
                           {status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-2 text-center">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

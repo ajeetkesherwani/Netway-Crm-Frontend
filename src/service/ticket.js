@@ -532,3 +532,31 @@ export const getTicketReplies = async (ticketId) => {
     return { status: false, message: err.message || "Network error" };
   }
 };
+
+
+export const getAllManageTicketList = async (page = 1, limit = 10, search = "", filter = "Manage") => {
+  // Build query string like your existing function
+  const params = new URLSearchParams();
+  params.append("page", page);
+  params.append("limit", limit);
+  if (search) params.append("search", search);
+  params.append("filter", filter);
+
+  const url = `${BASE_URL}/ticket/manageTicket/list?${params.toString()}`;
+  
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch manage tickets");
+  }
+
+  return data;
+};
