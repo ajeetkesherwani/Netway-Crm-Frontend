@@ -49,7 +49,7 @@ export default function CreateUser() {
   const [selectedArea, setSelectedArea] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
+  const connectionTypes = ["ILL", "FTTH", "RF", "OTHER"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
@@ -186,6 +186,7 @@ export default function CreateUser() {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  console.log("formData", formData);
 
   // FETCH ALL DATA + PACKAGES
   useEffect(() => {
@@ -820,9 +821,8 @@ export default function CreateUser() {
               <input
                 value={formData.customer.name}
                 onChange={(e) => handleChange(e, "customer.name")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.name"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.name"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Name"
               />
               {formErrors["customer.name"] && (
@@ -859,9 +859,8 @@ export default function CreateUser() {
                 type="email"
                 value={formData.customer.email}
                 onChange={(e) => handleChange(e, "customer.email")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.email"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.email"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Email"
               />
               {formErrors["customer.email"] && (
@@ -900,7 +899,7 @@ export default function CreateUser() {
                   scrollableYearDropdown
                   popperPlacement="bottom-start"
                   // This allows clicking the icon to open calendar
-                  onClickOutside={() => {}}
+                  onClickOutside={() => { }}
                   // Ensures calendar opens on icon click
                   showPopperArrow={false}
                 />
@@ -959,9 +958,8 @@ export default function CreateUser() {
                 //   }
                 // }}
 
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.mobile"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Mobile Number"
               />
               {formErrors["customer.mobile"] && (
@@ -978,15 +976,14 @@ export default function CreateUser() {
               <input
                 value={formData.customer.alternateMobile}
                 onChange={(e) => handleChange(e, "customer.alternateMobile")}
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["customer.alternateMobile"] ? "border-red-500" : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
+                  }`}
                 placeholder="Alternate Mobile"
-                // onKeyDown={(e) => {
-                //   if (!/[0-9]/.test(e.key)) {
-                //     e.preventDefault(); // Block alphabets & special characters
-                //   }
-                // }}
+              // onKeyDown={(e) => {
+              //   if (!/[0-9]/.test(e.key)) {
+              //     e.preventDefault(); // Block alphabets & special characters
+              //   }
+              // }}
               />
               {formErrors["customer.alternateMobile"] && (
                 <p className="text-red-500 text-sm">
@@ -1091,9 +1088,8 @@ export default function CreateUser() {
                     )}
                   </div>
                   <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform ${
-                      showDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1329,38 +1325,38 @@ export default function CreateUser() {
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
             {(selectedCreatedFor === "Retailer" ||
               selectedCreatedFor === "Lco") && (
-              <div>
-                <label className="block text-sm font-medium">Reseller</label>
-                <select
-                  name="reseller"
-                  className="mt-1 p-2 border rounded w-full"
-                  value={
-                    selectedCreatedFor === "Lco"
-                      ? selectedRetailerForLco
-                      : formData.customer.createdFor.id
-                  }
-                  onChange={(e) => {
-                    if (selectedCreatedFor === "Lco") {
-                      handleRetailerForLcoChange(e.target.value);
-                    } else {
-                      // if just reseller, set ID directly
-                      setFieldValue("customer.createdFor.id", e.target.value);
+                <div>
+                  <label className="block text-sm font-medium">Reseller</label>
+                  <select
+                    name="reseller"
+                    className="mt-1 p-2 border rounded w-full"
+                    value={
+                      selectedCreatedFor === "Lco"
+                        ? selectedRetailerForLco
+                        : formData.customer.createdFor.id
                     }
-                  }}
-                >
-                  <option value="" disabled>
-                    Select Reseller
-                  </option>
-                  {retailers
-                    .filter((r) => r.resellerName)
-                    .map((r) => (
-                      <option key={r._id} value={r._id}>
-                        {r.resellerName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
+                    onChange={(e) => {
+                      if (selectedCreatedFor === "Lco") {
+                        handleRetailerForLcoChange(e.target.value);
+                      } else {
+                        // if just reseller, set ID directly
+                        setFieldValue("customer.createdFor.id", e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select Reseller
+                    </option>
+                    {retailers
+                      .filter((r) => r.resellerName)
+                      .map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.resellerName}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
             {/* LCO Dropdown - Show only if Created For is Lco */}
             {selectedCreatedFor === "Lco" && (
               <div>
@@ -1398,11 +1394,10 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.billing.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["addresses.billing.addressLine1"]
-                    ? "border-red-500"
-                    : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
+                  ? "border-red-500"
+                  : ""
+                  }`}
                 placeholder="Address Line 1 (Required)"
               />
 
@@ -1424,9 +1419,8 @@ export default function CreateUser() {
                   value={formData.addresses.billing.city}
                   onChange={(e) => handleChange(e, "addresses.billing.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.city"] ? "border-red-500" : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.billing.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
@@ -1435,11 +1429,10 @@ export default function CreateUser() {
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.billing.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
@@ -1455,11 +1448,10 @@ export default function CreateUser() {
                       e.preventDefault(); // Blocks any non-digit key
                     }
                   }}
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.billing.pincode"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {formErrors["addresses.billing.pincode"] && (
                   <p className="text-red-500 text-sm mt-1">
@@ -1477,11 +1469,10 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.permanent.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${
-                  formErrors["addresses.permanent.addressLine1"]
-                    ? "border-red-500"
-                    : ""
-                }`}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.permanent.addressLine1"]
+                  ? "border-red-500"
+                  : ""
+                  }`}
                 placeholder="Address Line 1 (Required)"
               />
 
@@ -1503,11 +1494,10 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.city}
                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.city"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.permanent.city"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
@@ -1517,11 +1507,10 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
                   placeholder="State *"
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.state"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.state"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {/* {formErrors["addresses.permanent.state"] && (
                   <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
@@ -1539,11 +1528,10 @@ export default function CreateUser() {
                       e.preventDefault(); // Blocks any non-digit key
                     }
                   }}
-                  className={`p-2 border rounded w-1/2 ${
-                    formErrors["addresses.permanent.pincode"]
-                      ? "border-red-500"
-                      : ""
-                  }`}
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"]
+                    ? "border-red-500"
+                    : ""
+                    }`}
                 />
                 {formErrors["addresses.permanent.pincode"] && (
                   <p className="text-red-500 text-sm mt-1">
@@ -1735,7 +1723,7 @@ export default function CreateUser() {
                   Package Price <span className="text-red-500">*</span>
                   {customPackagePrice &&
                     formData.customer.packageDetails.packageAmount !==
-                      customPackagePrice && (
+                    customPackagePrice && (
                       <span className="text-xs text-orange-600 ml-2">
                         (Customized)
                       </span>
@@ -1774,7 +1762,7 @@ export default function CreateUser() {
                     {formData.customer.packageDetails.packageAmount}
                     {customPackagePrice &&
                       customPackagePrice !==
-                        formData.customer.packageDetails.packageAmount &&
+                      formData.customer.packageDetails.packageAmount &&
                       ` → Now: ₹${customPackagePrice}`}
                   </p>
                 )}
@@ -1831,12 +1819,22 @@ export default function CreateUser() {
                       <option
                         key={dt}
                         value={dt}
-                        disabled={formData.documents.some(
-                          (d, i) => d.type === dt && i !== index
-                        )} // prevent duplicates
+                        disabled={
+                          dt !== "Other" && // Only non-"Other" types get blocked on duplicate
+                          formData.documents.some((d, i) => d.type === dt && i !== index)
+                        }
                       >
                         {dt}
                       </option>
+                      // <option
+                      //   key={dt}
+                      //   value={dt}
+                      //   disabled={formData.documents.some(
+                      //     (d, i) => d.type === dt && i !== index
+                      //   )} // prevent duplicates
+                      // >
+                      //   {dt}
+                      // </option>
                     ))}
                   </select>
                 </div>
@@ -1877,7 +1875,11 @@ export default function CreateUser() {
               type="button"
               onClick={addDocumentRow}
               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
-              disabled={formData.documents.length >= documentTypes.length} // can't exceed available types
+              // disabled={formData.documents.length >= documentTypes.length} 
+              disabled={
+                formData.documents.length >= documentTypes.length &&
+                !formData.documents.some(doc => doc.type === "Other")
+              }
             >
               + Add Document
             </button>

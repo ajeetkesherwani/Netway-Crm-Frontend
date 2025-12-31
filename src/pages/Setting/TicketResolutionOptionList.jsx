@@ -179,17 +179,17 @@ export default function TicketResolutionOptionList() {
             <table className="w-full min-w-[600px] text-sm">
               <thead className="bg-gray-100 border-b">
                 <tr>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">S.No</th>
-                  <th className="px-6 py-4 text-left font-bold text-gray-700">Option Text</th>
-                  <th className="px-6 py-4 text-center font-bold text-gray-700">Actions</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">S.No</th>
+                  <th className="px-4 py-2 text-left font-bold text-gray-700">Option Text</th>
+                  <th className="px-4 py-2 text-center font-bold text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {displayedOptions.map((opt, index) => (
                   <tr key={opt._id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-gray-600">{index + 1}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{opt.name}</td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-2 text-gray-600">{index + 1}</td>
+                    <td className="px-4 py-2 font-medium text-gray-900">{opt.name}</td>
+                    <td className="px-4 py-2 text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

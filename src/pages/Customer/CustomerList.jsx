@@ -405,7 +405,7 @@ import {
   deleteUser,
   getAllUserList,
   updateUserStatus,
-  resetUserPassword, // Import from your service
+  resetUserPassword, 
 } from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";

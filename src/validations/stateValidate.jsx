@@ -9,9 +9,9 @@ export const stateValidate = (city) => {
     return "State can contain only alphabets";
   }
 
-  if (trimmed.length > 10) {
-    return "State should not exceed 30 characters";
-  }
+  // if (trimmed.length > 60) {
+  //   return "State should not exceed 60 characters";
+  // }
 
   return "";
 };
