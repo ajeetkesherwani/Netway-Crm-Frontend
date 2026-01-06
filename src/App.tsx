@@ -149,6 +149,8 @@ import AssignedStock from "./pages/UserProfile/AssignedStock";
 import OttList from "./pages/Package/OttPackageList";
 import IptvList from "./pages/Package/IptvPackageList";
 import PlanHistoryPage from "./pages/Customer/CustomerPlanHistory";
+import SubZoneList from "./pages/Setting/SubZoneList";
+import SubZoneCreate from "./pages/Setting/SubZoneCreate";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -367,6 +369,11 @@ export default function App() {
             <Route path="/setting/zonelist" element={<ZoneList />} />
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
             <Route path="/setting/zone/update" element={<ZoneUpdate />} />
+
+           {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
+                 <Route path="/setting/subZone/list" element={<SubZoneList/>}/>
+                 <Route path="/setting/subzone/create" element={<SubZoneCreate/>}/>
+ 
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/hardware/list" element={<HardwareList />} />
             <Route

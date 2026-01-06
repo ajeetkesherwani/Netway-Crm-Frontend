@@ -47,6 +47,7 @@ export default function CustomerUpdate() {
     "Pan Card",
     "Driving Licence",
     "GST",
+    "Caf Form",
     "Other",
   ];
 
@@ -402,61 +403,102 @@ export default function CustomerUpdate() {
   };
 
   // Submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loading) return;
-    setLoading(true);
+  // Submit Handler - Inside handleSubmit function
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (loading) return;
+  setLoading(true);
 
-    const payload = new FormData();
+  const payload = new FormData();
 
-    // Clean createdFor.id and customArea before sending
-    const cleanCustomer = {
-      ...formData.customer,
-      createdFor: {
-        type: formData.customer.createdFor.type,
-        id: formData.customer.createdFor.id || null,
-      },
-      customArea: customArea || "",
-    };
-
-    payload.append("customer", JSON.stringify(cleanCustomer));
-    payload.append("addresses", JSON.stringify(formData.addresses));
-    payload.append("additional", JSON.stringify(formData.additional));
-    payload.append("area", selectedArea || "");
-    payload.append("customArea", customArea || "");
-
-//     formData.documents.forEach((doc) => {
-//   if (doc.file) {
-//     payload.append("documents", doc.file);
-//     payload.append("documentTypes[]", doc.type);
-//   }
-//   if (doc.existingUrl && !doc.file) {
-//     const filename = doc.existingUrl.split(/[/\\]/).pop();
-//     payload.append("existingDocuments[]", filename);
-//   }
-// });
-    formData.documents.forEach((doc) => {
-      if (doc.file) {
-        payload.append("documents", doc.file);
-        payload.append("documentTypes[]", doc.type);
-      }
-      if (doc.existingUrl && !doc.file) {
-        const filename = doc.existingUrl.split("/").pop();
-        payload.append("existingDocuments[]", filename);
-      }
-    });
-
-    try {
-      await updateUser(id, payload);
-      toast.success("Customer updated successfully!");
-      navigate("/user/list");
-    } catch (err) {
-      console.error("Update error:", err);
-      toast.error(err.response?.data?.message || "Update failed");
-    } finally {
-      setLoading(false);
-    }
+  // Customer, addresses, additional
+  const cleanCustomer = {
+    ...formData.customer,
+    createdFor: {
+      type: formData.customer.createdFor.type,
+      id: formData.customer.createdFor.id || null,
+    },
+    customArea: customArea || "",
   };
+
+  payload.append("customer", JSON.stringify(cleanCustomer));
+  payload.append("addresses", JSON.stringify(formData.addresses));
+  payload.append("additional", JSON.stringify(formData.additional));
+  payload.append("area", selectedArea || "");
+  payload.append("customArea", customArea || "");
+
+  // --- DOCUMENTS: New files + types ---
+  const newDocuments = formData.documents.filter(doc => doc.file);
+  newDocuments.forEach((doc) => {
+    payload.append("documents", doc.file);
+    payload.append("documentTypes[]", doc.type || "Other");
+  });
+
+  // --- EXISTING DOCUMENTS: Send as JSON string ---
+  const existingFilenames = formData.documents
+    .filter(doc => doc.existingUrl && !doc.file)
+    .map(doc => doc.existingUrl.split("/").pop());
+
+  if (existingFilenames.length > 0) {
+    payload.append("existingDocuments", JSON.stringify(existingFilenames));
+  }
+
+  try {
+    await updateUser(id, payload);
+    toast.success("Customer updated successfully!");
+    navigate("/user/list");
+  } catch (err) {
+    console.error("Update error:", err);
+    toast.error(err.response?.data?.message || "Update failed");
+  } finally {
+    setLoading(false);
+  }
+};
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   if (loading) return;
+  //   setLoading(true);
+
+  //   const payload = new FormData();
+
+  //   // Clean createdFor.id and customArea before sending
+  //   const cleanCustomer = {
+  //     ...formData.customer,
+  //     createdFor: {
+  //       type: formData.customer.createdFor.type,
+  //       id: formData.customer.createdFor.id || null,
+  //     },
+  //     customArea: customArea || "",
+  //   };
+
+  //   payload.append("customer", JSON.stringify(cleanCustomer));
+  //   payload.append("addresses", JSON.stringify(formData.addresses));
+  //   payload.append("additional", JSON.stringify(formData.additional));
+  //   payload.append("area", selectedArea || "");
+  //   payload.append("customArea", customArea || "");
+
+  //   formData.documents.forEach((doc) => {
+  //     if (doc.file) {
+  //       payload.append("documents", doc.file);
+  //       payload.append("documentTypes[]", doc.type);
+  //     }
+  //     if (doc.existingUrl && !doc.file) {
+  //       const filename = doc.existingUrl.split("/").pop();
+  //       payload.append("existingDocuments[]", filename);
+  //     }
+  //   });
+
+  //   try {
+  //     await updateUser(id, payload);
+  //     toast.success("Customer updated successfully!");
+  //     navigate("/user/list");
+  //   } catch (err) {
+  //     console.error("Update error:", err);
+  //     toast.error(err.response?.data?.message || "Update failed");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="max-w-[1400px] mx-auto p-6 bg-white shadow-lg rounded-lg">

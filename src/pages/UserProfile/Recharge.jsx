@@ -5,6 +5,7 @@
 //   createPurchasedPlan,
 //   renewPurchasedPlan,
 //   getAssignedPackageList,
+//   getWalletBalance
 // } from "../../service/recharge";
 // import ProtectedAction from "../../components/ProtectedAction";
 // import { toast } from "react-toastify";
@@ -19,6 +20,11 @@
 //   const [showModal, setShowModal] = useState(false);
 //   const [isRenew, setIsRenew] = useState(false);
 //   const [selectedPackage, setSelectedPackage] = useState(null);
+//   const [walletBalance, setWalletBalance] = useState(0);
+
+//   // Dropdown search state
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [showDropdown, setShowDropdown] = useState(false);
 
 //   const [form, setForm] = useState({
 //     packageId: "",
@@ -33,16 +39,21 @@
 //     paymentRemark: "",
 //   });
 
+//   // Advance Renewal state
+//   const [isAdvanceRenewal, setIsAdvanceRenewal] = useState(false);
+
 //   useEffect(() => {
 //     fetchCurrentPlan();
 //     fetchPackages();
+//     fetchWalletBalance();
 //   }, [userId]);
+
+//   // REMOVED: Automatic modal open on load
 
 //   const fetchCurrentPlan = async () => {
 //     try {
 //       setLoading(true);
 //       const res = await getCurrentPlan(userId);
-
 //       if (res.status && res.data && res.data.length > 0) {
 //         const sortedPlans = res.data.sort((a, b) => {
 //           const dateA = new Date(a.startDate || a.purchaseDate);
@@ -67,32 +78,88 @@
 //   const fetchPackages = async () => {
 //     try {
 //       const res = await getAssignedPackageList(userId);
-//       if (res.status) {
-//         setPackages(res.data || []);
+//       if (res.status && res.data) {
+//         const normalized = res.data.map(pkg => ({
+//           ...pkg,
+//           packageIdStr: pkg.packageId?._id?.toString() || pkg.packageId?.toString() || ""
+//         }));
+//         setPackages(normalized);
 //       }
 //     } catch (err) {
 //       console.error("Failed to load packages", err);
 //     }
 //   };
 
+//   const fetchWalletBalance = async () => {
+//     try {
+//       const res = await getWalletBalance(userId);
+//       if (res.status && res.data) {
+//         setWalletBalance(res.data.walletBalance || 0);
+//       }
+//     } catch (err) {
+//       console.log("Wallet balance not loaded", err);
+//       setWalletBalance(0);
+//     }
+//   };
+
+//   const filteredPackages = searchTerm.trim()
+//     ? packages.filter(pkg =>
+//         pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
+//       )
+//     : packages;
+
 //   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
+
+//   // Helper to calculate dates
+//   const calculateDates = (pkg, advanceRenewal) => {
+//     const today = new Date();
+//     let baseDate = today;
+
+//     if (advanceRenewal && currentPlan && new Date(currentPlan.expiryDate) >= today) {
+//       baseDate = new Date(currentPlan.expiryDate);
+//     }
+
+//     const start = new Date(baseDate);
+//     if (advanceRenewal) {
+//       start.setDate(start.getDate() + 1);
+//     }
+
+//     const expiry = new Date(start);
+//     const validityNum = Number(pkg?.validity?.number) || 1;
+//     expiry.setMonth(expiry.getMonth() + validityNum);
+
+//     return {
+//       startDate: start.toISOString().split("T")[0],
+//       expiryDate: expiry.toISOString().split("T")[0],
+//     };
+//   };
 
 //   const openPurchaseModal = () => {
 //     setIsRenew(false);
-//     const today = new Date().toISOString().split("T")[0];
+//     setSelectedPackage(null);
+//     setSearchTerm("");
+
+//     const today = new Date();
+//     const hasActivePlan = currentPlan && new Date(currentPlan.expiryDate) >= today;
+
+//     // Auto-check Advance Renewal if active plan exists
+//     setIsAdvanceRenewal(hasActivePlan);
+
+//     const { startDate, expiryDate } = calculateDates(null, hasActivePlan);
+
 //     setForm({
 //       packageId: "",
 //       amountPaid: 0,
-//       startDate: today,
-//       expiryDate: "",
+//       startDate,
+//       expiryDate,
 //       paymentReceived: "No",
 //       paymentAmount: 0,
-//       paymentDate: today,
+//       paymentDate: today.toISOString().split("T")[0],
 //       paymentMethod: "Cash",
 //       remark: "",
 //       paymentRemark: "",
 //     });
-//     setSelectedPackage(null);
+
 //     setShowModal(true);
 //   };
 
@@ -102,32 +169,38 @@
 //       return;
 //     }
 
-//     const assignedPkg = packages.find(p => p.packageId === planToRenew.packageId?._id);
+//     const planPkgId = planToRenew.packageId?._id?.toString() || planToRenew.packageId?.toString();
+//     const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
+
 //     if (!assignedPkg) {
-//       toast.error("Assigned package not found");
+//       toast.error("Assigned package not found. Please refresh the page.");
 //       return;
 //     }
 
 //     const start = new Date(planToRenew.expiryDate);
 //     start.setDate(start.getDate() + 1);
 //     const expiry = new Date(start);
-//     expiry.setMonth(expiry.getMonth() + (assignedPkg.validity?.number || 1));
+//     const validityNum = Number(assignedPkg.validity?.number) || 1;
+//     expiry.setMonth(expiry.getMonth() + validityNum);
 
 //     setIsRenew(true);
+//     setIsAdvanceRenewal(true); // Always true and disabled in renew
 //     setCurrentPlan(planToRenew);
 //     setSelectedPackage(assignedPkg);
+
 //     setForm({
 //       packageId: assignedPkg._id,
-//       amountPaid: assignedPkg.customPrice,
+//       amountPaid: assignedPkg.customPrice || assignedPkg.basePrice || 0,
 //       startDate: start.toISOString().split("T")[0],
 //       expiryDate: expiry.toISOString().split("T")[0],
 //       paymentReceived: "No",
-//       paymentAmount: assignedPkg.customPrice,
+//       paymentAmount: assignedPkg.customPrice || assignedPkg.basePrice || 0,
 //       paymentDate: new Date().toISOString().split("T")[0],
 //       paymentMethod: "Cash",
 //       remark: "Renewed plan",
 //       paymentRemark: "",
 //     });
+
 //     setShowModal(true);
 //   };
 
@@ -135,40 +208,30 @@
 //     const pkg = packages.find((p) => p._id === assignedPkgId);
 //     if (!pkg) return;
 
-//   console.log("Selected Package Full Object:", pkg);
-//   console.log("Validity Object:", pkg.validity);
-//   console.log("Validity Number:", pkg.validity?.number);
-//   console.log("Validity Unit:", pkg.validity?.unit);
+//     const isAlreadyActive = plans.some(plan => {
+//       const planPkgId = plan.packageId?._id?.toString() || plan.packageId?.toString();
+//       return planPkgId === pkg.packageIdStr && new Date(plan.expiryDate) >= new Date();
+//     });
 
-//     // Check if this package is already active
-//     const isAlreadyActive = plans.some(plan =>
-//       plan.packageId?._id === pkg.packageId &&
-//       new Date(plan.expiryDate) >= new Date()
-//     );
-
-//     if (isAlreadyActive) {
-//       toast.error("This package is already active. Please renew instead!", {
+//     if (isAlreadyActive && !isRenew && !isAdvanceRenewal) {
+//       toast.error("This plan is already active! Enable Advance Renewal or use Renew button.", {
 //         position: "top-center",
-//         autoClose: 5000,
+//         autoClose: 6000,
 //       });
 //       return;
 //     }
 
 //     setSelectedPackage(pkg);
 
-//     const baseDate = isRenew && currentPlan ? new Date(currentPlan.expiryDate) : new Date();
-//     const start = new Date(baseDate);
-//     start.setDate(start.getDate() + (isRenew ? 1 : 0));
-//     const expiry = new Date(start);
-//     expiry.setMonth(expiry.getMonth() + (pkg.validity?.number || 1));
+//     const { startDate, expiryDate } = calculateDates(pkg, isAdvanceRenewal || isRenew);
 
 //     setForm({
 //       ...form,
 //       packageId: pkg._id,
-//       amountPaid: pkg.customPrice,
-//       paymentAmount: pkg.customPrice,
-//       startDate: start.toISOString().split("T")[0],
-//       expiryDate: expiry.toISOString().split("T")[0],
+//       amountPaid: pkg.customPrice || pkg.basePrice || 0,
+//       paymentAmount: pkg.customPrice || pkg.basePrice || 0,
+//       startDate,
+//       expiryDate,
 //     });
 //   };
 
@@ -181,16 +244,16 @@
 //     try {
 //       const payload = {
 //         userId,
-//         packageId: selectedPackage.packageId,
+//         packageId: selectedPackage.packageId?._id || selectedPackage.packageId,
 //         assignedPackageId: form.packageId,
 //         startDate: new Date(form.startDate).toISOString(),
 //         expiryDate: new Date(form.expiryDate).toISOString(),
-//         amountPaid: parseFloat(form.amountPaid),
+//         amountPaid: parseFloat(form.amountPaid) || 0,
 //         paymentReceived: form.paymentReceived,
 //         paymentMethod: form.paymentMethod,
 //         paymentStatus: form.paymentReceived === "Yes" ? "paid" : "pending",
 //         paymentDate: form.paymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
-//         remark: form.remark,
+//         remark: form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
 //         paymentRemark: form.paymentRemark,
 //       };
 
@@ -204,15 +267,15 @@
 //       if (res.status) {
 //         toast.success(isRenew ? "Plan renewed successfully!" : "New plan purchased successfully!", {
 //           position: "top-center",
-//           autoClose: 3000,
+//           autoClose: 4000,
 //         });
 //         setShowModal(false);
 //         fetchCurrentPlan();
 //       }
 //     } catch (err) {
-//       toast.error(err.response?.data?.message || "Something went wrong.", {
+//       toast.error(err.response?.data?.message || "Something went wrong", {
 //         position: "top-center",
-//         autoClose: 5000,
+//         autoClose: 6000,
 //       });
 //     }
 //   };
@@ -220,7 +283,7 @@
 //   if (loading) {
 //     return (
 //       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-//         <div className="text-xl text-gray-600">Loading...</div>
+//         <div className="text-2xl text-gray-700 font-bold">Loading...</div>
 //       </div>
 //     );
 //   }
@@ -252,7 +315,7 @@
 //                 <h3 className="text-xl font-bold">All Active Plans</h3>
 //                 {plans.length > 1 && (
 //                   <span className="text-sm bg-green-600 px-3 py-1 rounded-full">
-//                     Latest Active → Row 1
+//                     Latest Active to Row 1
 //                   </span>
 //                 )}
 //               </div>
@@ -296,7 +359,7 @@
 //                             </span>
 //                           )}
 //                         </td>
-//                         <td className="px-6 py-4">{plan.packageId?.name}</td>
+//                         <td className="px-6 py-4">{plan.packageId?.name || "Unknown"}</td>
 //                         <td className="px-6 py-4">{formatDate(plan.startDate)}</td>
 //                         <td className="px-6 py-4">{formatDate(plan.expiryDate)}</td>
 //                         <td className="px-6 py-4">₹{plan.amountPaid}</td>
@@ -326,7 +389,7 @@
 //         </div>
 //       </div>
 
-//       {/* MODAL - 100% SAME UI & FIELDS */}
+//       {/* MODAL */}
 //       {showModal && (
 //         <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 px-4">
 //           <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl border-4 border-blue-500 max-h-screen overflow-y-auto">
@@ -352,26 +415,58 @@
 //               <div className="grid grid-cols-2 gap-6">
 //                 {/* LEFT COLUMN */}
 //                 <div className="space-y-2.5">
-//                   <div className="flex items-center gap-3">
+//                   <div className="flex items-center gap-3 relative">
 //                     <label className="w-36 font-semibold">Current Plan :</label>
-//                     <select
-//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none"
-//                       value={form.packageId}
-//                       onChange={(e) => handlePackageChange(e.target.value)}
-//                       disabled={isRenew}
-//                     >
-//                       <option value="">Select Package</option>
-//                       {packages.map((pkg) => (
-//                         <option key={pkg._id} value={pkg._id}>
-//                           {pkg.packageName}
-//                         </option>
-//                       ))}
-//                     </select>
+//                     <div className="flex-1 relative">
+//                       <input
+//                         type="text"
+//                         className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none bg-white"
+//                         placeholder="Search package..."
+//                         value={searchTerm || (selectedPackage ? selectedPackage.packageName : "")}
+//                         onChange={(e) => {
+//                           setSearchTerm(e.target.value);
+//                           setShowDropdown(true);
+//                           if (e.target.value !== selectedPackage?.packageName) {
+//                             setSelectedPackage(null);
+//                             setForm({ ...form, packageId: "" });
+//                           }
+//                         }}
+//                         onFocus={() => setShowDropdown(true)}
+//                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+//                         disabled={isRenew}
+//                       />
+//                       {showDropdown && (
+//                         <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs">
+//                           {filteredPackages.length > 0 ? (
+//                             filteredPackages.map((pkg) => (
+//                               <li
+//                                 key={pkg._id}
+//                                 className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
+//                                 onClick={() => {
+//                                   handlePackageChange(pkg._id);
+//                                   setSearchTerm(pkg.packageName);
+//                                   setShowDropdown(false);
+//                                 }}
+//                               >
+//                                 {pkg.packageName}
+//                               </li>
+//                             ))
+//                           ) : (
+//                             <li className="px-3 py-2 text-gray-500">No matching packages</li>
+//                           )}
+//                         </ul>
+//                       )}
+//                     </div>
 //                   </div>
 
 //                   <div className="flex items-center gap-3">
 //                     <label className="w-36">MRP :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value={selectedPackage?.customPrice || "0"} readOnly />
+//                     <input
+//                       type="text"
+//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+//                       value={selectedPackage?.customPrice || selectedPackage?.basePrice || "0"}
+//                       readOnly
+//                     />
 //                   </div>
 
 //                   <div className="flex items-center gap-3">
@@ -386,7 +481,12 @@
 
 //                   <div className="flex items-center gap-3">
 //                     <label className="w-36">Wallet Balance :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold" value="-100.00" readOnly />
+//                     <input
+//                       type="text"
+//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
+//                       value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
+//                       readOnly
+//                     />
 //                   </div>
 
 //                   <div className="flex items-center gap-3">
@@ -403,14 +503,32 @@
 //                 {/* RIGHT COLUMN */}
 //                 <div className="space-y-2.5">
 //                   <div className="flex items-center gap-3">
-//                     <input type="checkbox" className="w-4 h-4" defaultChecked={isRenew} />
-//                     <span className="font-bold text-xs">Advance Renewal</span>
-//                     <input type="text" className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs" value="03/01/2026" readOnly />
+//                     <input
+//                       type="checkbox"
+//                       className={`w-4 h-4 ${isRenew ? "accent-green-600" : "accent-blue-600"}`}
+//                       checked={isRenew || isAdvanceRenewal}
+//                       onChange={(e) => !isRenew && setIsAdvanceRenewal(e.target.checked)}
+//                       disabled={isRenew}
+//                     />
+//                     <span className={`font-bold text-xs ${isRenew ? "text-gray-600" : ""}`}>
+//                       Advance Renewal
+//                     </span>
+//                     <input
+//                       type="text"
+//                       className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs"
+//                       value={currentPlan ? formatDate(currentPlan.expiryDate) : ""}
+//                       readOnly
+//                     />
 //                   </div>
 
 //                   <div className="flex items-center gap-3">
 //                     <label className="w-36">Validity :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value={`${selectedPackage?.validity?.number || ""} ${selectedPackage?.validity?.unit || ""}`} readOnly />
+//                     <input
+//                       type="text"
+//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
+//                       value={`${selectedPackage?.validity?.number || ""} ${selectedPackage?.validity?.unit || ""}`}
+//                       readOnly
+//                     />
 //                   </div>
 
 //                   <div className="flex items-center gap-3">
@@ -473,15 +591,29 @@
 //                   <div className="grid grid-cols-2 gap-5 max-w-4xl mx-auto text-xs">
 //                     <div className="flex justify-between items-center">
 //                       <span className="font-bold">Amount</span>
-//                       <input type="number" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentAmount} onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })} />
+//                       <input
+//                         type="number"
+//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
+//                         value={form.paymentAmount}
+//                         onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
+//                       />
 //                     </div>
 //                     <div className="flex justify-between items-center">
 //                       <span className="font-bold">Payment Date</span>
-//                       <input type="date" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentDate} onChange={(e) => setForm({ ...form, paymentDate: e.target.value })} />
+//                       <input
+//                         type="date"
+//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
+//                         value={form.paymentDate}
+//                         onChange={(e) => setForm({ ...form, paymentDate: e.target.value })}
+//                       />
 //                     </div>
 //                     <div className="flex justify-between items-center">
 //                       <span className="font-bold">Payment Mode</span>
-//                       <select className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
+//                       <select
+//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
+//                         value={form.paymentMethod}
+//                         onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+//                       >
 //                         <option>Cash</option>
 //                         <option>UPI</option>
 //                         <option>Bank Transfer</option>
@@ -491,7 +623,13 @@
 //                     </div>
 //                     <div className="flex justify-between items-center">
 //                       <span className="font-bold">Remark</span>
-//                       <input type="text" className="w-52 border border-gray-400 rounded px-3 py-1.5" value={form.paymentRemark} onChange={(e) => setForm({ ...form, paymentRemark: e.target.value })} placeholder="e.g. Paid via GPay" />
+//                       <input
+//                         type="text"
+//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
+//                         value={form.paymentRemark}
+//                         onChange={(e) => setForm({ ...form, paymentRemark: e.target.value })}
+//                         placeholder="e.g. Paid via GPay"
+//                       />
 //                     </div>
 //                   </div>
 //                 )}
@@ -553,7 +691,7 @@ const UserRechargePackage = () => {
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [walletBalance, setWalletBalance] = useState(0);
 
-  //dropdown search state
+  // Dropdown search state
   const [searchTerm, setSearchTerm] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -570,25 +708,19 @@ const UserRechargePackage = () => {
     paymentRemark: "",
   });
 
-  // open purchase model automatically
+  // Advance Renewal state
+  const [isAdvanceRenewal, setIsAdvanceRenewal] = useState(false);
+
   useEffect(() => {
     fetchCurrentPlan();
     fetchPackages();
     fetchWalletBalance();
   }, [userId]);
 
-
-  useEffect(() => {
-    if (userId) {
-      openPurchaseModal();
-    }
-  }, [userId]);
-
   const fetchCurrentPlan = async () => {
     try {
       setLoading(true);
       const res = await getCurrentPlan(userId);
-
       if (res.status && res.data && res.data.length > 0) {
         const sortedPlans = res.data.sort((a, b) => {
           const dateA = new Date(a.startDate || a.purchaseDate);
@@ -614,7 +746,6 @@ const UserRechargePackage = () => {
     try {
       const res = await getAssignedPackageList(userId);
       if (res.status && res.data) {
-        // IMPORTANT: Convert ObjectId to string for safe comparison
         const normalized = res.data.map(pkg => ({
           ...pkg,
           packageIdStr: pkg.packageId?._id?.toString() || pkg.packageId?.toString() || ""
@@ -625,15 +756,6 @@ const UserRechargePackage = () => {
       console.error("Failed to load packages", err);
     }
   };
-
-  //serach tearms filtering
-  const filteredPackages = searchTerm.trim()
-    ? packages.filter(pkg =>
-      pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    : packages;
-
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
 
   const fetchWalletBalance = async () => {
     try {
@@ -647,35 +769,73 @@ const UserRechargePackage = () => {
     }
   };
 
+  const filteredPackages = searchTerm.trim()
+    ? packages.filter(pkg =>
+        pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : packages;
+
+  const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
+
+  // Helper to calculate dates
+  const calculateDates = (pkg, advanceRenewal) => {
+    const today = new Date();
+    let baseDate = today;
+
+    if (advanceRenewal && currentPlan && new Date(currentPlan.expiryDate) >= today) {
+      baseDate = new Date(currentPlan.expiryDate);
+    }
+
+    const start = new Date(baseDate);
+    if (advanceRenewal) {
+      start.setDate(start.getDate() + 1);
+    }
+
+    const expiry = new Date(start);
+    const validityNum = Number(pkg?.validity?.number) || 1;
+    expiry.setMonth(expiry.getMonth() + validityNum);
+
+    return {
+      startDate: start.toISOString().split("T")[0],
+      expiryDate: expiry.toISOString().split("T")[0],
+    };
+  };
+
   const openPurchaseModal = () => {
     setIsRenew(false);
-    const today = new Date().toISOString().split("T")[0];
+    setSelectedPackage(null);
+    setSearchTerm("");
+
+    const today = new Date();
+    const hasActivePlan = currentPlan && new Date(currentPlan.expiryDate) >= today;
+
+    setIsAdvanceRenewal(hasActivePlan);
+
+    const { startDate, expiryDate } = calculateDates(null, hasActivePlan);
+
     setForm({
       packageId: "",
       amountPaid: 0,
-      startDate: today,
-      expiryDate: "",
+      startDate,
+      expiryDate,
       paymentReceived: "No",
       paymentAmount: 0,
-      paymentDate: today,
+      paymentDate: today.toISOString().split("T")[0],
       paymentMethod: "Cash",
       remark: "",
       paymentRemark: "",
     });
-    setSelectedPackage(null);
+
     setShowModal(true);
   };
 
-  // RENEW BUTTON 
   const openRenewModal = (planToRenew = currentPlan) => {
     if (!planToRenew) {
       toast.error("No active plan to renew");
       return;
     }
 
-    // Convert both IDs to string for comparison
     const planPkgId = planToRenew.packageId?._id?.toString() || planToRenew.packageId?.toString();
-
     const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
 
     if (!assignedPkg) {
@@ -683,16 +843,14 @@ const UserRechargePackage = () => {
       return;
     }
 
-    // Calculate next day after expiry
     const start = new Date(planToRenew.expiryDate);
     start.setDate(start.getDate() + 1);
-
-    // Add validity period
     const expiry = new Date(start);
     const validityNum = Number(assignedPkg.validity?.number) || 1;
     expiry.setMonth(expiry.getMonth() + validityNum);
 
     setIsRenew(true);
+    setIsAdvanceRenewal(true); // Always checked for Renew
     setCurrentPlan(planToRenew);
     setSelectedPackage(assignedPkg);
 
@@ -716,14 +874,13 @@ const UserRechargePackage = () => {
     const pkg = packages.find((p) => p._id === assignedPkgId);
     if (!pkg) return;
 
-    // Prevent duplicate purchase of active plan
     const isAlreadyActive = plans.some(plan => {
       const planPkgId = plan.packageId?._id?.toString() || plan.packageId?.toString();
       return planPkgId === pkg.packageIdStr && new Date(plan.expiryDate) >= new Date();
     });
 
-    if (isAlreadyActive) {
-      toast.error("This plan is already active! Please use 'Renew' button.", {
+    if (isAlreadyActive && !isRenew && !isAdvanceRenewal) {
+      toast.error("This plan is already active! Enable Advance Renewal or use Renew button.", {
         position: "top-center",
         autoClose: 6000,
       });
@@ -732,21 +889,15 @@ const UserRechargePackage = () => {
 
     setSelectedPackage(pkg);
 
-    const baseDate = isRenew && currentPlan ? new Date(currentPlan.expiryDate) : new Date();
-    const start = new Date(baseDate);
-    start.setDate(start.getDate() + (isRenew ? 1 : 0));
-
-    const expiry = new Date(start);
-    const validityNum = Number(pkg.validity?.number) || 1;
-    expiry.setMonth(expiry.getMonth() + validityNum);
+    const { startDate, expiryDate } = calculateDates(pkg, isAdvanceRenewal || isRenew);
 
     setForm({
       ...form,
       packageId: pkg._id,
       amountPaid: pkg.customPrice || pkg.basePrice || 0,
       paymentAmount: pkg.customPrice || pkg.basePrice || 0,
-      startDate: start.toISOString().split("T")[0],
-      expiryDate: expiry.toISOString().split("T")[0],
+      startDate,
+      expiryDate,
     });
   };
 
@@ -904,7 +1055,7 @@ const UserRechargePackage = () => {
         </div>
       </div>
 
-      {/* MODAL - SAME UI, ALL FIELDS, FULLY WORKING */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl border-4 border-blue-500 max-h-screen overflow-y-auto">
@@ -930,8 +1081,6 @@ const UserRechargePackage = () => {
               <div className="grid grid-cols-2 gap-6">
                 {/* LEFT COLUMN */}
                 <div className="space-y-2.5">
-
-                  {/* serachable dropdown for packages */}
                   <div className="flex items-center gap-3 relative">
                     <label className="w-36 font-semibold">Current Plan :</label>
                     <div className="flex-1 relative">
@@ -943,24 +1092,17 @@ const UserRechargePackage = () => {
                         onChange={(e) => {
                           setSearchTerm(e.target.value);
                           setShowDropdown(true);
-                          // If user types something new, clear previous selection
                           if (e.target.value !== selectedPackage?.packageName) {
                             setSelectedPackage(null);
                             setForm({ ...form, packageId: "" });
                           }
                         }}
                         onFocus={() => setShowDropdown(true)}
-                        onBlur={() => {
-                          // Small delay so click on item registers
-                          setTimeout(() => setShowDropdown(false), 200);
-                        }}
+                        onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                         disabled={isRenew}
                       />
-
                       {showDropdown && (
-                        <ul
-                          className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs"
-                        >
+                        <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs">
                           {filteredPackages.length > 0 ? (
                             filteredPackages.map((pkg) => (
                               <li
@@ -982,22 +1124,6 @@ const UserRechargePackage = () => {
                       )}
                     </div>
                   </div>
-                  {/* <div className="flex items-center gap-3">
-                    <label className="w-36 font-semibold">Current Plan :</label>
-                    <select
-                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none"
-                      value={form.packageId}
-                      onChange={(e) => handlePackageChange(e.target.value)}
-                      disabled={isRenew}
-                    >
-                      <option value="">Select Package</option>
-                      {packages.map((pkg) => (
-                        <option key={pkg._id} value={pkg._id}>
-                          {pkg.packageName}
-                        </option>
-                      ))}
-                    </select>
-                  </div> */}
 
                   <div className="flex items-center gap-3">
                     <label className="w-36">MRP :</label>
@@ -1019,12 +1145,14 @@ const UserRechargePackage = () => {
                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0.0" readOnly />
                   </div>
 
-
                   <div className="flex items-center gap-3">
                     <label className="w-36">Wallet Balance :</label>
-                    <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
+                    <input
+                      type="text"
+                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
                       value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
-                      readOnly />
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -1041,9 +1169,22 @@ const UserRechargePackage = () => {
                 {/* RIGHT COLUMN */}
                 <div className="space-y-2.5">
                   <div className="flex items-center gap-3">
-                    <input type="checkbox" className="w-4 h-4" defaultChecked={isRenew} />
-                    <span className="font-bold text-xs">Advance Renewal</span>
-                    <input type="text" className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs" value="03/01/2026" readOnly />
+                    <input
+                      type="checkbox"
+                      className={`w-4 h-4 ${isRenew ? "accent-green-600" : "accent-blue-600"}`}
+                      checked={isRenew || isAdvanceRenewal}
+                      onChange={(e) => !isRenew && setIsAdvanceRenewal(e.target.checked)}
+                      disabled={isRenew}
+                    />
+                    <span className={`font-bold text-xs ${isRenew ? "text-green-600" : ""}`}>
+                      Advance Renewal
+                    </span>
+                    <input
+                      type="text"
+                      className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs"
+                      value={currentPlan ? formatDate(currentPlan.expiryDate) : ""}
+                      readOnly
+                    />
                   </div>
 
                   <div className="flex items-center gap-3">
