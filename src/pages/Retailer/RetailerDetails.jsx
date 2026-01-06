@@ -16,9 +16,9 @@ export default function RetailerView() {
   const [error, setError] = useState("");
 
   // for open and closed the employees
-  const [isEmployeeOpen, setIsEmployeeOpen] = useState(false);
-  const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(false);
-  const [isAssignedPackageOpen, setIsAssignedPaclagesOpen] = useState(false)
+  const [isEmployeeOpen, setIsEmployeeOpen] = useState(true);
+  const [isWalletHistoryOpen, setIsWalletHistoryOpen] = useState(true);
+  const [isAssignedPackageOpen, setIsAssignedPaclagesOpen] = useState(true)
 
   useEffect(() => {
     const loadRetailer = async () => {

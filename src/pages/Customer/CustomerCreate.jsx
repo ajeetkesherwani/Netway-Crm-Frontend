@@ -20,6 +20,7 @@ import { checkAlternateSameAsMobile } from "../../validations/validateAlternateM
 import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
+import { getAllSubZones } from "../../service/apiClient"; // adjust path if needed
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -43,9 +44,10 @@ export default function CreateUser() {
   const [selectedLco, setSelectedLco] = useState("");
   const [customPackagePrice, setCustomPackagePrice] = useState("");
 
+  const [subZoneList, setSubZoneList] = useState([]);
+  const [selectedSubZone, setSelectedSubZone] = useState("");
+
   const [formErrors, setFormErrors] = useState({});
-  // const [areas, setAreas] = useState(["Main Area"]);
-  // const [areas, setAreas] = useState([""]);
   const [selectedArea, setSelectedArea] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -192,7 +194,7 @@ export default function CreateUser() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes] =
+        const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes, subZoneRes,] =
           await Promise.allSettled([
             getRoles(),
             getRetailer(),
@@ -200,6 +202,7 @@ export default function CreateUser() {
             getStaffList?.(),
             getAllZoneList(),
             getAllPackageList(),
+            getAllSubZones(),
           ]);
 
         console.log("resellerRes", resellerRes);
@@ -215,6 +218,9 @@ export default function CreateUser() {
           setZoneList(zoneRes.value.data || []);
         if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
           setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
+        if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
+          setSubZoneList(subZoneRes.value.data || []);
+        }
       } catch (err) {
         console.error("fetch error", err);
       }
@@ -758,37 +764,67 @@ export default function CreateUser() {
     "Pan Card",
     "Driving Licence",
     "GST",
+    "Caf Form",
     "Other",
-    // "ID proof",
-    // "Profile Id",
-    // "Aadhar Card",
-    // "Insurence Paper",
-    // "Signature",
-    // "Pan Card",
-    // "Other"
   ];
   const addDocumentRow = () =>
     setFormData((prev) => ({
       ...prev,
-      documents: [...prev.documents, { type: "", file: null }],
+      documents: [...prev.documents, { type: "", file: null, preview: "" }], // ← add preview: ""
     }));
+  // const addDocumentRow = () =>
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     documents: [...prev.documents, { type: "", file: null }],
+  //   }));
   const updateDocumentType = (i, v) =>
     setFormData((prev) => {
       const d = [...prev.documents];
       d[i].type = v;
       return { ...prev, documents: d };
     });
-  const updateDocumentFile = (i, f) =>
+  const updateDocumentFile = (i, f) => {
+    if (!f) return;
+
+    // Create preview only for images
+    const isImage = f.type.startsWith("image/");
+    const preview = isImage ? URL.createObjectURL(f) : "";
+
     setFormData((prev) => {
       const d = [...prev.documents];
-      d[i].file = f;
+      d[i] = {
+        ...d[i],
+        file: f,
+        preview: preview,
+      };
       return { ...prev, documents: d };
     });
+  };
+  // const updateDocumentFile = (i, f) =>
+  //   setFormData((prev) => {
+  //     const d = [...prev.documents];
+  //     d[i].file = f;
+  //     return { ...prev, documents: d };
+  //   });
   const removeDocumentRow = (i) =>
-    setFormData((prev) => ({
-      ...prev,
-      documents: prev.documents.filter((_, idx) => idx !== i),
-    }));
+    setFormData((prev) => {
+      const d = [...prev.documents];
+
+      // Clean up old preview URL to prevent memory leak
+      if (d[i]?.preview) {
+        URL.revokeObjectURL(d[i].preview);
+      }
+
+      return {
+        ...prev,
+        documents: d.filter((_, idx) => idx !== i),
+      };
+    });
+  // const removeDocumentRow = (i) =>
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     documents: prev.documents.filter((_, idx) => idx !== i),
+  //   }));
 
   return (
     <div className="max-w-[1400px] mx-auto p-4 bg-white shadow rounded">
@@ -1658,7 +1694,7 @@ export default function CreateUser() {
               </div>
 
               {/* Right: Custom Area Input */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Area
                 </label>
@@ -1671,6 +1707,34 @@ export default function CreateUser() {
                   placeholder="e.g. Shivaji Nagar, Near Temple"
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 />
+              </div> */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sub Area<span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedSubZone}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedSubZone(value);
+                    // Save subzone ID in formData (create new field if not exists)
+                    setFieldValue("customer.subZoneId", value);
+                  }}
+                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                >
+                  <option value="">-- Select Sub Area --</option>
+                  {subZoneList.map((sz) => (
+                    <option key={sz._id} value={sz._id}>
+                      {sz.subZoneName || sz.name}
+                    </option>
+                  ))}
+                </select>
+                {formErrors["customer.subZoneId"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["customer.subZoneId"]}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1768,25 +1832,6 @@ export default function CreateUser() {
                 )}
               </div>
             </div>
-
-            {/* NETWORK TYPE */}
-            {/* <div>
-              <label className="block text-sm font-medium">Network Type</label>
-              <select
-                value={formData.customer.networkType || ""}
-                onChange={(e) =>
-                  setFieldValue("customer.networkType", e.target.value)
-                }
-                className="mt-1 p-2 border rounded w-full"
-              >
-                <option value="">Select Network Type</option>
-                {networkTypes.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div> */}
           </div>
         </section>
 
@@ -1820,27 +1865,67 @@ export default function CreateUser() {
                         key={dt}
                         value={dt}
                         disabled={
-                          dt !== "Other" && // Only non-"Other" types get blocked on duplicate
+                          dt !== "Other" &&
                           formData.documents.some((d, i) => d.type === dt && i !== index)
                         }
                       >
                         {dt}
                       </option>
-                      // <option
-                      //   key={dt}
-                      //   value={dt}
-                      //   disabled={formData.documents.some(
-                      //     (d, i) => d.type === dt && i !== index
-                      //   )} // prevent duplicates
-                      // >
-                      //   {dt}
-                      // </option>
                     ))}
                   </select>
                 </div>
 
                 {/* File Upload */}
-                <div className="md:col-span-1">
+                {/* File Upload + Preview */}
+                <div className="md:col-span-2">
+                  <label className="text-sm">Upload File</label>
+                  <input
+                    type="file"
+                    onChange={(e) =>
+                      updateDocumentFile(index, e.target.files[0])
+                    }
+                    className="mt-1 p-2 border rounded w-full"
+                    disabled={!doc.type}
+                  />
+
+                  {/* Show filename always */}
+                  {doc.file && (
+                    <p className="text-sm mt-2 text-gray-700">
+                      Selected: <span className="font-medium">{doc.file.name}</span>
+                    </p>
+                  )}
+
+                  {/* Show image preview only if it's an image */}
+                  {doc.preview && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-blue-700 mb-2">Preview:</p>
+                      <img
+                        src={doc.preview}
+                        alt="Document preview"
+                        className="w-16 h-16 object-cover border rounded-md shadow-sm"
+                      />
+                    </div>
+                  )}
+
+                  {/* Show message for non-image files */}
+                  {doc.file && !doc.preview && (
+                    <p className="text-sm text-gray-500 mt-3 italic">
+                      (Preview not available for non-image files like PDF)
+                    </p>
+                  )}
+                </div>
+
+                {/* Remove Button */}
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeDocumentRow(index)}
+                    className="px-3 py-2 bg-red-600 text-white text-sm rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* <div className="md:col-span-1">
                   <label className="text-sm">Upload File</label>
                   <input
                     type="file"
@@ -1855,10 +1940,10 @@ export default function CreateUser() {
                       {doc.file.name}
                     </p>
                   )}
-                </div>
+                </div> */}
 
                 {/* Remove Button */}
-                <div className="flex items-end justify-end">
+                {/* <div className="flex items-end justify-end">
                   <button
                     type="button"
                     onClick={() => removeDocumentRow(index)}
@@ -1866,7 +1951,7 @@ export default function CreateUser() {
                   >
                     Remove
                   </button>
-                </div>
+                </div> */}
               </div>
             ))}
 
@@ -1899,16 +1984,6 @@ export default function CreateUser() {
             Additional
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* <div>
-              <label className="block text-sm">DOB</label>
-              <input
-                type="date"
-                value={formData.additional.dob}
-                onChange={(e) => handleChange(e, "additional.dob")}
-                className="mt-1 p-2 border rounded w-full"
-              />  
-            </div> */}
-
             <div>
               <label className="block text-sm">eKYC (Aadhar Verified)</label>
               <div className="mt-1 flex items-center gap-3">

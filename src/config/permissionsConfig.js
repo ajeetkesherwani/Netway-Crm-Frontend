@@ -1,5 +1,4 @@
-// src/config/permissionsConfig.js
-export const permissionsConfig = [
+  export const permissionsConfig = [
     {
         category: "dashboard",
         label: "Dashboard",
@@ -227,12 +226,21 @@ export const permissionsConfig = [
             "zoneRemove",
             "zoneUpdate",
             "zoneCreate",
+            "subZoneList",
+            "subZoneUpdate",
+            "subZoneDelete",
+            "subZoneCreate",
         ],
     },
     {
         category: "setting",
         label: "Setting",
         permissions: ["listing", "create", "edit", "delete", "view", "approve"],
+    },
+    {
+        category: "stockManagement",
+        label: "Stock Management",
+        permissions: ["listing", "create", "edit", "delete", "view", "assign"],
     },
     {
         category: "userCms",

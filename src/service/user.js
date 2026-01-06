@@ -309,3 +309,22 @@ export const getUserPlanHistory = async (userId) => {
     };
   }
 };
+
+//auto recharge
+export const toggleAutoRecharge = async (userId, enable) => {
+  const res = await fetch(`${BASE_URL}/user/auto-recharge/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ autoRecharge: enable }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Failed to update auto recharge");
+  }
+  return res.json();
+};
+
