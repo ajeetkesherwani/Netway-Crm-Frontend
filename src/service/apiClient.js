@@ -165,3 +165,37 @@ export const deleteSubzone = async (subzoneId) => {
   if (!res.ok) throw new Error(result.message || "Failed to delete subzone");
   return result;
 };
+
+export const getSubzonesWithZoneId = async (zoneId) => {
+  if (!zoneId) {
+    return { data: [], status: false };
+  }
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${BASE_URL}/subZone/subzone/list/${zoneId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch subzones");
+    }
+    return {
+      status: true,
+      data: result.data || result || [],
+    };
+  } catch (error) {
+    console.error("Error fetching subzones by zoneId:", error);
+    return {
+      status: false,
+      data: [],
+    };
+  }
+};

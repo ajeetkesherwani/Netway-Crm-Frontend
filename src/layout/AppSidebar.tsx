@@ -251,6 +251,11 @@ if (packageSubItems.length > 0) {
     // 💳 Payment
     const paymentSubItems = [];
     if (hasTruePermission(permissions.payment)) {
+       if (permissions.payment?.add)
+        paymentSubItems.push({
+          name: "Add Payment",
+          path: "/add/payment",
+        });
       if (permissions.payment?.success)
         paymentSubItems.push({
           name: "Received Payment",

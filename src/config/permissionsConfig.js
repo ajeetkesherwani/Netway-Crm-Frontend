@@ -184,6 +184,7 @@
         category: "payment",
         label: "Payment",
         permissions: [
+            "add",
             "success",
             "failed",
             "viewReceipt",
@@ -232,11 +233,11 @@
             "subZoneCreate",
         ],
     },
-    {
-        category: "setting",
-        label: "Setting",
-        permissions: ["listing", "create", "edit", "delete", "view", "approve"],
-    },
+    // {
+    //     category: "setting",
+    //     label: "Setting",
+    //     permissions: ["listing", "create", "edit", "delete", "view", "approve"],
+    // },
     {
         category: "stockManagement",
         label: "Stock Management",

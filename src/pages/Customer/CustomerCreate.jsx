@@ -20,7 +20,8 @@ import { checkAlternateSameAsMobile } from "../../validations/validateAlternateM
 import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
-import { getAllSubZones } from "../../service/apiClient"; // adjust path if needed
+// import { getAllSubZones } from "../../service/apiClient";
+import { getSubzonesWithZoneId } from "../../service/apiClient";
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -192,41 +193,117 @@ export default function CreateUser() {
 
   // FETCH ALL DATA + PACKAGES
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes, subZoneRes,] =
-          await Promise.allSettled([
-            getRoles(),
-            getRetailer(),
-            getAllLco(),
-            getStaffList?.(),
-            getAllZoneList(),
-            getAllPackageList(),
-            getAllSubZones(),
-          ]);
+  const fetchAll = async () => {
+    try {
+      const [
+        rRes,
+        resellerRes,
+        lcoRes,
+        staffRes,
+        zoneRes,
+        pkgRes,
+      ] = await Promise.allSettled([
+        getRoles(),
+        getRetailer(),
+        getAllLco(),
+        getStaffList?.(),
+        getAllZoneList(),
+        getAllPackageList(),
+      ]);
 
-        console.log("resellerRes", resellerRes);
-        if (rRes.status === "fulfilled" && rRes.value?.status)
-          setRoles(rRes.value.data);
-        if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
-          setRetailers(resellerRes.value.data);
-        if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
-          setLcos(lcoRes.value.data);
-        if (staffRes?.status === "fulfilled" && staffRes.value?.status)
-          setStaff(staffRes.value.data);
-        if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
-          setZoneList(zoneRes.value.data || []);
-        if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
-          setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
-        if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
-          setSubZoneList(subZoneRes.value.data || []);
-        }
-      } catch (err) {
-        console.error("fetch error", err);
+      if (rRes.status === "fulfilled" && rRes.value?.status)
+        setRoles(rRes.value.data || []);
+
+      if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
+        setRetailers(resellerRes.value.data || []);
+
+      if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
+        setLcos(lcoRes.value.data || []);
+
+      if (staffRes?.status === "fulfilled" && staffRes.value?.status)
+        setStaff(staffRes.value.data || []);
+
+      if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
+        setZoneList(zoneRes.value.data || []);
+
+      if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
+        setPackageList(pkgRes.value.data || []);
+
+      // Start with empty subzones
+      setSubZoneList([]);
+      setSelectedSubZone("");
+
+    } catch (err) {
+      console.error("fetch error", err);
+    }
+  };
+  fetchAll();
+}, []);
+  // useEffect(() => {
+  //   const fetchAll = async () => {
+  //     try {
+  //       const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes, subZoneRes,] =
+  //         await Promise.allSettled([
+  //           getRoles(),
+  //           getRetailer(),
+  //           getAllLco(),
+  //           getStaffList?.(),
+  //           getAllZoneList(),
+  //           getAllPackageList(),
+  //         ]);
+
+  //       console.log("resellerRes", resellerRes);
+  //       if (rRes.status === "fulfilled" && rRes.value?.status)
+  //         setRoles(rRes.value.data);
+  //       if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
+  //         setRetailers(resellerRes.value.data);
+  //       if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
+  //         setLcos(lcoRes.value.data);
+  //       if (staffRes?.status === "fulfilled" && staffRes.value?.status)
+  //         setStaff(staffRes.value.data);
+  //       if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
+  //         setZoneList(zoneRes.value.data || []);
+  //       if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
+  //         setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
+  //       setSubZoneList([]);
+  //       setSelectedSubZone("");
+  //       // if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
+  //       //   setSubZoneList(subZoneRes.value.data || []);
+  //       // }
+  //     } catch (err) {
+  //       console.error("fetch error", err);
+  //     }
+  //   };
+  //   fetchAll();
+  // }, []);
+
+  useEffect(() => {
+  const fetchSubzones = async () => {
+    if (!selectedArea) {
+      setSubZoneList([]);
+      setSelectedSubZone("");
+      setFieldValue("customer.subZoneId", "");
+      return;
+    }
+
+    try {
+      const response = await getSubzonesWithZoneId(selectedArea);
+
+      if (response?.status && Array.isArray(response.data)) {
+        setSubZoneList(response.data);
+      } else {
+        setSubZoneList([]);
+        toast.error("No sub areas found for this zone");
       }
-    };
-    fetchAll();
-  }, []);
+    } catch (err) {
+      console.error("Error fetching subzones:", err);
+      setSubZoneList([]);
+      toast.error("Failed to load sub areas");
+    }
+  };
+
+  fetchSubzones();
+}, [selectedArea]);
 
   console.log("retailers", retailers);
   console.log("staff", staff);
@@ -627,6 +704,7 @@ export default function CreateUser() {
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
       payload.append("area", selectedArea);
+      payload.append("subZone", selectedSubZone);
 
       formData.documents.forEach((doc) => {
         if (doc.file && doc.type) {
@@ -1642,31 +1720,6 @@ export default function CreateUser() {
               )}
             </div>
 
-            {/* dynamic area editor (bottom row across grid) */}
-
-            {/* SINGLE AREA (ZONE) DROPDOWN  */}
-            {/* <div className="md:col-span-3 mt-6 p-5 rounded-xl border-2 ">
-              <label className="block text-lg font-bold text-blue-900 mb-3">
-                Select Area (Zone) <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedArea}
-                onChange={(e) => setSelectedArea(e.target.value)}
-                className="w-full p-4 text-lg border-2  outline-none transition"
-              >
-                <option value="">-- Select Area / Zone --</option>
-                {zoneList.map((zone) => (
-                  <option key={zone._id} value={zone._id}>
-                    {zone.zoneName}
-                  </option>
-                ))}
-              </select>
-
-              {formErrors.area && (
-                <p className="text-red-600 font-medium mt-2">{formErrors.area}</p>
-              )}
-            </div> */}
-
             {/* ZONE + CUSTOM AREA - SIMPLE & CLEAN (Same as other inputs) */}
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {/* Left: Zone Dropdown */}
@@ -1674,7 +1727,33 @@ export default function CreateUser() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Select Zone <span className="text-red-500">*</span>
                 </label>
-                <select
+              <select
+  value={selectedArea}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSelectedArea(value);
+
+    // Reset subzone when zone changes
+    setSelectedSubZone("");
+    setFieldValue("customer.subZoneId", "");
+
+    // Clear related errors
+    setFormErrors((prev) => ({
+      ...prev,
+      ["customer.subZoneId"]: undefined,
+      zone: undefined,
+    }));
+  }}
+  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+>
+  <option value="">-- Select Zone --</option>
+  {zoneList.map((zone) => (
+    <option key={zone._id} value={zone._id}>
+      {zone.zoneName}
+    </option>
+  ))}
+</select>
+                {/* <select
                   value={selectedArea}
                   onChange={(e) => setSelectedArea(e.target.value)}
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -1685,7 +1764,7 @@ export default function CreateUser() {
                       {zone.zoneName}
                     </option>
                   ))}
-                </select>
+                </select> */}
                 {formErrors["zone"] && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors["zone"]}
@@ -1694,25 +1773,31 @@ export default function CreateUser() {
               </div>
 
               {/* Right: Custom Area Input */}
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Area
-                </label>
-                <input
-                  type="text"
-                  value={formData.customer.customArea || ""}
-                  onChange={(e) =>
-                    setFieldValue("customer.customArea", e.target.value)
-                  }
-                  placeholder="e.g. Shivaji Nagar, Near Temple"
-                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                />
-              </div> */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Sub Area<span className="text-red-500">*</span>
                 </label>
-                <select
+              <select
+  value={selectedSubZone}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSelectedSubZone(value);
+    setFieldValue("customer.subZoneId", value);
+  }}
+  disabled={!selectedArea}
+  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+  required
+>
+  <option value="">
+    {!selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
+  </option>
+  {subZoneList.map((sz) => (
+    <option key={sz._id} value={sz._id}>
+      {sz.subZoneName || sz.name}
+    </option>
+  ))}
+</select>
+                {/* <select
                   value={selectedSubZone}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1729,7 +1814,7 @@ export default function CreateUser() {
                       {sz.subZoneName || sz.name}
                     </option>
                   ))}
-                </select>
+                </select> */}
                 {formErrors["customer.subZoneId"] && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors["customer.subZoneId"]}

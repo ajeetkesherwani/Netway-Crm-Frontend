@@ -328,3 +328,20 @@ export const toggleAutoRecharge = async (userId, enable) => {
   return res.json();
 };
 
+//add user wallet transaction
+export const addWalletPayment = async (userId, formData) => {
+  const res = await fetch(`${BASE_URL}/user/addPayment/${userId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to record payment");
+  }
+
+  return res.json();
+};

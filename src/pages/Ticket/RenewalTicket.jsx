@@ -119,7 +119,7 @@ export default function ReassignTicketList() {
             <tr>
               <th className="px-3 py-2 border text-left">S.No</th>
               <th className="px-3 py-2 border text-left">Ticket No</th>
-              <th className="px-3 py-2 border text-left">Client Name</th>
+              <th className="px-3 py-2 border text-left">User ID (userName)</th>
               <th className="px-3 py-2 border text-left">Priority</th>
               <th className="px-3 py-2 border text-left">Ticket Date</th>
               <th className="px-3 py-2 border text-left">Call Source</th>

@@ -12,6 +12,7 @@ import { getRetailer } from "../../service/retailer";
 import { getAllPackageList } from "../../service/package";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
+import { getSubzonesWithZoneId } from "../../service/apiClient";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
@@ -28,6 +29,9 @@ export default function CustomerUpdate() {
   // Zone + Custom Area
   const [selectedArea, setSelectedArea] = useState("");
   const [customArea, setCustomArea] = useState("");
+
+  const [subZoneList, setSubZoneList] = useState([]);
+  const [selectedSubZone, setSelectedSubZone] = useState("");
 
   // Created For States
   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
@@ -249,14 +253,25 @@ export default function CustomerUpdate() {
               images.forEach((img, index) => {
                 docs.push({
                   type: type,
-                  // For multiple "Other" images, show index in label if needed (optional)
                   displayLabel: type === "Other" && images.length > 1
                     ? `${type} (${index + 1})`
                     : type,
                   existingImage: img,
-                  existingUrl: img ? `/uploads/${img}` : null,
+                  existingUrl: img ? '/' + img.replace(/\\/g, '/') : null, 
+                  preview: null,
                   file: null,
                 });
+                // docs.push({
+                //   type: type,
+                //   // For multiple "Other" images, show index in label if needed (optional)
+                //   displayLabel: type === "Other" && images.length > 1
+                //     ? `${type} (${index + 1})`
+                //     : type,
+                //   existingImage: img,
+                //   // existingUrl: img ? `/uploads/${img}` : null,
+                //   existingUrl: img ? '/' + img.replace(/\\/g, '/') : null,
+                //   file: null,
+                // });
               });
             });
             return docs;
@@ -275,6 +290,7 @@ export default function CustomerUpdate() {
 
         // Pre-fill Zone & Custom Area
         setSelectedArea(getId(u.addressDetails?.area) || "");
+        setSelectedSubZone(getId(u.addressDetails?.subZone) || "");
         setCustomArea(u.generalInformation?.customArea || "");
         setFieldValue(
           "customer.customArea",
@@ -289,6 +305,33 @@ export default function CustomerUpdate() {
     };
     load();
   }, [id]);
+
+  // Fetch subzones when zone changes
+  useEffect(() => {
+    const fetchSubzones = async () => {
+      if (!selectedArea) {
+        setSubZoneList([]);
+        setSelectedSubZone("");
+        return;
+      }
+
+      try {
+        const response = await getSubzonesWithZoneId(selectedArea);
+        if (response?.status && Array.isArray(response.data)) {
+          setSubZoneList(response.data);
+        } else {
+          setSubZoneList([]);
+          toast.error("No sub areas found for this zone");
+        }
+      } catch (err) {
+        console.error("Error fetching subzones:", err);
+        setSubZoneList([]);
+        toast.error("Failed to load sub areas");
+      }
+    };
+
+    fetchSubzones();
+  }, [selectedArea]);
 
   // Auto-sync billing → installation
   useEffect(() => {
@@ -358,16 +401,47 @@ export default function CustomerUpdate() {
   };
 
   const updateDocumentFile = (i, f) => {
+    if (!f) return;
+
     const d = [...formData.documents];
-    d[i].file = f;
+
+    // Create preview only for image files
+    const isImage = f.type.startsWith("image/");
+    const preview = isImage ? URL.createObjectURL(f) : "";
+
+    d[i] = {
+      ...d[i],
+      file: f,
+      preview: preview,
+    };
+
     setFormData((prev) => ({ ...prev, documents: d }));
   };
+  // const updateDocumentFile = (i, f) => {
+  //   const d = [...formData.documents];
+  //   d[i].file = f;
+  //   setFormData((prev) => ({ ...prev, documents: d }));
+  // };
 
   const removeDocumentRow = (i) =>
-    setFormData((prev) => ({
-      ...prev,
-      documents: prev.documents.filter((_, idx) => idx !== i),
-    }));
+    setFormData((prev) => {
+      const d = [...prev.documents];
+
+      // Clean up preview URL if it exists (for new files)
+      if (d[i]?.preview) {
+        URL.revokeObjectURL(d[i].preview);
+      }
+
+      return {
+        ...prev,
+        documents: d.filter((_, idx) => idx !== i),
+      };
+    });
+  // const removeDocumentRow = (i) =>
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     documents: prev.documents.filter((_, idx) => idx !== i),
+  //   }));
 
   // Handle Created For change - NEVER send empty string
   const handleCreatedForChange = (type) => {
@@ -404,56 +478,57 @@ export default function CustomerUpdate() {
 
   // Submit
   // Submit Handler - Inside handleSubmit function
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (loading) return;
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    setLoading(true);
 
-  const payload = new FormData();
+    const payload = new FormData();
 
-  // Customer, addresses, additional
-  const cleanCustomer = {
-    ...formData.customer,
-    createdFor: {
-      type: formData.customer.createdFor.type,
-      id: formData.customer.createdFor.id || null,
-    },
-    customArea: customArea || "",
+    // Customer, addresses, additional
+    const cleanCustomer = {
+      ...formData.customer,
+      createdFor: {
+        type: formData.customer.createdFor.type,
+        id: formData.customer.createdFor.id || null,
+      },
+      customArea: customArea || "",
+    };
+
+    payload.append("customer", JSON.stringify(cleanCustomer));
+    payload.append("addresses", JSON.stringify(formData.addresses));
+    payload.append("additional", JSON.stringify(formData.additional));
+    payload.append("area", selectedArea || "");
+    payload.append("subZone", selectedSubZone || "");
+    payload.append("customArea", customArea || "");
+
+    // --- DOCUMENTS: New files + types ---
+    const newDocuments = formData.documents.filter(doc => doc.file);
+    newDocuments.forEach((doc) => {
+      payload.append("documents", doc.file);
+      payload.append("documentTypes[]", doc.type || "Other");
+    });
+
+    // --- EXISTING DOCUMENTS: Send as JSON string ---
+    const existingFilenames = formData.documents
+      .filter(doc => doc.existingUrl && !doc.file)
+      .map(doc => doc.existingUrl.split("/").pop());
+
+    if (existingFilenames.length > 0) {
+      payload.append("existingDocuments", JSON.stringify(existingFilenames));
+    }
+
+    try {
+      await updateUser(id, payload);
+      toast.success("Customer updated successfully!");
+      navigate("/user/list");
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(err.response?.data?.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  payload.append("customer", JSON.stringify(cleanCustomer));
-  payload.append("addresses", JSON.stringify(formData.addresses));
-  payload.append("additional", JSON.stringify(formData.additional));
-  payload.append("area", selectedArea || "");
-  payload.append("customArea", customArea || "");
-
-  // --- DOCUMENTS: New files + types ---
-  const newDocuments = formData.documents.filter(doc => doc.file);
-  newDocuments.forEach((doc) => {
-    payload.append("documents", doc.file);
-    payload.append("documentTypes[]", doc.type || "Other");
-  });
-
-  // --- EXISTING DOCUMENTS: Send as JSON string ---
-  const existingFilenames = formData.documents
-    .filter(doc => doc.existingUrl && !doc.file)
-    .map(doc => doc.existingUrl.split("/").pop());
-
-  if (existingFilenames.length > 0) {
-    payload.append("existingDocuments", JSON.stringify(existingFilenames));
-  }
-
-  try {
-    await updateUser(id, payload);
-    toast.success("Customer updated successfully!");
-    navigate("/user/list");
-  } catch (err) {
-    console.error("Update error:", err);
-    toast.error(err.response?.data?.message || "Update failed");
-  } finally {
-    setLoading(false);
-  }
-};
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
   //   if (loading) return;
@@ -1112,19 +1187,58 @@ const handleSubmit = async (e) => {
             </div>
           </div>
 
-          {/* Area Dropdown - Like Create Form */}
-          {/* <div className="p-6 border-t">
-            <label className="block text-lg font-bold text-blue-900 mb-3">Select Area (Zone) *</label>
-            <select value={selectedArea} onChange={e => setSelectedArea(e.target.value)} className="w-full p-4 text-lg border-2 rounded-lg outline-none focus:border-blue-600">
-              <option value="">-- Select Area / Zone --</option>
-              {zoneList.map(zone => (
-                <option key={zone._id} value={zone._id}>{zone.zoneName}</option>
-              ))}
-            </select>
-          </div> */}
+
           {/* ZONE + CUSTOM AREA - Same as Create Form */}
+          {/* ZONE + SUBZONE */}
           <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6">
             {/* Left: Zone Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Zone <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedArea}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedArea(value);
+                  setSelectedSubZone(""); // reset subzone
+                }}
+                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              >
+                <option value="">-- Select Zone --</option>
+                {zoneList.map((zone) => (
+                  <option key={zone._id} value={zone._id}>
+                    {zone.zoneName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Right: SubZone Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sub Area <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedSubZone}
+                onChange={(e) => setSelectedSubZone(e.target.value)}
+                disabled={!selectedArea}
+                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                required
+              >
+                <option value="">
+                  {!selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
+                </option>
+                {subZoneList.map((sz) => (
+                  <option key={sz._id} value={sz._id}>
+                    {sz.subZoneName || sz.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {/* <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6">
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Select Zone <span className="text-red-500">*</span>
@@ -1143,7 +1257,6 @@ const handleSubmit = async (e) => {
               </select>
             </div>
 
-            {/* Right: Custom Area Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Area
@@ -1156,7 +1269,7 @@ const handleSubmit = async (e) => {
                 className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               />
             </div>
-          </div>
+          </div> */}
         </section>
 
         {/* Network & Package */}
@@ -1263,7 +1376,98 @@ const handleSubmit = async (e) => {
                     ))}
                   </select> */}
                 </div>
-                <div>
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium">Upload New File</label>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => updateDocumentFile(i, e.target.files[0])}
+                    className="w-full p-2 border rounded mt-1"
+                  />
+
+                  {/* Show filename when a new file is selected */}
+                  {doc.file && (
+                    <p className="text-sm mt-2 text-green-700 font-medium">
+                      Selected: {doc.file.name}
+                    </p>
+                  )}
+
+                  {/* Show PREVIEW for NEW image upload */}
+                  {doc.preview && (
+                    <div className="mt-4">
+                      <p className="text-xs font-medium text-green-700 mb-1">New Preview:</p>
+                      <img
+                        src={doc.preview}
+                        alt="New preview"
+                        className="w-24 h-24 object-cover border-2 border-green-500 rounded-lg shadow"
+                      />
+                    </div>
+                  )}
+
+                  {/* Show CURRENT existing image */}
+                  {doc.existingUrl && !doc.file && (
+                    <div className="mt-4">
+                      <p className="text-xs font-medium text-blue-700 mb-1">Current:</p>
+                      <img
+                        src={`http://localhost:5004${doc.existingUrl}`}
+                        alt="Current document"
+                        className="w-24 h-24 object-cover border-2 border-blue-400 rounded-lg shadow"
+                      />
+                    </div>
+                  )}
+
+                  {/* Show both side-by-side when replacing */}
+                  {doc.existingUrl && doc.file && (
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">Current:</p>
+                        <img
+                          src={`http://localhost:5004${doc.existingUrl}`}
+                          alt="Current"
+                          className="w-full h-20 object-cover border rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-green-700 mb-1">New:</p>
+                        <img
+                          src={doc.preview}
+                          alt="New"
+                          className="w-full h-20 object-cover border-2 border-green-500 rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Show both if user is replacing an image */}
+                  {doc.existingUrl && doc.file && (
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-2">Current:</p>
+                        <img
+                          src={`http://localhost:5004${doc.existingUrl}`}
+                          alt="Current"
+                          className="w-full h-32 object-cover border rounded-lg"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-green-700 mb-2">New:</p>
+                        <img
+                          src={doc.preview}
+                          alt="New"
+                          className="w-full h-32 object-cover border-2 border-green-500 rounded-lg"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Message for non-image files (PDF, etc.) */}
+                  {doc.file && !doc.preview && (
+                    <p className="text-sm text-gray-500 mt-3 italic">
+                      Preview not available for non-image files (e.g. PDF)
+                    </p>
+                  )}
+                </div>
+                {/* <div>
                   <label>New File</label>
                   <input
                     type="file"
@@ -1282,7 +1486,7 @@ const handleSubmit = async (e) => {
                       New: {doc.file.name}
                     </p>
                   )}
-                </div>
+                </div> */}
                 <div className="flex items-end">
                   <button
                     type="button"
