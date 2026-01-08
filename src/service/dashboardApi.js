@@ -53,3 +53,17 @@ export const getUserListDetails = async (type, filter, month, year) => {
     );
   return data;
 };
+
+
+export const getDashboardSummary = async () => {
+  const token = localStorage.getItem("token");
+  const res = await fetch(
+    "http://localhost:5004/api/admin/common/count/summary",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return res.json();
+};

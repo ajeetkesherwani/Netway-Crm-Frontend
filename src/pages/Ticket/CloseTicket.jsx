@@ -396,7 +396,7 @@ export default function ClosedTicket() {
             <div className="hidden md:grid grid-cols-11 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
               <div>S.No</div>
               <div>Ticket No</div>
-              <div>User ID</div>
+              <div>User ID (userName)</div>
               <div>Category</div>
               <div>Ticket Date/Time</div>
               <div>Resolution</div>

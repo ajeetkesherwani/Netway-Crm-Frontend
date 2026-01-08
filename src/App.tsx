@@ -151,6 +151,7 @@ import IptvList from "./pages/Package/IptvPackageList";
 import PlanHistoryPage from "./pages/Customer/CustomerPlanHistory";
 import SubZoneList from "./pages/Setting/SubZoneList";
 import SubZoneCreate from "./pages/Setting/SubZoneCreate";
+import AddPayment from "./pages/Payment/AddPayment";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -435,6 +436,8 @@ export default function App() {
 
             <Route path="/received/payment" element={<CompletePaymentList />} />
             <Route path="/pending/payment" element={<PendingPaymentList />} />
+            <Route path="/add/payment" element={<AddPayment />} />
+         
 
             {/*--------------------------puched plan list-------------------------------------------------------------------*/}
 

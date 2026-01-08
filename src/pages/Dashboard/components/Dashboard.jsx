@@ -4,6 +4,19 @@ import DashboardDetails from './DashboardDetails';
 import { getUserList, getAllType } from '../../../service/dashboardApi';
 import { useNavigate } from 'react-router';
 import { usePermission } from "../../../context/PermissionContext";
+import { getDashboardSummary } from "../../../service/dashboardApi";
+import DashboardSection from "./DashboardSection";
+import MiniCard from "./MiniCard";
+
+import {
+  FaClock,
+  FaTasks,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaFileAlt,
+  FaBan,
+  FaWifi,
+} from "react-icons/fa";
 const typeMap = {
   'Registration *': 'register',
   'Renewal': 'renewal',
@@ -26,8 +39,29 @@ const Dashboard = () => {
     onlineUser: 0,
   });
   const navigate = useNavigate();
-  console.log(data," this is the dashboard data");
+  console.log(data, " this is the dashboard data");
   const [selectedType, setSelectedType] = useState(null);
+
+  const [summary, setSummary] = useState({
+    tickets: {},
+    caf: {},
+    serviceOpted: {},
+    ekyc: {},
+  });
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await getDashboardSummary();
+        setSummary(res.data || {});
+      } catch (err) {
+        console.error("Dashboard summary error", err);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -36,7 +70,7 @@ const Dashboard = () => {
         const currentMonth = currentDate.getMonth() + 1; // Months are 0-indexed
         const currentYear = currentDate.getFullYear();
         const currentWeek = Math.ceil(currentDay / 7);
-        
+
         const fetchForType = async (type) => {
           try {
             // Single API call for the type, assuming it returns all periods in one response
@@ -81,8 +115,8 @@ const Dashboard = () => {
   }, []);
 
   // const handleViewDetails = (title) => setSelectedType(title);
-  const handleViewDetails = (title) => navigate("/dashboard/details", { state: { type: typeMap[title] ,title:typeMap[title]} });
-  const handleResellerWise = (title) => navigate("/reseller-wise-list/" +title);
+  const handleViewDetails = (title) => navigate("/dashboard/details", { state: { type: typeMap[title], title: typeMap[title] } });
+  const handleResellerWise = (title) => navigate("/reseller-wise-list/" + title);
 
   if (selectedType) {
     return (
@@ -160,6 +194,120 @@ const Dashboard = () => {
           resellerWisePermission={permissions.dashboard?.UpComRenewalResellerWise}
         />
       </div>
+
+      <DashboardSection title="Complaint Status">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <MiniCard title="Open"
+            value={summary.tickets?.Open}
+            icon={<FaClock />}
+            color="red"
+            onCountClick={() => navigate("ticket/manage")}
+          />
+
+          <MiniCard
+            title="Assigned"
+            value={summary.tickets?.Assigned}
+            icon={<FaTasks />}
+            color="orange"
+            onCountClick={() => navigate("ticket/manage")}
+          />
+
+          <MiniCard
+            title="Fixed"
+            value={summary.tickets?.Fixed}
+            icon={<FaCheckCircle />}
+            color="green"
+            onCountClick={() => navigate("/ticket/approval")}
+          />
+
+          <MiniCard
+            title="Closed"
+            value={summary.tickets?.Closed}
+            icon={<FaTimesCircle />}
+            color="teal"
+            onCountClick={() => navigate("/ticket/close")}
+          />
+
+          <MiniCard
+            title="Total"
+            value={summary.tickets?.total}
+            icon={<FaFileAlt />}
+            color="blue"
+            onCountClick={() => navigate("/ticket/all")}
+          />
+
+        </div>
+      </DashboardSection>
+
+      <DashboardSection title="CAF Form">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MiniCard
+            title="CAF Uploaded"
+            value={summary.caf?.uploaded}
+            icon={<FaCheckCircle />}
+            color="green"
+            onCountClick={() => navigate("/user/list")}
+          />
+          <MiniCard
+            title="CAF Not Uploaded"
+            value={summary.caf?.notUploaded}
+            icon={<FaBan />}
+            color="red"
+            onCountClick={() => navigate("/user/list")}
+          />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection title="Service">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <MiniCard
+            title="Intercom"
+            value={summary.serviceOpted?.intercom}
+            icon={<FaWifi />}
+            color="blue"
+            onCountClick={() => navigate("/user/list")}
+          />
+          <MiniCard
+            title="Broadband"
+            value={
+              summary.serviceOpted?.broadband +
+              (summary.serviceOpted?.broadBand || 0)
+            }
+            icon={<FaWifi />}
+            color="green"
+            onCountClick={() => navigate("/user/list")}
+          />
+          <MiniCard
+            title="Corporate"
+            value={summary.serviceOpted?.corporate}
+            icon={<FaWifi />}
+            color="gray"
+            onCountClick={() => navigate("/user/list")}
+          />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection title="eKYC Status">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MiniCard
+            title="eKYC Completed"
+            value={summary.ekyc?.yes}
+            icon={<FaCheckCircle />}
+            color="green"
+            onCountClick={() => navigate("/user/list?ekyc=yes")}
+          />
+
+          <MiniCard
+            title="eKYC Pending"
+            value={summary.ekyc?.no}
+            icon={<FaBan />}
+            color="red"
+            onCountClick={() => navigate("/user/list?ekyc=no")}
+          />
+        </div>
+      </DashboardSection>
+
+
     </div>
   );
 };

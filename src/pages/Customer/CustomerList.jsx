@@ -15,7 +15,7 @@ import {
   deleteUser,
   getAllUserList,
   updateUserStatus,
-  resetUserPassword, 
+  resetUserPassword,
 } from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -43,12 +43,14 @@ export default function UserList() {
     searchQuery: searchParams.get("searchQuery") || "",
     status: searchParams.get("status") || "",
     area: searchParams.get("area") || "",
+    subZone: searchParams.get("subZone") || "",
     ekyc: searchParams.get("ekyc") || "",
     serviceOpted: searchParams.get("serviceOpted") || "",
     startDate: searchParams.get("startDate") || "",
     endDate: searchParams.get("endDate") || "",
     reseller: searchParams.get("reseller") || "",
     lco: searchParams.get("lco") || "",
+    cafUploaded: searchParams.get("cafUploaded") || "",
   };
 
   const debouncedSearch = useDebounce(filters.searchQuery, 500);
@@ -88,12 +90,14 @@ export default function UserList() {
     debouncedSearch,
     filters.status,
     filters.area,
+    filters.subZone,
     filters.ekyc,
     filters.serviceOpted,
     filters.startDate,
     filters.endDate,
     filters.reseller,
     filters.lco,
+    filters.cafUploaded,
   ]);
 
   const toggleMenu = (userId) => {
@@ -101,7 +105,7 @@ export default function UserList() {
   };
 
   const toggleStatus = (userId, currentStatus) => {
-    setNewStatus(currentStatus); // preselect current status
+    setNewStatus(currentStatus);
     setOpenStatusModalId(userId);
     setOpenMenuId(null);
   };
@@ -189,92 +193,92 @@ export default function UserList() {
     <div className="p-6">
       <CustomerFilters filters={filters} setSearchParams={setSearchParams} />
 
-<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-  <h1 className="text-xl font-semibold">Customer List</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-xl font-semibold">Customer List</h1>
 
-  <div className="flex flex-wrap gap-3">
-    {/* Download Excel Button */}
-    <button
-      onClick={() => {
-        if (users.length === 0) {
-          toast.info("No data to export");
-          return;
-        }
+        <div className="flex flex-wrap gap-3">
+          {/* Download Excel Button */}
+          <button
+            onClick={() => {
+              if (users.length === 0) {
+                toast.info("No data to export");
+                return;
+              }
 
-        const exportData = users.map((user, index) => ({
-          "S.No": index + 1,
-          Name: user.generalInformation?.name || "-",
-          Email: user.generalInformation?.email || "-",
-          Phone: user.generalInformation?.phone || "-",
-          Address:
-            user.addressDetails?.permanentAddress?.addressine1 ||
-            user.addressDetails?.installationAddress?.addressLine1 ||
-            "-",
-          City:
-            user.addressDetails?.permanentAddress?.city ||
-            user.addressDetails?.installationAddress?.city ||
-            "-",
-          Pincode:
-            user.addressDetails?.permanentAddress?.pincode ||
-            user.addressDetails?.installationAddress?.pincode ||
-            "-",
-          Status: user.status?.charAt(0).toUpperCase() + user.status?.slice(1),
-          // "Package Name": user.packageDetails?.packageName || "-",
-          // "Package Amount": user.packageDetails?.packageAmount || "-",
-          "Connection Type": user.generalInformation?.connectionType || "-",
-          "Service Opted": user.generalInformation?.serviceOpted || "-",
-          "Created Date": user.createdAt
-            ? new Date(user.createdAt).toLocaleDateString("en-IN")
-            : "-",
-        }));
+              const exportData = users.map((user, index) => ({
+                "S.No": index + 1,
+                Name: user.generalInformation?.name || "-",
+                Email: user.generalInformation?.email || "-",
+                Phone: user.generalInformation?.phone || "-",
+                Address:
+                  user.addressDetails?.permanentAddress?.addressine1 ||
+                  user.addressDetails?.installationAddress?.addressLine1 ||
+                  "-",
+                City:
+                  user.addressDetails?.permanentAddress?.city ||
+                  user.addressDetails?.installationAddress?.city ||
+                  "-",
+                Pincode:
+                  user.addressDetails?.permanentAddress?.pincode ||
+                  user.addressDetails?.installationAddress?.pincode ||
+                  "-",
+                Status: user.status?.charAt(0).toUpperCase() + user.status?.slice(1),
+                // "Package Name": user.packageDetails?.packageName || "-",
+                // "Package Amount": user.packageDetails?.packageAmount || "-",
+                "Connection Type": user.generalInformation?.connectionType || "-",
+                "Service Opted": user.generalInformation?.serviceOpted || "-",
+                "Created Date": user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("en-IN")
+                  : "-",
+              }));
 
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Customers");
+              const ws = XLSX.utils.json_to_sheet(exportData);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "Customers");
 
-        // Auto-size columns
-        const colWidths = [
-          { wch: 6 },   // S.No
-          { wch: 25 },  // Name
-          { wch: 30 },  // Email
-          { wch: 15 },  // Phone
-          { wch: 40 },  // Address
-          { wch: 15 },  // City
-          { wch: 10 },  // Pincode
-          { wch: 10 },  // Status
-          { wch: 20 },  // Package Name
-          { wch: 15 },  // Package Amount
-          { wch: 15 },  // Connection Type
-          { wch: 15 },  // Service Opted
-          { wch: 15 },  // Created Date
-        ];
-        ws["!cols"] = colWidths;
+              // Auto-size columns
+              const colWidths = [
+                { wch: 6 },   // S.No
+                { wch: 25 },  // Name
+                { wch: 30 },  // Email
+                { wch: 15 },  // Phone
+                { wch: 40 },  // Address
+                { wch: 15 },  // City
+                { wch: 10 },  // Pincode
+                { wch: 10 },  // Status
+                { wch: 20 },  // Package Name
+                { wch: 15 },  // Package Amount
+                { wch: 15 },  // Connection Type
+                { wch: 15 },  // Service Opted
+                { wch: 15 },  // Created Date
+              ];
+              ws["!cols"] = colWidths;
 
-        // Generate filename with date
-        const today = new Date().toISOString().slice(0, 10);
-        XLSX.writeFile(wb, `Customers_List_${today}.xlsx`);
-        
-        toast.success("Excel downloaded successfully!");
-      }}
-      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow flex items-center gap-2 transition"
-    >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-      </svg>
-      Download Excel
-    </button>
+              // Generate filename with date
+              const today = new Date().toISOString().slice(0, 10);
+              XLSX.writeFile(wb, `Customers_List_${today}.xlsx`);
 
-    {/* Add Customer Button */}
-    <ProtectedAction module="users" action="create">
-      <button
-        onClick={() => navigate("/user/create")}
-        className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 font-medium"
-      >
-        Add Customer
-      </button>
-    </ProtectedAction>
-  </div>
-</div>
+              toast.success("Excel downloaded successfully!");
+            }}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow flex items-center gap-2 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download Excel
+          </button>
+
+          {/* Add Customer Button */}
+          <ProtectedAction module="users" action="create">
+            <button
+              onClick={() => navigate("/user/create")}
+              className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 font-medium"
+            >
+              Add Customer
+            </button>
+          </ProtectedAction>
+        </div>
+      </div>
 
       {/* <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold">Customer List</h1>
@@ -334,11 +338,10 @@ export default function UserList() {
 
                     <td className="px-[2px] py-[2px]">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          user.status === "active"
+                        className={`px-2 py-1 rounded text-xs ${user.status === "active"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }`}
+                          }`}
                       >
                         {user.status}
                       </span>

@@ -1008,19 +1008,19 @@ export default function PriceBookList() {
     // Search by assigned name, respecting the selected type
     const nameMatch = appliedSearch
       ? pb.assignedTo?.some((assign) => {
-          if (typeof assign !== "object" || assign === null) return false; // Skip non-objects (e.g., string IDs)
+        if (typeof assign !== "object" || assign === null) return false; // Skip non-objects (e.g., string IDs)
 
-          let name = "";
-          if (appliedType === "Reseller" && assign.resellerName) {
-            name = assign.resellerName;
-          } else if (appliedType === "Lco" && assign.lcoName) {
-            name = assign.lcoName;
-          } else if (!appliedType) {
-            name = assign.resellerName || assign.lcoName || "";
-          }
+        let name = "";
+        if (appliedType === "Reseller" && assign.resellerName) {
+          name = assign.resellerName;
+        } else if (appliedType === "Lco" && assign.lcoName) {
+          name = assign.lcoName;
+        } else if (!appliedType) {
+          name = assign.resellerName || assign.lcoName || "";
+        }
 
-          return name.toLowerCase().includes(appliedSearch);
-        })
+        return name.toLowerCase().includes(appliedSearch);
+      })
       : true;
 
     return typeMatch && nameMatch;
@@ -1107,10 +1107,8 @@ export default function PriceBookList() {
                   <tr>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">S.No</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Price Book Name</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">From Date</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">To Date</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Packages</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Count</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Assigned</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Created</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Modified By</th>
@@ -1128,12 +1126,6 @@ export default function PriceBookList() {
                       >
                         {pb.priceBookName}
                       </td>
-                      <td className="px-6 py-4 text-gray-700">
-                        {new Date(pb.fromDate).toLocaleDateString("en-GB")}
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">
-                        {new Date(pb.toDate).toLocaleDateString("en-GB")}
-                      </td>
                       <td className="px-6 py-4">
                         <span
                           className={`px-3 py-1 text-xs font-medium rounded-full ${pb.status === "active"
@@ -1145,7 +1137,26 @@ export default function PriceBookList() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {pb.package?.map((p) => p.name).join(", ") || "-"}
+                        {(() => {
+                          if (!pb.assignedTo || pb.assignedTo.length === 0) return "";
+
+                          const resellerCount = pb.assignedTo.filter(
+                            (a) => a.resellerName
+                          ).length;
+                          const lcoCount = pb.assignedTo.filter(
+                            (a) => a.lcoName
+                          ).length;
+                          if (resellerCount > 0 && lcoCount > 0) {
+                            return `${resellerCount} / ${lcoCount}`;
+                          }
+                          if (resellerCount > 0) {
+                            return resellerCount;
+                          }
+                          if (lcoCount > 0) {
+                            return lcoCount;
+                          }
+                          return "";
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {(() => {
@@ -1155,8 +1166,8 @@ export default function PriceBookList() {
                           const lcoCount = pb.assignedTo.filter(a => a.lcoName).length;
 
                           const parts = [];
-                          if (resellerCount) parts.push(`Reseller (${resellerCount})`);
-                          if (lcoCount) parts.push(`Lco (${lcoCount})`);
+                          if (resellerCount) parts.push(`Reseller`);
+                          if (lcoCount) parts.push(`Lco `);
 
                           return parts.join(", ");
                         })()}
