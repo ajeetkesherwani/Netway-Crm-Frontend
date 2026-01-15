@@ -348,7 +348,7 @@ export default function PendingPaymentList() {
         "Payment Mode": item.paymentMode || "Online",
         "Payment Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
         "Payment Time": new Date(item.createdAt || item.PaymentDate).toLocaleTimeString("en-IN"),
-        "Recharge Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
+        // "Recharge Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
       };
     });
 
@@ -413,7 +413,7 @@ export default function PendingPaymentList() {
               <th className="px-3 py-2 border text-center">DUE</th>
               <th className="px-3 py-2 border text-center">MODE</th>
               <th className="px-3 py-2 border text-center">PAYMENT DATE</th>
-              <th className="px-3 py-2 border text-center">RECHARGE DATE</th>
+              {/* <th className="px-3 py-2 border text-center">RECHARGE DATE</th> */}
             </tr>
           </thead>
 
@@ -459,10 +459,10 @@ export default function PendingPaymentList() {
                         {new Date(item.createdAt || item.PaymentDate).toLocaleTimeString("en-IN")}
                       </span>
                     </td>
-
+{/* 
                     <td className="border px-3 py-2 text-center">
                       {new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN")}
-                    </td>
+                    </td> */}
                   </tr>
                 );
               })

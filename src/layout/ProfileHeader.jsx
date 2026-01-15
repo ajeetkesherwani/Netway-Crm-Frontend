@@ -292,7 +292,13 @@ const ProfileHeader = () => {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
               <div className="py-2">
-                <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+                {/* <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+                  <FaCreditCard /> Add Payment
+                </button> */}
+                <button
+                  onClick={() => navigate("/add/payment")}
+                  className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                >
                   <FaCreditCard /> Add Payment
                 </button>
                 <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">

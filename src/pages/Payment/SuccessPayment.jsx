@@ -322,7 +322,7 @@ export default function CompletePaymentList() {
 
   const handleNext = () => {
     if (currentPage < totalPages) setCurrentPage((p) => p + 1);
-  };
+  };                                                            
 
   const handlePrev = () => {
     if (currentPage > 1) setCurrentPage((p) => p - 1);
@@ -347,7 +347,7 @@ export default function CompletePaymentList() {
         "Payment Mode": item.paymentMode || "Online",
         "Paid Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
         "Paid Time": new Date(item.createdAt || item.PaymentDate).toLocaleTimeString("en-IN"),
-        "Recharge Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
+        // "Recharge Date": new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN"),
       };
     });
 
@@ -412,7 +412,7 @@ export default function CompletePaymentList() {
               <th className="px-3 py-2 border text-center">PAID</th>
               <th className="px-3 py-2 border text-center">MODE</th>
               <th className="px-3 py-2 border text-center">PAID DATE</th>
-              <th className="px-3 py-2 border text-center">RECHARGE DATE</th>
+              {/* <th className="px-3 py-2 border text-center">RECHARGE DATE</th> */}
             </tr>
           </thead>
 
@@ -459,9 +459,9 @@ export default function CompletePaymentList() {
                       </span>
                     </td>
 
-                    <td className="border px-3 py-2 text-center">
+                    {/* <td className="border px-3 py-2 text-center">
                       {new Date(item.createdAt || item.PaymentDate).toLocaleDateString("en-IN")}
-                    </td>
+                    </td> */}
                   </tr>
                 );
               })
