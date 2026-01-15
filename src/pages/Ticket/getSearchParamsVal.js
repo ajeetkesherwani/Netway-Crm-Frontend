@@ -1,3 +1,5 @@
+import { sub } from "date-fns";
+
 export const getSearchParamsVal = (searchParams) => {
   return {
     page: parseInt(searchParams.get("page") ?? "1"),
@@ -7,6 +9,7 @@ export const getSearchParamsVal = (searchParams) => {
     createdFrom: searchParams.get("fromDate") ?? "",
     createdTo: searchParams.get("toDate") ?? "",
     zoneId: searchParams.get("zoneId") ?? "",
+    subZoneId: searchParams.get("subZoneId") ?? "",
     fixedBy: searchParams.get("resolvedBy") ?? "",
     category: searchParams.get("category") ?? "",
     assignTo: searchParams.get("assignTo") ?? "",

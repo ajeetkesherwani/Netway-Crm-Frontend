@@ -99,3 +99,32 @@ export const getIptvPackageList = async () => {
 
   return res.json();
 };
+
+//get iptv package list from third party api
+export const getIptvPackageListFromThirdParty = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/package/iptv-packages/list`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+         Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch IPTV packages");
+    }
+
+    const result = await response.json();
+
+    if (!result.status || !result.data?.packages) {
+      throw new Error("Invalid response format from IPTV packages API");
+    }
+
+    return result.data.packages; 
+  } catch (error) {
+    console.error("getIptvPackageList error:", error);
+    throw error; 
+  }
+};

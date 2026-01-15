@@ -3,7 +3,7 @@ import { MdArrowDropDown } from "react-icons/md";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getLcos } from "../../service/lco";
 import { getRetailers } from "../../service/retailer";
-import { getZones } from "../../service/apiClient";
+import { getZones, getAllSubZones } from "../../service/apiClient";
 import { getCategoryList } from "../../service/category";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -20,6 +20,13 @@ export default function TicketFilter({ setSearchParams }) {
   const [showZone, setShowZone] = useState(false);
   const zoneRef = useRef(null);
 
+  /* ───────────── SUBZONE STATES ───────────── */
+  const [subZones, setSubZones] = useState([]);
+  const [subZoneText, setSubZoneText] = useState("");
+  const [showSubZone, setShowSubZone] = useState(false);
+  const subZoneRef = useRef(null);
+  console.log("SubZones:", subZones);
+
   /*-----------------Category-----------------*/
   const [categoryes, setCatagoryes] = useState([]);
   const [categoryText, setCategoryText] = useState("");
@@ -34,6 +41,7 @@ export default function TicketFilter({ setSearchParams }) {
   const [selectedReseller, setSelectedReseller] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedZone, setSelectedZone] = useState(null);
+  const [selectedSubZone, setSelectedSubZone] = useState(null);
 
   /* ───────────── FETCH DATA ───────────── */
   useEffect(() => {
@@ -41,6 +49,7 @@ export default function TicketFilter({ setSearchParams }) {
     // getRetailer().then((res) => setResellers(res?.data || []));
     getZones().then((res) => setZones(res?.data || res || []));
     getCategoryList().then((res) => setCatagoryes(res?.data || []));
+    getAllSubZones().then((res) => setSubZones(res?.data || []));
   }, []);
 
   /* ───────────── OUTSIDE CLICK CLOSE ───────────── */
@@ -50,10 +59,15 @@ export default function TicketFilter({ setSearchParams }) {
         setShowZone(false);
       if (categoryRef.current && !categoryRef.current.contains(e.target))
         setShowCatagory(false);
+      if (subZoneRef.current && !subZoneRef.current.contains(e.target))
+        setShowSubZone(false);
     };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    // document.addEventListener("mousedown", handleClick);
+    // return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, []);
+
 
   // const filteredLcos = lcos.filter((l) =>
   //   l.lcoName?.toLowerCase().includes(lcoText.toLowerCase())
@@ -66,6 +80,10 @@ export default function TicketFilter({ setSearchParams }) {
   const filteredZones = zones.filter((z) =>
     z.zoneName?.toLowerCase().includes(zoneText.toLowerCase())
   );
+
+ const filteredSubZones = subZones.filter((sz) =>
+  sz.name?.toLowerCase().includes(subZoneText.toLowerCase())
+);
 
   const filteredCategoryes = categoryes.filter((c) =>
     c.name?.toLowerCase().includes(categoryText.toLowerCase())
@@ -83,6 +101,9 @@ export default function TicketFilter({ setSearchParams }) {
     setSearch("");
     setTicketNumber("");
     setZoneText("");
+    setSelectedSubZone(null);
+    setSubZoneText("");
+
 
     const sp = new URLSearchParams();
     sp.delete("fromDate");
@@ -94,6 +115,7 @@ export default function TicketFilter({ setSearchParams }) {
     sp.delete("lcoId");
     sp.delete("resellerId");
     sp.delete("callSource");
+    sp.delete("subZoneId");
 
     setSearchParams(sp);
   };
@@ -143,6 +165,13 @@ export default function TicketFilter({ setSearchParams }) {
     setSelectedZone(zone);
   };
 
+
+  const handleOnSelectSubZone = (subZone) => {
+    setSelectedSubZone(subZone);
+  };
+
+
+
   const handleOnSearch = () => {
     const sp = new URLSearchParams();
     if (fromDate) sp.set("fromDate", convertUTCDateToYYYYMMDD(fromDate));
@@ -151,6 +180,7 @@ export default function TicketFilter({ setSearchParams }) {
     if (ticketNumber.trim()) sp.set("ticketNumber", ticketNumber.trim());
     if (selectedCategory) sp.set("category", selectedCategory._id);
     if (selectedZone) sp.set("zoneId", selectedZone?._id);
+    if (selectedSubZone) sp.set("subZoneId", selectedSubZone._id);
     if (selectedLco) sp.set("lcoId", selectedLco?._id);
     if (selectedReseller) sp.set("resellerId", selectedReseller?._id);
     if (callSource.trim()) sp.set("callSource", callSource.trim());
@@ -264,6 +294,50 @@ export default function TicketFilter({ setSearchParams }) {
             </div>
           )}
         </div>
+
+        {/* ───────────── SUBZONE SEARCHABLE ───────────── */}
+        <div ref={subZoneRef} className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Zone
+          </label>
+
+          <input
+            type="text"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Select Zone"
+            value={subZoneText}
+            onFocus={() => setShowSubZone(true)}
+            onChange={(e) => {
+              setSubZoneText(e.target.value);
+              setShowSubZone(true);
+            }}
+          />
+
+          <MdArrowDropDown className="absolute right-3 top-9 text-gray-500 pointer-events-none" />
+
+          {showSubZone && (
+            <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
+              {filteredSubZones.length === 0 ? (
+                <div className="px-4 py-2 text-gray-500">No SubZone found</div>
+              ) : (
+                filteredSubZones.map((sz) => (
+                  <div
+                    key={sz._id}
+                    onClick={() => {
+                      setSubZoneText(sz.name);
+                      setShowSubZone(false);
+                      handleOnSelectSubZone(sz);
+                    }}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                  >
+                    {sz.name}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
 
         {/* Resolved By */}
         {/* <div>
@@ -427,7 +501,7 @@ export default function TicketFilter({ setSearchParams }) {
         </div>
 
         {/* ───────────── RESELLER SEARCHABLE (UI SAME) ───────────── */}
-          <div className="relative">
+        <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select Reseller
           </label>
@@ -443,7 +517,7 @@ export default function TicketFilter({ setSearchParams }) {
           />
         </div>
 
-      {/* ───────────── LCO SEARCHABLE (UI SAME) ───────────── */}
+        {/* ───────────── LCO SEARCHABLE (UI SAME) ───────────── */}
         <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select LCO
