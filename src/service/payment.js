@@ -55,3 +55,28 @@ export const getFilteredPayments = async (queryString = "") => {
     total: data.total || 0,
   };
 };
+
+export const getPaymentReceiptDetails = async (userId, receiptId) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/admin/user/receipt/${userId}/${receiptId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to fetch receipt details");
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

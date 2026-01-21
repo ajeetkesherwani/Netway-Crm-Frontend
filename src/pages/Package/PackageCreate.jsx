@@ -707,7 +707,6 @@ export default function PackageCreate() {
           </div>
         )}
       </div>
-
       {/* Description */}
       <div className="mb-8">
         <label className="block font-medium mb-1">Description</label>

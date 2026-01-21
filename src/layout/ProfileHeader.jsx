@@ -236,7 +236,7 @@ const ProfileHeader = () => {
             <div className="space-y-3">
               <p><strong>Expiry Date:</strong> <span className={`font-bold ${remainingDays <= 7 ? "text-red-600" : "text-gray-600"}`}> {formatDate(expiryDate)}</span></p>
               <p><strong>Remaining Days:</strong> <span className="font-bold text-lg text-gray-600"> {remainingDays} Days</span></p>
-              <p><strong>Dues:</strong> <span className="font-bold text-gray-600">₹{user.walletBalance < 0 ? Math.abs(user.walletBalance).toFixed(2) : "0.00"}</span></p>
+              <p><strong>Dues:</strong> <span className="font-bold text-gray-600">₹{user.walletBalance}</span></p>
               <p><strong>Last Recharge:</strong> {formatDate(lastRechargeDate)}</p>
             </div>
             <div className="space-y-3">
@@ -292,67 +292,118 @@ const ProfileHeader = () => {
           {isMenuOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
               <div className="py-2">
-                {/* <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
-                  <FaCreditCard /> Add Payment
-                </button> */}
-                <button
-                  onClick={() => navigate("/add/payment")}
-                  className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <FaCreditCard /> Add Payment
-                </button>
-                <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+
+                <ProtectedAction module="customer" action="addPayment">
+                  <button
+                    onClick={() => {
+                      navigate("/add/payment");
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <FaCreditCard /> Add Payment
+                  </button>
+                </ProtectedAction>
+
+                <button disabled className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
                   <FaLink /> Send Pay Link
                 </button>
-                <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+                <button disabled className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
                   <FaSyncAlt /> Send Recharge Link
                 </button>
-                <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+                <button disabled className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
                   <FaSignOutAlt /> Force To Logout
                 </button>
 
-                <button
-                  onClick={() => {
-                    setShowPasswordModal(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <FaKey /> Change Password
-                </button>
 
-                <button
-                  onClick={handleSetInactive}
-                  className="w-full text-left px-5 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
-                >
-                  <FaBan /> Inactive
-                </button>
+                <ProtectedAction module="customer" action="changePassword">
+                  <button
+                    onClick={() => {
+                      setShowPasswordModal(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <FaKey /> Change Password
+                  </button>
+                </ProtectedAction>
 
-                <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
+                <ProtectedAction module="customer" action="statusButton">
+                  <button
+                    onClick={() => {
+                      handleSetInactive();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-5 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                  >
+                    <FaBan /> Inactive
+                  </button>
+                </ProtectedAction>
+
+
+                <button disabled className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
                   <FaUserAlt /> Login as User
                 </button>
 
-                <button
-                  onClick={() => {
-                    navigate(`/user/plan-history/${id}`);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <FaHistory /> Plan History
-                </button>
+                <ProtectedAction module="customer" action="planHistory">
+                  <button
+                    onClick={() => {
+                      navigate(`/user/plan-history/${id}`);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <FaHistory /> Plan History
+                  </button>
+                </ProtectedAction>
 
-                <button
-                  onClick={() => {
-                    navigate(`/ticket/create?userId=${id}`);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
-                >
-                  <FaTicketAlt /> Add Ticket
-                </button>
+                <ProtectedAction module="customer" action="addTicket">
+                  <button
+                    onClick={() => {
+                      navigate(`/ticket/create?userId=${id}`);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
+                  >
+                    <FaTicketAlt /> Add Ticket
+                  </button>
+                </ProtectedAction>
 
-                <button
+                <ProtectedAction module="customer" action="autoRechargeToggle">
+                  <button
+                    onClick={handleToggleAutoRecharge}
+                    disabled={toggleLoading}
+                    className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-100
+               flex items-center justify-between disabled:opacity-60 cursor-pointer"
+                  >
+                    <span className="flex items-center gap-3">
+                      <FaChargingStation /> Auto Recharge
+                    </span>
+
+                    <div className="relative inline-flex items-center">
+                      <div
+                        className={`w-12 h-6 rounded-full transition-colors duration-300 ${autoRechargeEnabled ? "bg-green-600" : "bg-gray-400"
+                          }`}
+                      >
+                        <div
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md
+                      transform transition-transform duration-300 ${autoRechargeEnabled ? "translate-x-6" : ""
+                            }`}
+                        />
+                      </div>
+
+                      {toggleLoading && (
+                        <div className="absolute -right-8 flex items-center">
+                          <div className="w-4 h-4 border-2 border-t-transparent border-gray-600 rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                </ProtectedAction>
+
+
+
+                {/* <button
                   onClick={handleToggleAutoRecharge}
                   disabled={toggleLoading}
                   className="w-full text-left px-5 py-4 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between disabled:opacity-60 cursor-pointer"
@@ -378,11 +429,8 @@ const ProfileHeader = () => {
                       </div>
                     )}
                   </div>
-                </button>
-
-                {/* <button className="w-full text-left px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3">
-                  <FaChargingStation /> Add Auto Recharge
                 </button> */}
+
               </div>
             </div>
           )}

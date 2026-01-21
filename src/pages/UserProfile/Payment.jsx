@@ -64,6 +64,11 @@ const UserPayments = () => {
     setOpenMenuId(null);
   };
 
+//   const handleViewReceipt = (paymentId) => {
+//   navigate(`/admin/user/receipt/${id}/${paymentId}`);
+//   setOpenMenuId(null);
+// };
+
   const handleDeletePayment = (paymentId) => {
     if (window.confirm("Are you sure you want to delete this payment?")) {
       toast.success(`Payment ${paymentId} deleted (mock)`);
