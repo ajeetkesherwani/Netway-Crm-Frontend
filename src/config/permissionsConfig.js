@@ -1,4 +1,4 @@
-  export const permissionsConfig = [
+export const permissionsConfig = [
     {
         category: "dashboard",
         label: "Dashboard",
@@ -101,6 +101,12 @@
             "purchasedNewPackage",
             "renewPackage",
             "assignedStockView",
+            "addPayment",
+            "statusButton",
+            "changePassword",
+            "addTicket",
+            "planHistory",
+            "autoRechargeToggle"
         ],
     },
     {

@@ -1,672 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import { useParams } from "react-router-dom";
-// import {
-//   getCurrentPlan,
-//   createPurchasedPlan,
-//   renewPurchasedPlan,
-//   getAssignedPackageList,
-//   getWalletBalance
-// } from "../../service/recharge";
-// import ProtectedAction from "../../components/ProtectedAction";
-// import { toast } from "react-toastify";
-
-// const UserRechargePackage = () => {
-//   const { id: userId } = useParams();
-
-//   const [plans, setPlans] = useState([]);
-//   const [currentPlan, setCurrentPlan] = useState(null);
-//   const [packages, setPackages] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [showModal, setShowModal] = useState(false);
-//   const [isRenew, setIsRenew] = useState(false);
-//   const [selectedPackage, setSelectedPackage] = useState(null);
-//   const [walletBalance, setWalletBalance] = useState(0);
-
-//   // Dropdown search state
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [showDropdown, setShowDropdown] = useState(false);
-
-//   const [form, setForm] = useState({
-//     packageId: "",
-//     amountPaid: 0,
-//     startDate: "",
-//     expiryDate: "",
-//     paymentReceived: "No",
-//     paymentAmount: 0,
-//     paymentDate: "",
-//     paymentMethod: "Cash",
-//     remark: "",
-//     paymentRemark: "",
-//   });
-
-//   // Advance Renewal state
-//   const [isAdvanceRenewal, setIsAdvanceRenewal] = useState(false);
-
-//   useEffect(() => {
-//     fetchCurrentPlan();
-//     fetchPackages();
-//     fetchWalletBalance();
-//   }, [userId]);
-
-//   // REMOVED: Automatic modal open on load
-
-//   const fetchCurrentPlan = async () => {
-//     try {
-//       setLoading(true);
-//       const res = await getCurrentPlan(userId);
-//       if (res.status && res.data && res.data.length > 0) {
-//         const sortedPlans = res.data.sort((a, b) => {
-//           const dateA = new Date(a.startDate || a.purchaseDate);
-//           const dateB = new Date(b.startDate || b.purchaseDate);
-//           return dateB - dateA;
-//         });
-//         setPlans(sortedPlans);
-//         setCurrentPlan(sortedPlans[0]);
-//       } else {
-//         setPlans([]);
-//         setCurrentPlan(null);
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       setPlans([]);
-//       setCurrentPlan(null);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const fetchPackages = async () => {
-//     try {
-//       const res = await getAssignedPackageList(userId);
-//       if (res.status && res.data) {
-//         const normalized = res.data.map(pkg => ({
-//           ...pkg,
-//           packageIdStr: pkg.packageId?._id?.toString() || pkg.packageId?.toString() || ""
-//         }));
-//         setPackages(normalized);
-//       }
-//     } catch (err) {
-//       console.error("Failed to load packages", err);
-//     }
-//   };
-
-//   const fetchWalletBalance = async () => {
-//     try {
-//       const res = await getWalletBalance(userId);
-//       if (res.status && res.data) {
-//         setWalletBalance(res.data.walletBalance || 0);
-//       }
-//     } catch (err) {
-//       console.log("Wallet balance not loaded", err);
-//       setWalletBalance(0);
-//     }
-//   };
-
-//   const filteredPackages = searchTerm.trim()
-//     ? packages.filter(pkg =>
-//         pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
-//       )
-//     : packages;
-
-//   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
-
-//   // Helper to calculate dates
-//   const calculateDates = (pkg, advanceRenewal) => {
-//     const today = new Date();
-//     let baseDate = today;
-
-//     if (advanceRenewal && currentPlan && new Date(currentPlan.expiryDate) >= today) {
-//       baseDate = new Date(currentPlan.expiryDate);
-//     }
-
-//     const start = new Date(baseDate);
-//     if (advanceRenewal) {
-//       start.setDate(start.getDate() + 1);
-//     }
-
-//     const expiry = new Date(start);
-//     const validityNum = Number(pkg?.validity?.number) || 1;
-//     expiry.setMonth(expiry.getMonth() + validityNum);
-
-//     return {
-//       startDate: start.toISOString().split("T")[0],
-//       expiryDate: expiry.toISOString().split("T")[0],
-//     };
-//   };
-
-//   const openPurchaseModal = () => {
-//     setIsRenew(false);
-//     setSelectedPackage(null);
-//     setSearchTerm("");
-
-//     const today = new Date();
-//     const hasActivePlan = currentPlan && new Date(currentPlan.expiryDate) >= today;
-
-//     // Auto-check Advance Renewal if active plan exists
-//     setIsAdvanceRenewal(hasActivePlan);
-
-//     const { startDate, expiryDate } = calculateDates(null, hasActivePlan);
-
-//     setForm({
-//       packageId: "",
-//       amountPaid: 0,
-//       startDate,
-//       expiryDate,
-//       paymentReceived: "No",
-//       paymentAmount: 0,
-//       paymentDate: today.toISOString().split("T")[0],
-//       paymentMethod: "Cash",
-//       remark: "",
-//       paymentRemark: "",
-//     });
-
-//     setShowModal(true);
-//   };
-
-//   const openRenewModal = (planToRenew = currentPlan) => {
-//     if (!planToRenew) {
-//       toast.error("No active plan to renew");
-//       return;
-//     }
-
-//     const planPkgId = planToRenew.packageId?._id?.toString() || planToRenew.packageId?.toString();
-//     const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
-
-//     if (!assignedPkg) {
-//       toast.error("Assigned package not found. Please refresh the page.");
-//       return;
-//     }
-
-//     const start = new Date(planToRenew.expiryDate);
-//     start.setDate(start.getDate() + 1);
-//     const expiry = new Date(start);
-//     const validityNum = Number(assignedPkg.validity?.number) || 1;
-//     expiry.setMonth(expiry.getMonth() + validityNum);
-
-//     setIsRenew(true);
-//     setIsAdvanceRenewal(true); // Always true and disabled in renew
-//     setCurrentPlan(planToRenew);
-//     setSelectedPackage(assignedPkg);
-
-//     setForm({
-//       packageId: assignedPkg._id,
-//       amountPaid: assignedPkg.customPrice || assignedPkg.basePrice || 0,
-//       startDate: start.toISOString().split("T")[0],
-//       expiryDate: expiry.toISOString().split("T")[0],
-//       paymentReceived: "No",
-//       paymentAmount: assignedPkg.customPrice || assignedPkg.basePrice || 0,
-//       paymentDate: new Date().toISOString().split("T")[0],
-//       paymentMethod: "Cash",
-//       remark: "Renewed plan",
-//       paymentRemark: "",
-//     });
-
-//     setShowModal(true);
-//   };
-
-//   const handlePackageChange = (assignedPkgId) => {
-//     const pkg = packages.find((p) => p._id === assignedPkgId);
-//     if (!pkg) return;
-
-//     const isAlreadyActive = plans.some(plan => {
-//       const planPkgId = plan.packageId?._id?.toString() || plan.packageId?.toString();
-//       return planPkgId === pkg.packageIdStr && new Date(plan.expiryDate) >= new Date();
-//     });
-
-//     if (isAlreadyActive && !isRenew && !isAdvanceRenewal) {
-//       toast.error("This plan is already active! Enable Advance Renewal or use Renew button.", {
-//         position: "top-center",
-//         autoClose: 6000,
-//       });
-//       return;
-//     }
-
-//     setSelectedPackage(pkg);
-
-//     const { startDate, expiryDate } = calculateDates(pkg, isAdvanceRenewal || isRenew);
-
-//     setForm({
-//       ...form,
-//       packageId: pkg._id,
-//       amountPaid: pkg.customPrice || pkg.basePrice || 0,
-//       paymentAmount: pkg.customPrice || pkg.basePrice || 0,
-//       startDate,
-//       expiryDate,
-//     });
-//   };
-
-//   const handleSubmit = async () => {
-//     if (!form.packageId || !selectedPackage) {
-//       toast.error("Please select a valid package");
-//       return;
-//     }
-
-//     try {
-//       const payload = {
-//         userId,
-//         packageId: selectedPackage.packageId?._id || selectedPackage.packageId,
-//         assignedPackageId: form.packageId,
-//         startDate: new Date(form.startDate).toISOString(),
-//         expiryDate: new Date(form.expiryDate).toISOString(),
-//         amountPaid: parseFloat(form.amountPaid) || 0,
-//         paymentReceived: form.paymentReceived,
-//         paymentMethod: form.paymentMethod,
-//         paymentStatus: form.paymentReceived === "Yes" ? "paid" : "pending",
-//         paymentDate: form.paymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
-//         remark: form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
-//         paymentRemark: form.paymentRemark,
-//       };
-
-//       let res;
-//       if (isRenew && currentPlan?._id) {
-//         res = await renewPurchasedPlan(currentPlan._id, payload);
-//       } else {
-//         res = await createPurchasedPlan(payload);
-//       }
-
-//       if (res.status) {
-//         toast.success(isRenew ? "Plan renewed successfully!" : "New plan purchased successfully!", {
-//           position: "top-center",
-//           autoClose: 4000,
-//         });
-//         setShowModal(false);
-//         fetchCurrentPlan();
-//       }
-//     } catch (err) {
-//       toast.error(err.response?.data?.message || "Something went wrong", {
-//         position: "top-center",
-//         autoClose: 6000,
-//       });
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-//         <div className="text-2xl text-gray-700 font-bold">Loading...</div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <>
-//       <div className="min-h-screen bg-gray-100 p-6">
-//         <div className="max-w-7xl mx-auto">
-//           <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
-
-//           <div className="flex justify-end gap-6 mb-8">
-//             <ProtectedAction module="customer" action="purchasedNewPackage">
-//               <button
-//                 onClick={openPurchaseModal}
-//                 className="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
-//               >
-//                 Purchase New Plan
-//               </button>
-//             </ProtectedAction>
-//           </div>
-
-//           {plans.length === 0 ? (
-//             <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-//               <p className="text-xl text-gray-600">No active plan found for this user.</p>
-//             </div>
-//           ) : (
-//             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-//               <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
-//                 <h3 className="text-xl font-bold">All Active Plans</h3>
-//                 {plans.length > 1 && (
-//                   <span className="text-sm bg-green-600 px-3 py-1 rounded-full">
-//                     Latest Active to Row 1
-//                   </span>
-//                 )}
-//               </div>
-
-//               <table className="w-full">
-//                 <thead className="bg-gray-200 text-gray-700">
-//                   <tr>
-//                     <th className="px-6 py-4 text-left">Status</th>
-//                     <th className="px-6 py-4 text-left">Package</th>
-//                     <th className="px-6 py-4 text-left">Start Date</th>
-//                     <th className="px-6 py-4 text-left">Expiry Date</th>
-//                     <th className="px-6 py-4 text-left">Amount</th>
-//                     <th className="px-6 py-4 text-left">Renewed?</th>
-//                     <ProtectedAction module="customer" action="renewPackage">
-//                       <th className="px-6 py-4 text-left">Action</th>
-//                     </ProtectedAction>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {plans.map((plan, index) => {
-//                     const isLatest = index === 0;
-//                     const isCurrentlyActive = new Date(plan.expiryDate) >= new Date();
-
-//                     return (
-//                       <tr
-//                         key={plan._id}
-//                         className={`hover:bg-gray-50 border-b ${isLatest ? "bg-blue-50 font-bold" : ""}`}
-//                       >
-//                         <td className="px-6 py-4">
-//                           {isLatest && isCurrentlyActive ? (
-//                             <span className="bg-green-600 text-white px-3 py-1 rounded-full text-xs">
-//                               CURRENT ACTIVE
-//                             </span>
-//                           ) : isCurrentlyActive ? (
-//                             <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs">
-//                               ACTIVE
-//                             </span>
-//                           ) : (
-//                             <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs">
-//                               EXPIRED
-//                             </span>
-//                           )}
-//                         </td>
-//                         <td className="px-6 py-4">{plan.packageId?.name || "Unknown"}</td>
-//                         <td className="px-6 py-4">{formatDate(plan.startDate)}</td>
-//                         <td className="px-6 py-4">{formatDate(plan.expiryDate)}</td>
-//                         <td className="px-6 py-4">₹{plan.amountPaid}</td>
-//                         <td className="px-6 py-4">
-//                           {plan.latestRenewal ? "Yes (Latest)" : plan.isRenewed ? "Yes" : "No"}
-//                         </td>
-
-//                         <ProtectedAction module="customer" action="renewPackage">
-//                           <td className="px-6 py-4">
-//                             {isCurrentlyActive && (
-//                               <button
-//                                 onClick={() => openRenewModal(plan)}
-//                                 className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded shadow transition"
-//                               >
-//                                 Renew
-//                               </button>
-//                             )}
-//                           </td>
-//                         </ProtectedAction>
-//                       </tr>
-//                     );
-//                   })}
-//                 </tbody>
-//               </table>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-
-//       {/* MODAL */}
-//       {showModal && (
-//         <div className="fixed inset-0 bg-opacity-60 flex items-center justify-center z-50 px-4">
-//           <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl border-4 border-blue-500 max-h-screen overflow-y-auto">
-//             <div className="bg-gray-700 text-white px-5 py-2.5 flex items-center justify-between text-sm sticky top-0 z-10">
-//               <div className="font-bold text-sm">
-//                 {isRenew ? "Renew Plan" : "Purchase New Plan"} | User ID: {userId}
-//               </div>
-//               {isRenew && (
-//                 <div className="flex items-center gap-6 text-xs">
-//                   <label className="flex items-center gap-1.5">
-//                     <input type="radio" checked={true} readOnly className="w-3.5 h-3.5" />
-//                     <span>Renew</span>
-//                   </label>
-//                   <label className="flex items-center gap-1.5">
-//                     <input type="radio" checked={false} readOnly className="w-3.5 h-3.5" />
-//                     <span>Upgrade</span>
-//                   </label>
-//                 </div>
-//               )}
-//             </div>
-
-//             <div className="p-1 bg-gray-50 text-xs space-y-3.5 text-gray-700">
-//               <div className="grid grid-cols-2 gap-6">
-//                 {/* LEFT COLUMN */}
-//                 <div className="space-y-2.5">
-//                   <div className="flex items-center gap-3 relative">
-//                     <label className="w-36 font-semibold">Current Plan :</label>
-//                     <div className="flex-1 relative">
-//                       <input
-//                         type="text"
-//                         className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-medium focus:border-blue-500 focus:outline-none bg-white"
-//                         placeholder="Search package..."
-//                         value={searchTerm || (selectedPackage ? selectedPackage.packageName : "")}
-//                         onChange={(e) => {
-//                           setSearchTerm(e.target.value);
-//                           setShowDropdown(true);
-//                           if (e.target.value !== selectedPackage?.packageName) {
-//                             setSelectedPackage(null);
-//                             setForm({ ...form, packageId: "" });
-//                           }
-//                         }}
-//                         onFocus={() => setShowDropdown(true)}
-//                         onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-//                         disabled={isRenew}
-//                       />
-//                       {showDropdown && (
-//                         <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded-b mt-1 max-h-48 overflow-y-auto shadow-lg text-xs">
-//                           {filteredPackages.length > 0 ? (
-//                             filteredPackages.map((pkg) => (
-//                               <li
-//                                 key={pkg._id}
-//                                 className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
-//                                 onClick={() => {
-//                                   handlePackageChange(pkg._id);
-//                                   setSearchTerm(pkg.packageName);
-//                                   setShowDropdown(false);
-//                                 }}
-//                               >
-//                                 {pkg.packageName}
-//                               </li>
-//                             ))
-//                           ) : (
-//                             <li className="px-3 py-2 text-gray-500">No matching packages</li>
-//                           )}
-//                         </ul>
-//                       )}
-//                     </div>
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">MRP :</label>
-//                     <input
-//                       type="text"
-//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
-//                       value={selectedPackage?.customPrice || selectedPackage?.basePrice || "0"}
-//                       readOnly
-//                     />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Discount :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0" readOnly />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Refund Charge :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="0.0" readOnly />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Wallet Balance :</label>
-//                     <input
-//                       type="text"
-//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
-//                       value={`₹${Math.abs(Number(walletBalance)).toFixed(2)}`}
-//                       readOnly
-//                     />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36 font-bold">Total Pay Amount :</label>
-//                     <input
-//                       type="text"
-//                       className="flex-1 border-2 border-gray-300 rounded px-3 py-1.5 bg-gray-100 font-bold"
-//                       value={form.amountPaid || "0.00"}
-//                       readOnly
-//                     />
-//                   </div>
-//                 </div>
-
-//                 {/* RIGHT COLUMN */}
-//                 <div className="space-y-2.5">
-//                   <div className="flex items-center gap-3">
-//                     <input
-//                       type="checkbox"
-//                       className={`w-4 h-4 ${isRenew ? "accent-green-600" : "accent-blue-600"}`}
-//                       checked={isRenew || isAdvanceRenewal}
-//                       onChange={(e) => !isRenew && setIsAdvanceRenewal(e.target.checked)}
-//                       disabled={isRenew}
-//                     />
-//                     <span className={`font-bold text-xs ${isRenew ? "text-gray-600" : ""}`}>
-//                       Advance Renewal
-//                     </span>
-//                     <input
-//                       type="text"
-//                       className="w-28 border border-gray-300 rounded px-2 py-1 bg-gray-200 text-center text-xs"
-//                       value={currentPlan ? formatDate(currentPlan.expiryDate) : ""}
-//                       readOnly
-//                     />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Validity :</label>
-//                     <input
-//                       type="text"
-//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100"
-//                       value={`${selectedPackage?.validity?.number || ""} ${selectedPackage?.validity?.unit || ""}`}
-//                       readOnly
-//                     />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Volume Quota :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Time Quota :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="UNLIMITED" readOnly />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Old Plan Used :</label>
-//                     <input type="text" className="flex-1 border border-gray-300 rounded px-3 py-1.5 bg-gray-100" value="" readOnly />
-//                   </div>
-
-//                   <div className="flex items-center gap-3">
-//                     <label className="w-36">Remark :</label>
-//                     <input
-//                       type="text"
-//                       className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-xs"
-//                       value={form.remark}
-//                       onChange={(e) => setForm({ ...form, remark: e.target.value })}
-//                       placeholder="Enter remark"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-
-//               {/* Payment Section */}
-//               <div className="border-t-2 border-gray-400 mt-4 pt-3.5 pb-2">
-//                 <div className="text-center mb-2">
-//                   <span className="font-bold text-sm">Payment Received</span>
-//                   <div className="inline-flex gap-8 ml-5">
-//                     <label className="flex items-center gap-2 cursor-pointer">
-//                       <input
-//                         type="radio"
-//                         name="payment"
-//                         checked={form.paymentReceived === "Yes"}
-//                         onChange={() => setForm({ ...form, paymentReceived: "Yes", paymentAmount: form.amountPaid })}
-//                         className="w-4 h-4"
-//                       />
-//                       <span className="font-bold text-sm">Yes</span>
-//                     </label>
-//                     <label className="flex items-center gap-2 cursor-pointer">
-//                       <input
-//                         type="radio"
-//                         name="payment"
-//                         checked={form.paymentReceived === "No"}
-//                         onChange={() => setForm({ ...form, paymentReceived: "No" })}
-//                         className="w-4 h-4"
-//                       />
-//                       <span className="font-bold text-sm">No</span>
-//                     </label>
-//                   </div>
-//                 </div>
-
-//                 {form.paymentReceived === "Yes" && (
-//                   <div className="grid grid-cols-2 gap-5 max-w-4xl mx-auto text-xs">
-//                     <div className="flex justify-between items-center">
-//                       <span className="font-bold">Amount</span>
-//                       <input
-//                         type="number"
-//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
-//                         value={form.paymentAmount}
-//                         onChange={(e) => setForm({ ...form, paymentAmount: e.target.value })}
-//                       />
-//                     </div>
-//                     <div className="flex justify-between items-center">
-//                       <span className="font-bold">Payment Date</span>
-//                       <input
-//                         type="date"
-//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
-//                         value={form.paymentDate}
-//                         onChange={(e) => setForm({ ...form, paymentDate: e.target.value })}
-//                       />
-//                     </div>
-//                     <div className="flex justify-between items-center">
-//                       <span className="font-bold">Payment Mode</span>
-//                       <select
-//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
-//                         value={form.paymentMethod}
-//                         onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
-//                       >
-//                         <option>Cash</option>
-//                         <option>UPI</option>
-//                         <option>Bank Transfer</option>
-//                         <option>Cheque</option>
-//                         <option>Online</option>
-//                       </select>
-//                     </div>
-//                     <div className="flex justify-between items-center">
-//                       <span className="font-bold">Remark</span>
-//                       <input
-//                         type="text"
-//                         className="w-52 border border-gray-400 rounded px-3 py-1.5"
-//                         value={form.paymentRemark}
-//                         onChange={(e) => setForm({ ...form, paymentRemark: e.target.value })}
-//                         placeholder="e.g. Paid via GPay"
-//                       />
-//                     </div>
-//                   </div>
-//                 )}
-
-//                 <div className="border-t border-gray-300 my-2"></div>
-//                 <div className="grid grid-cols-2 gap-2 text-xs font-bold max-w-4xl mx-auto">
-//                   <div className="flex justify-between"><span>Total Payable</span><span className="text-gray-800">₹{form.amountPaid || "0.00"}</span></div>
-//                   <div className="flex justify-between"><span>Remaining</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (form.amountPaid - (parseFloat(form.paymentAmount) || 0)).toFixed(2) : form.amountPaid || "0.00"}</span></div>
-//                   <div className="flex justify-between"><span>Payment Received</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? form.paymentAmount || "0.00" : "0.00"}</span></div>
-//                   <div className="flex justify-between"><span>Wallet After</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (-100 - (form.amountPaid - (parseFloat(form.paymentAmount) || 0))).toFixed(2) : (-100 - form.amountPaid).toFixed(2)}</span></div>
-//                 </div>
-//               </div>
-
-//               <div className="flex justify-center gap-2 py-2 border-t border-gray-300 -mt-3">
-//                 <button
-//                   onClick={handleSubmit}
-//                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-8 rounded shadow transition"
-//                 >
-//                   Save
-//                 </button>
-//                 <button
-//                   onClick={() => setShowModal(false)}
-//                   className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1.5 px-8 rounded shadow transition"
-//                 >
-//                   Close
-//                 </button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default UserRechargePackage;
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -700,10 +31,10 @@ const UserRechargePackage = () => {
     amountPaid: 0,
     startDate: "",
     expiryDate: "",
-    paymentReceived: "No",
+    isPaymentReceived: false,
     paymentAmount: 0,
     paymentDate: "",
-    paymentMethod: "Cash",
+    paymentMethod: "Online",
     remark: "",
     paymentRemark: "",
   });
@@ -771,8 +102,8 @@ const UserRechargePackage = () => {
 
   const filteredPackages = searchTerm.trim()
     ? packages.filter(pkg =>
-        pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      pkg.packageName?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : packages;
 
   const formatDate = (date) => new Date(date).toLocaleDateString("en-GB");
@@ -818,7 +149,7 @@ const UserRechargePackage = () => {
       amountPaid: 0,
       startDate,
       expiryDate,
-      paymentReceived: "No",
+      isPaymentReceived: false,
       paymentAmount: 0,
       paymentDate: today.toISOString().split("T")[0],
       paymentMethod: "Cash",
@@ -831,7 +162,7 @@ const UserRechargePackage = () => {
 
   const openRenewModal = (planToRenew = currentPlan) => {
     if (!planToRenew) {
-      toast.error("No active plan to renew");
+      toast.error("No active/current plan found to renew");
       return;
     }
 
@@ -839,36 +170,84 @@ const UserRechargePackage = () => {
     const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
 
     if (!assignedPkg) {
-      toast.error("Assigned package not found. Please refresh the page.");
+      toast.error("Package not found in assigned list. Refresh page.");
       return;
     }
 
-    const start = new Date(planToRenew.expiryDate);
-    start.setDate(start.getDate() + 1);
-    const expiry = new Date(start);
+    // Show next validity period (just for information – backend will decide real activation)
+    const proposedStart = new Date(planToRenew.expiryDate);
+    proposedStart.setDate(proposedStart.getDate() + 1);
+
+    const proposedExpiry = new Date(proposedStart);
     const validityNum = Number(assignedPkg.validity?.number) || 1;
-    expiry.setMonth(expiry.getMonth() + validityNum);
+    const unit = assignedPkg.validity?.unit?.toLowerCase() || 'month';
+
+    if (unit === 'day') proposedExpiry.setDate(proposedExpiry.getDate() + validityNum);
+    else if (unit === 'week') proposedExpiry.setDate(proposedExpiry.getDate() + validityNum * 7);
+    else if (unit === 'month') proposedExpiry.setMonth(proposedExpiry.getMonth() + validityNum);
+    else if (unit === 'year') proposedExpiry.setFullYear(proposedExpiry.getFullYear() + validityNum);
 
     setIsRenew(true);
-    setIsAdvanceRenewal(true); // Always checked for Renew
+    setIsAdvanceRenewal(true);           // ← ALWAYS true for renewals
     setCurrentPlan(planToRenew);
     setSelectedPackage(assignedPkg);
 
     setForm({
       packageId: assignedPkg._id,
       amountPaid: assignedPkg.customPrice || assignedPkg.basePrice || 0,
-      startDate: start.toISOString().split("T")[0],
-      expiryDate: expiry.toISOString().split("T")[0],
-      paymentReceived: "No",
+      startDate: proposedStart.toISOString().split("T")[0],
+      expiryDate: proposedExpiry.toISOString().split("T")[0],
+      isPaymentReceived: false,
       paymentAmount: assignedPkg.customPrice || assignedPkg.basePrice || 0,
       paymentDate: new Date().toISOString().split("T")[0],
       paymentMethod: "Cash",
-      remark: "Renewed plan",
+      remark: "Advance renewal request",
       paymentRemark: "",
     });
 
     setShowModal(true);
   };
+
+  // const openRenewModal = (planToRenew = currentPlan) => {
+  //   if (!planToRenew) {
+  //     toast.error("No active plan to renew");
+  //     return;
+  //   }
+
+  //   const planPkgId = planToRenew.packageId?._id?.toString() || planToRenew.packageId?.toString();
+  //   const assignedPkg = packages.find(p => p.packageIdStr === planPkgId);
+
+  //   if (!assignedPkg) {
+  //     toast.error("Assigned package not found. Please refresh the page.");
+  //     return;
+  //   }
+
+  //   const start = new Date(planToRenew.expiryDate);
+  //   start.setDate(start.getDate() + 1);
+  //   const expiry = new Date(start);
+  //   const validityNum = Number(assignedPkg.validity?.number) || 1;
+  //   expiry.setMonth(expiry.getMonth() + validityNum);
+
+  //   setIsRenew(true);
+  //   setIsAdvanceRenewal(true); // Always checked for Renew
+  //   setCurrentPlan(planToRenew);
+  //   setSelectedPackage(assignedPkg);
+
+  //   setForm({
+  //     packageId: assignedPkg._id,
+  //     amountPaid: assignedPkg.customPrice || assignedPkg.basePrice || 0,
+  //     startDate: start.toISOString().split("T")[0],
+  //     expiryDate: expiry.toISOString().split("T")[0],
+  //     isPaymentReceived: "No",
+  //     paymentAmount: assignedPkg.customPrice || assignedPkg.basePrice || 0,
+  //     paymentDate: new Date().toISOString().split("T")[0],
+  //     paymentMethod: "Cash",
+  //     remark: "Renewed plan",
+  //     paymentRemark: "",
+  //   });
+
+  //   setShowModal(true);
+  // };
 
   const handlePackageChange = (assignedPkgId) => {
     const pkg = packages.find((p) => p._id === assignedPkgId);
@@ -908,19 +287,43 @@ const UserRechargePackage = () => {
     }
 
     try {
+      // const payload = {
+      //   userId,
+      //   packageId: selectedPackage.packageId?._id || selectedPackage.packageId,
+      //   assignedPackageId: form.packageId,
+      //   startDate: new Date(form.startDate).toISOString(),
+      //   expiryDate: new Date(form.expiryDate).toISOString(),
+      //   amountPaid: parseFloat(form.amountPaid) || 0,
+      //   isPaymentReceived: form.isPaymentReceived,
+      //   advanceRenewal: isAdvanceRenewal,
+      //   paymentMethod: form.paymentMethod,
+      //   paymentStatus: form.isPaymentReceived === "Yes" ? "paid" : "pending",
+      //   paymentDate: form.isPaymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
+      //   remark: form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
+      //   paymentRemark: form.paymentRemark,
+      // };
       const payload = {
         userId,
         packageId: selectedPackage.packageId?._id || selectedPackage.packageId,
         assignedPackageId: form.packageId,
         startDate: new Date(form.startDate).toISOString(),
         expiryDate: new Date(form.expiryDate).toISOString(),
-        amountPaid: parseFloat(form.amountPaid) || 0,
-        paymentReceived: form.paymentReceived,
+
+        amountPaid: parseFloat(form.amountPaid) || 0,           // ← total due / package price
+
+        isPaymentReceived: form.isPaymentReceived,                  // "Yes" / "No"
+        paymentAmount: form.isPaymentReceived === true
+          ? parseFloat(form.paymentAmount) || 0                 // ← actual received now
+          : 0,
+
         paymentMethod: form.paymentMethod,
-        paymentStatus: form.paymentReceived === "Yes" ? "paid" : "pending",
-        paymentDate: form.paymentReceived === "Yes" ? new Date(form.paymentDate).toISOString() : null,
-        remark: form.remark || (isRenew ? "Plan renewed" : "New plan purchased"),
-        paymentRemark: form.paymentRemark,
+        paymentDate: form.isPaymentReceived === true
+          ? new Date(form.paymentDate).toISOString()
+          : null,
+        paymentRemark: form.paymentRemark || "",
+
+        advanceRenewal: isAdvanceRenewal,
+        remark: form.remark || (isRenew ? "Advance renewal request" : "New plan purchased"),
       };
 
       let res;
@@ -939,7 +342,7 @@ const UserRechargePackage = () => {
         fetchCurrentPlan();
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong", {
+      toast.error(err.response?.data?.message || "something went wrong.", {
         position: "top-center",
         autoClose: 6000,
       });
@@ -1234,8 +637,8 @@ const UserRechargePackage = () => {
                       <input
                         type="radio"
                         name="payment"
-                        checked={form.paymentReceived === "Yes"}
-                        onChange={() => setForm({ ...form, paymentReceived: "Yes", paymentAmount: form.amountPaid })}
+                        checked={form.isPaymentReceived === true}
+                        onChange={() => setForm({ ...form, isPaymentReceived: true, paymentAmount: form.amountPaid })}
                         className="w-4 h-4"
                       />
                       <span className="font-bold text-sm">Yes</span>
@@ -1244,8 +647,8 @@ const UserRechargePackage = () => {
                       <input
                         type="radio"
                         name="payment"
-                        checked={form.paymentReceived === "No"}
-                        onChange={() => setForm({ ...form, paymentReceived: "No" })}
+                        checked={form.isPaymentReceived === false}
+                        onChange={() => setForm({ ...form, isPaymentReceived: false})}
                         className="w-4 h-4"
                       />
                       <span className="font-bold text-sm">No</span>
@@ -1253,7 +656,7 @@ const UserRechargePackage = () => {
                   </div>
                 </div>
 
-                {form.paymentReceived === "Yes" && (
+                {form.isPaymentReceived === true && (
                   <div className="grid grid-cols-2 gap-5 max-w-4xl mx-auto text-xs">
                     <div className="flex justify-between items-center">
                       <span className="font-bold">Amount</span>
@@ -1303,9 +706,17 @@ const UserRechargePackage = () => {
                 <div className="border-t border-gray-300 my-2"></div>
                 <div className="grid grid-cols-2 gap-2 text-xs font-bold max-w-4xl mx-auto">
                   <div className="flex justify-between"><span>Total Payable</span><span className="text-gray-800">₹{form.amountPaid || "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Remaining</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (form.amountPaid - (parseFloat(form.paymentAmount) || 0)).toFixed(2) : form.amountPaid || "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Payment Received</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? form.paymentAmount || "0.00" : "0.00"}</span></div>
-                  <div className="flex justify-between"><span>Wallet After</span><span className="text-gray-800">₹{form.paymentReceived === "Yes" ? (-100 - (form.amountPaid - (parseFloat(form.paymentAmount) || 0))).toFixed(2) : (-100 - form.amountPaid).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span>Remaining</span><span className="text-gray-800">₹{form.isPaymentReceived === true ? (form.amountPaid - (parseFloat(form.paymentAmount) || 0)).toFixed(2) : form.amountPaid || "0.00"}</span></div>
+                  <div className="flex justify-between"><span>Payment Received</span><span className="text-gray-800">₹{form.isPaymentReceived === true ? form.paymentAmount || "0.00" : "0.00"}</span></div>
+                  {/* <div className="flex justify-between"><span>Wallet After</span><span className="text-gray-800">₹{form.isPaymentReceived === "Yes" ? (-100 - (form.amountPaid - (parseFloat(form.paymentAmount) || 0))).toFixed(2) : (-100 - form.amountPaid).toFixed(2)}</span></div> */}
+                  <div className="flex justify-between">
+                    <span>Wallet After</span>
+                    <span className="text-gray-800">
+                      ₹{(walletBalance - (form.isPaymentReceived === true
+                        ? (form.amountPaid - parseFloat(form.paymentAmount) || 0)
+                        : form.amountPaid)).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
