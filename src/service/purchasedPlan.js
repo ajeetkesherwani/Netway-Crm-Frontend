@@ -230,3 +230,28 @@ export const getInvoiceDetails = async (id) => {
     throw err;
   }
 };
+
+export const deleteInvoice = async (invoiceId) => {
+  try {
+    const token = getToken(); 
+
+    const response = await fetch(`${BASE_URL}/common/delete/${invoiceId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Delete service error:", error);
+    throw error; 
+  }
+};

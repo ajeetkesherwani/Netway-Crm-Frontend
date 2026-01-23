@@ -7,7 +7,7 @@ export default function LcoWalletCreate() {
   const { id } = useParams(); // LCO member ID
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [transactionType, setTransactionType] = useState("add"); // "add" or "reverse"
+  const [transactionType, setTransactionType] = useState("add"); 
   const [formData, setFormData] = useState({
     lcoId: id,
     amount: "",
@@ -20,12 +20,20 @@ export default function LcoWalletCreate() {
   console.log("Received data:", data);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const { name, value } = e.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: name === "amount" ? Number(value) : value
+  }));
+};
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();

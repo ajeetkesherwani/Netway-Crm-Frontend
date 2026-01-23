@@ -124,3 +124,22 @@ export const getWalletBalance = async (userId) => {
   if (!res.ok) throw new Error("Failed to fetch wallet balance");
   return res.json();
 };
+
+
+export const refundPurchasedPlan = async (planId) => {
+  const res = await fetch(`${BASE_URL}/purchasedPlan/refund/${planId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    throw new Error(json.message || "Failed to refund purchased plan");
+  }
+
+  return json;
+};

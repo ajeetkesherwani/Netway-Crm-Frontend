@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { FaCheck, FaTrashAlt, FaEye, FaEllipsisV, FaSearch, FaDownload, FaUndo } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-import { getInvoices, fetchInvoicePdfBlob, downloadInvoicePdf } from "../../service/purchasedPlan";
+import { getInvoices, fetchInvoicePdfBlob, downloadInvoicePdf, deleteInvoice } from "../../service/purchasedPlan";
 import ProtectedAction from "../../components/ProtectedAction";
 import * as XLSX from "xlsx";
-import { InvoiceFilters } from "../Invoice/InvoiceFilter"; // Adjust path if needed
+import { InvoiceFilters } from "../Invoice/InvoiceFilter";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -86,20 +86,33 @@ export default function PurchasedPlanList() {
     fetchInvoices(1);
   };
 
-  // Package name search (client-side, optional since backend already filters)
+  // Package name search (client-side filter)
   const finalInvoices = invoices.filter((inv) =>
     inv.packageName?.toLowerCase().includes(searchInput.trim().toLowerCase())
   );
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
+  // ────────────────────────────────────────────────
+  //    STATUS LOGIC - only used for AMOUNT column color
+  // ────────────────────────────────────────────────
+  const getAmountStatusColor = (inv) => {
+    const total = Number(inv.amount || 0);
+    const paid = Number(inv.paidAmount || 0);   // ← change field name if different
+
+    if (paid >= total && total > 0) return "green";
+    if (paid === 0 && total > 0) return "red";
+    if (paid > 0 && paid < total) return "blue";
+    if (paid > total) return "yellow";
+    return "gray";
+  };
+
   // Excel download (works with current filtered list)
   const downloadExcel = () => {
     const data = finalInvoices.map((invoice, index) => ({
       "S.NO": index + 1,
-      "Recharge Type": `${invoice.packageType?.internet ? "Internet " : ""}${
-        invoice.packageType?.isOtt ? "OTT " : ""
-      }${invoice.packageType?.isIptv ? "IPTV" : ""}`.trim(),
+      "Recharge Type": `${invoice.packageType?.internet ? "Internet " : ""}${invoice.packageType?.isOtt ? "OTT " : ""
+        }${invoice.packageType?.isIptv ? "IPTV" : ""}`.trim(),
       Username: invoice.userId?.generalInformation?.username || "—",
       Name: invoice.userId?.generalInformation?.name || "N/A",
       "Invoice No.": invoice.invoiceNumber || "—",
@@ -139,12 +152,27 @@ export default function PurchasedPlanList() {
     setOpenMenuId(null);
   };
 
-  const handleDelete = (invoiceId) => {
-    if (window.confirm("Are you sure you want to remove this invoice?")) {
-      toast.success(`Invoice ${invoiceId} removed (mock)`);
+  const handleDelete = async (invoiceId) => {     // ← accept both ids
+    if (!window.confirm("Are you sure you want to delete this invoice.")) {
+      return;
+    }
+    try {
+      await deleteInvoice(invoiceId);
+      toast.success("Invoice deleted successfully");
+      fetchInvoices(currentPage);
+    } catch (err) {
+      toast.error(err.message || "Failed to delete invoice");
+    } finally {
       setOpenMenuId(null);
     }
   };
+
+  // const handleDelete = (invoiceId) => {
+  //   if (window.confirm("Are you sure you want to remove this invoice?")) {
+  //     toast.success(`Invoice ${invoiceId} removed (mock)`);
+  //     setOpenMenuId(null);
+  //   }
+  // };
 
   const handleRefund = (invoiceId) => {
     if (window.confirm("Are you sure you want to refund this plan?")) {
@@ -167,7 +195,7 @@ export default function PurchasedPlanList() {
   return (
     <div className="p-6 flex flex-col min-h-screen w-7xl">
       {/* Header with extra search & Excel */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      {/* <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex items-center">
@@ -187,7 +215,55 @@ export default function PurchasedPlanList() {
             Download Excel
           </button>
         </div>
+      </div> */}
+
+      {/* Header with search, download + status legend */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
+
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
+          {/* Search input */}
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              placeholder="Search by package name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[220px]"
+            />
+            <FaSearch className="absolute left-3 text-gray-400 pointer-events-none" />
+          </div>
+
+          {/* Download button */}
+          <button
+            onClick={downloadExcel}
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 whitespace-nowrap"
+          >
+            Download Excel
+          </button>
+
+          {/* Status legend – small colored dots + labels */}
+          <div className="flex items-center gap-4 sm:gap-5 text-sm text-gray-700 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-green-600"></div>
+              <span>Paid</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-600"></div>
+              <span>Unpaid</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+              <span>Partial</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <span>Extra</span>
+            </div>
+          </div>
+        </div>
       </div>
+
 
       {/* Filters */}
       <InvoiceFilters
@@ -238,6 +314,7 @@ export default function PurchasedPlanList() {
               finalInvoices.map((invoice, index) => {
                 const userInfo = invoice.userId?.generalInformation || {};
                 const pkgType = invoice.packageType || {};
+                const amountColor = getAmountStatusColor(invoice);
 
                 return (
                   <tr key={invoice._id} className="hover:bg-gray-50">
@@ -273,22 +350,28 @@ export default function PurchasedPlanList() {
 
                     <td className="border px-4 py-3">{invoice.packageName || "—"}</td>
 
+                    {/* AMOUNT - colored according to status */}
                     <td className="border px-4 py-3 text-center">
                       <span
-                        className={`px-2 py-1 rounded text-white text-xs ${
-                          Number(invoice.amount) > 1000 ? "bg-red-500" : "bg-green-500"
-                        }`}
+                        className={`px-2 py-1 rounded text-white text-xs font-medium ${amountColor === "green" ? "bg-green-500" :
+                            amountColor === "red" ? "bg-red-500" :
+                              amountColor === "blue" ? "bg-blue-500" :
+                                amountColor === "yellow" ? "bg-yellow-500" :
+                                  "bg-gray-500"
+                          }`}
                       >
                         ₹{invoice.amount || 0}
                       </span>
                     </td>
 
+                    {/* LCO Amount - no status color */}
                     <td className="border px-4 py-3 text-center">₹{invoice.lcoAmount || 0}</td>
+
+                    {/* Reseller Amount - no status color */}
                     <td className="border px-4 py-3 text-center">₹{invoice.resellerAmount || 0}</td>
 
                     <td className="border px-4 py-3 text-gray-700">
                       {new Date(invoice.createdAt).toLocaleDateString("en-GB")}{" "}
-                      {/* dd/mm/yyyy */}
                       <br />
                       <span className="text-xs text-gray-500">
                         {new Date(invoice.createdAt).toLocaleTimeString()}
@@ -354,6 +437,15 @@ export default function PurchasedPlanList() {
                               <FaTrashAlt className="mr-2" /> Remove
                             </button>
                           </ProtectedAction>
+
+                          {/* <ProtectedAction module="invoice" action="packageRechargeRemove">
+                            <button
+                              onClick={() => handleDelete(invoice._id)}
+                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              <FaTrashAlt className="mr-2" /> Remove
+                            </button>
+                          </ProtectedAction> */}
                         </div>
                       )}
                     </td>
@@ -371,11 +463,10 @@ export default function PurchasedPlanList() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className={`px-5 py-2 rounded-md text-sm font-medium ${
-              currentPage === 1
+            className={`px-5 py-2 rounded-md text-sm font-medium ${currentPage === 1
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                 : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+              }`}
           >
             ← Previous
           </button>
@@ -387,11 +478,10 @@ export default function PurchasedPlanList() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className={`px-5 py-2 rounded-md text-sm font-medium ${
-              currentPage === totalPages
+            className={`px-5 py-2 rounded-md text-sm font-medium ${currentPage === totalPages
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                 : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+              }`}
           >
             Next →
           </button>

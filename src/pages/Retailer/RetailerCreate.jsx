@@ -984,6 +984,7 @@ export default function RetailerCreate() {
     // role:"Retailer",
     nas: [],
     employeeAssociation: [],
+    documents: [],
     aadhaarCard: null, // NEW - File object
     panCard: null, // NEW - File object
     license: null, // NEW - File object
@@ -1068,7 +1069,7 @@ export default function RetailerCreate() {
     const errors = {};
     if (!formData.resellerName)
       errors.resellerName = "Reseller Name is required";
-    if (!formData.password) errors.password = "Password is required";
+    // if (!formData.password) errors.password = "Password is required";
     if (!formData.mobileNo) errors.mobileNo = "Mobile Number is required";
     if (formData.mobileNo && !/^[0-9]{10}$/.test(formData.mobileNo))
       errors.mobileNo = "Mobile Number must be 10 digits";
@@ -1137,43 +1138,103 @@ export default function RetailerCreate() {
     }));
   };
   // Handle form submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const retailerErrors = validateRetailer();
-    if (Object.keys(retailerErrors).length > 0) {
-      setFormErrors(retailerErrors);
-      setActiveTab("general"); // Switch to general tab to show errors
-      return;
-    }
-    setLoading(true);
-    try {
-      // await createRetailer(formData);
-      const submitData = new FormData();
 
-      for (const key in formData) {
-        if (formData[key] !== null && formData[key] !== undefined) {
-          if (Array.isArray(formData[key])) {
-            // Convert arrays/objects to JSON strings
-            // submitData.append(key, JSON.stringify(formData[key]));
-            submitData.append(key, JSON.stringify(formData[key]));
-          } else {
-            // Append normal fields & files directly
-            submitData.append(key, formData[key]);
-          }
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+
+//   const retailerErrors = validateRetailer();
+//   if (Object.keys(retailerErrors).length > 0) {
+//     setFormErrors(retailerErrors);
+//     setActiveTab("general");
+//     toast.error("Please fix errors in General Information");
+//     return;
+//   }
+
+//   // Optional: Require at least one employee (if you want)
+//   if (formData.employeeAssociation.length === 0) {
+//     toast.error("Please add at least one employee in Associated tab");
+//     setActiveTab("associated");
+//     return;
+//   }
+
+//   setLoading(true);
+
+//   try {
+//     const submitData = new FormData();
+
+//     for (const key in formData) {
+//       if (formData[key] !== null && formData[key] !== undefined) {
+//         if (Array.isArray(formData[key])) {
+//           submitData.append(key, JSON.stringify(formData[key]));
+//         } else {
+//           submitData.append(key, formData[key]);
+//         }
+//       }
+//     }
+
+//     await createRetailer(submitData);
+//     toast.success("Retailer created successfully ✅");
+//     navigate("/retailer/list");
+//   } catch (err) {
+//     console.error("Create Retailer Error:", err);
+//     toast.error(err.response?.data?.message || "Failed to create retailer ❌");
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const retailerErrors = validateRetailer();
+  if (Object.keys(retailerErrors).length > 0) {
+    setFormErrors(retailerErrors);
+    setActiveTab("general");
+    toast.error("Please fix errors in General Information");
+    return;
+  }
+
+  if (formData.employeeAssociation.length === 0) {
+    toast.error("Please add at least one employee in Associated tab");
+    setActiveTab("associated");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const submitData = new FormData();
+
+    // Append all normal fields
+    for (const key in formData) {
+      if (key === "documents") continue; // skip documents array
+
+      if (formData[key] !== null && formData[key] !== undefined) {
+        if (Array.isArray(formData[key])) {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else {
+          submitData.append(key, formData[key]);
         }
       }
-
-      // 🟢 Send it to API — no need to stringify
-      await createRetailer(submitData);
-      toast.success("Retailer created successfully ✅");
-      navigate("/retailer/list");
-    } catch (err) {
-      console.error("Create Retailer Error:", err);
-      toast.error(err.message || "Failed to create retailer ❌");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // Append actual document files using original field names
+    formData.documents.forEach((doc) => {
+      if (doc.file) {
+        submitData.append(doc.fieldName, doc.file);
+      }
+    });
+
+    await createRetailer(submitData);
+    toast.success("Retailer created successfully ✅");
+    navigate("/retailer/list");
+  } catch (err) {
+    console.error("Create Retailer Error:", err);
+    toast.error(err.response?.data?.message || "Failed to create retailer ❌");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Handle clear form
   const handleClear = () => {
@@ -1185,15 +1246,28 @@ export default function RetailerCreate() {
 
   // Handle next button to switch to Associated Employee tab
   const handleNext = () => {
-    const retailerErrors = validateRetailer();
-    if (Object.keys(retailerErrors).length > 0) {
-      setFormErrors(retailerErrors);
-      return;
-    }
-    setActiveTab("associated");
-  };
+  const retailerErrors = validateRetailer();
+
+  setFormErrors(retailerErrors);   // always show errors (good UX)
+
+  if (Object.keys(retailerErrors).length > 0) {
+    toast.error("Please correct the errors in General Information");
+    return;
+  }
+
+  setActiveTab("associated");      // ← move it here
+};
+  // const handleNext = () => {
+  //   const retailerErrors = validateRetailer();
+  //   if (Object.keys(retailerErrors).length > 0) {
+  //     setFormErrors(retailerErrors);
+  //     return;
+  //   }
+  //   setActiveTab("associated");
+  // };
 
   // Handle next button to switch to Reseller Document tab
+ 
   const handleNextToDocument = () => {
     setActiveTab("resellerDocument");
   };
@@ -1208,10 +1282,29 @@ export default function RetailerCreate() {
   };
 
   // Handle file change for documents
-  const handleFileChange = (e, field) => {
-    const file = e.target.files[0];
-    setFormData((prev) => ({ ...prev, [field]: file }));
-  };
+  // const handleFileChange = (e, field) => {
+  //   const file = e.target.files[0];
+  //   setFormData((prev) => ({ ...prev, [field]: file }));
+  // };
+  const handleDocumentChange = (e, fieldName) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const isImage = file.type.startsWith("image/");
+  const preview = isImage ? URL.createObjectURL(file) : null;
+
+  setFormData((prev) => {
+    // Remove previous file for this field (if any)
+    const existing = prev.documents.filter(d => d.fieldName !== fieldName);
+    return {
+      ...prev,
+      documents: [
+        ...existing,
+        { fieldName, file, preview, name: file.name }
+      ]
+    };
+  });
+};
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
       <h2 className="text-2xl font-bold mb-6">Create Reseller</h2>
@@ -1926,65 +2019,52 @@ export default function RetailerCreate() {
         )}
         {/* Reseller Document Tab */}
         {activeTab === "resellerDocument" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-medium mb-1">Aadhaar Card</label>
-              <input
-                type="file"
-                name="aadhaarCard"
-                onChange={(e) => handleFileChange(e, "aadhaarCard")}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-              {formData.aadhaarCard && (
-                <p className="text-sm text-gray-600 mt-1">
-                  {formData.aadhaarCard.name}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    {[
+      { label: "Aadhaar Card", field: "aadhaarCard" },
+      { label: "PAN Card",      field: "panCard" },
+      { label: "License",       field: "license" },
+      { label: "Other Document",field: "other" },
+    ].map(({ label, field }) => {
+      const doc = formData.documents.find(d => d.fieldName === field);
+
+      return (
+        <div key={field} className="border rounded-lg p-4 bg-gray-50">
+          <label className="block font-medium mb-2">{label}</label>
+
+          <input
+            type="file"
+            onChange={(e) => handleDocumentChange(e, field)}
+            className="w-full border border-gray-300 rounded-md p-2 cursor-pointer"
+            accept="image/*,.pdf"
+          />
+
+          {doc && (
+            <div className="mt-3">
+              <p className="text-sm text-gray-700">
+                Selected: <strong>{doc.name}</strong>
+              </p>
+
+              {doc.preview ? (
+                <div className="mt-3">
+                  <img
+                    src={doc.preview}
+                    alt={`${label} preview`}
+                    className="max-w-full h-32 object-contain border rounded shadow-sm"
+                  />
+                </div>
+              ) : doc.file ? (
+                <p className="mt-2 text-sm text-gray-500 italic">
+                  Preview not available (PDF or unsupported format)
                 </p>
-              )}
+              ) : null}
             </div>
-            <div>
-              <label className="block font-medium mb-1">PAN Card</label>
-              <input
-                type="file"
-                name="panCard"
-                onChange={(e) => handleFileChange(e, "panCard")}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-              {formData.panCard && (
-                <p className="text-sm text-gray-600 mt-1">
-                  {formData.panCard.name}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block font-medium mb-1">License</label>
-              <input
-                type="file"
-                name="license"
-                onChange={(e) => handleFileChange(e, "license")}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-              {formData.license && (
-                <p className="text-sm text-gray-600 mt-1">
-                  {formData.license.name}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block font-medium mb-1">Other Document</label>
-              <input
-                type="file"
-                name="other"
-                onChange={(e) => handleFileChange(e, "other")}
-                className="w-full border border-gray-300 rounded-md p-2"
-              />
-              {formData.other && (
-                <p className="text-sm text-gray-600 mt-1">
-                  {formData.other.name}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
         {/* Form Buttons */}
         <div className="col-span-2 flex justify-end gap-3 mt-6">
           {activeTab !== "general" && (

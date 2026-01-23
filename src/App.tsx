@@ -152,6 +152,7 @@ import PlanHistoryPage from "./pages/Customer/CustomerPlanHistory";
 import SubZoneList from "./pages/Setting/SubZoneList";
 import SubZoneCreate from "./pages/Setting/SubZoneCreate";
 import AddPayment from "./pages/Payment/AddPayment";
+import ReceiptDetails from "./pages/UserProfile/ReceiptDetails";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -243,6 +244,7 @@ export default function App() {
               <Route path="activity-log" element={<UserLogs />} />
               <Route path="assigned-stock" element={<AssignedStock />} />
             </Route>
+         <Route path="payment/receipt/:userId/:receiptId" element={<ReceiptDetails />} />
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
             <Route path="staff/list" element={<StaffList />} />
