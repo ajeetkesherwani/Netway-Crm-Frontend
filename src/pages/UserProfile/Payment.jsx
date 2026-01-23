@@ -52,22 +52,17 @@ const UserPayments = () => {
     });
   };
 
-  // Mock actions (replace with real API calls when ready)
   const handleViewReceipt = (paymentId) => {
-    // Example: Open receipt PDF or modal
-    toast.success(`Viewing receipt for payment ${paymentId} (mock)`);
-    setOpenMenuId(null);
-  };
+  navigate(`/payment/receipt/${id}/${paymentId}`);
+  setOpenMenuId(null);
+};
 
   const handleEditPayment = (paymentId) => {
     navigate(`/payments/edit/${paymentId}`, { state: { userId: id } });
     setOpenMenuId(null);
   };
 
-//   const handleViewReceipt = (paymentId) => {
-//   navigate(`/admin/user/receipt/${id}/${paymentId}`);
-//   setOpenMenuId(null);
-// };
+
 
   const handleDeletePayment = (paymentId) => {
     if (window.confirm("Are you sure you want to delete this payment?")) {

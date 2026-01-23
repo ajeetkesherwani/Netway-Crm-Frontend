@@ -5,7 +5,8 @@ import {
   createPurchasedPlan,
   renewPurchasedPlan,
   getAssignedPackageList,
-  getWalletBalance
+  getWalletBalance,
+  refundPurchasedPlan
 } from "../../service/recharge";
 import ProtectedAction from "../../components/ProtectedAction";
 import { toast } from "react-toastify";
@@ -357,6 +358,28 @@ const UserRechargePackage = () => {
     );
   }
 
+  const handleRefund = async (planId) => {
+    if (!window.confirm("Are you sure you want to refund this plan")) {
+      return;
+    }
+
+    try {
+      const res = await refundPurchasedPlan(planId);
+      if (res.status) {
+        toast.success("Plan refunded successfully!", {
+          position: "top-center",
+          autoClose: 4000,
+        });
+        fetchCurrentPlan();
+        fetchWalletBalance();
+      } else {
+        toast.error(res.message || "Refund failed.");
+      }
+    } catch (err) {
+      toast.error(err.message || "An error occurred during refund.");
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-100 p-6">
@@ -436,7 +459,7 @@ const UserRechargePackage = () => {
                           {plan.latestRenewal ? "Yes (Latest)" : plan.isRenewed ? "Yes" : "No"}
                         </td>
 
-                        <ProtectedAction module="customer" action="renewPackage">
+                        {/* <ProtectedAction module="customer" action="renewPackage">
                           <td className="px-6 py-4">
                             {isCurrentlyActive && (
                               <button
@@ -445,6 +468,29 @@ const UserRechargePackage = () => {
                               >
                                 Renew
                               </button>
+                            )}
+                          </td>
+                        </ProtectedAction> */}
+                        <ProtectedAction module="customer" action="renewPackage">
+                          <td className="px-6 py-4">
+                            {isCurrentlyActive && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => openRenewModal(plan)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-5 rounded shadow transition"
+                                >
+                                  Renew
+                                </button>
+
+                                <ProtectedAction module="customer" action="refundPackage">
+                                  <button
+                                    onClick={() => handleRefund(plan._id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-5 rounded shadow transition"
+                                  >
+                                    Refund
+                                  </button>
+                                </ProtectedAction>
+                              </div>
                             )}
                           </td>
                         </ProtectedAction>
@@ -648,7 +694,7 @@ const UserRechargePackage = () => {
                         type="radio"
                         name="payment"
                         checked={form.isPaymentReceived === false}
-                        onChange={() => setForm({ ...form, isPaymentReceived: false})}
+                        onChange={() => setForm({ ...form, isPaymentReceived: false })}
                         className="w-4 h-4"
                       />
                       <span className="font-bold text-sm">No</span>

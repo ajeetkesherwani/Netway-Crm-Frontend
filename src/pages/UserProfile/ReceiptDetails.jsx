@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { FaArrowLeft, FaFileInvoiceDollar } from "react-icons/fa";
-
-// Service function (we'll create it next)
 import { getPaymentReceiptDetails } from "../../service/payment";
 
 const ReceiptDetails = () => {
@@ -217,9 +215,9 @@ const ReceiptDetails = () => {
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 px-8 py-5 border-t text-center text-sm text-gray-500">
+          {/* <div className="bg-gray-50 px-8 py-5 border-t text-center text-sm text-gray-500">
             Receipt ID: {receipt._id} • Generated on {formatDate(new Date())}
-          </div>
+          </div> */}
         </div>
 
         <div className="mt-6 text-center">

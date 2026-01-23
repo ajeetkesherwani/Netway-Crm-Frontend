@@ -59,7 +59,7 @@ export const getFilteredPayments = async (queryString = "") => {
 export const getPaymentReceiptDetails = async (userId, receiptId) => {
   try {
     const res = await fetch(
-      `${BASE_URL}/api/admin/user/receipt/${userId}/${receiptId}`,
+      `${BASE_URL}/user/receipt/${userId}/${receiptId}`,
       {
         method: "GET",
         headers: {

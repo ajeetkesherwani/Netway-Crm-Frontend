@@ -208,7 +208,7 @@ export const createLcoWalletTransaction = async (transactionData) => {
 export const reverseLcoWalletBalance = async (transactionData) => {
   try {
     const response = await fetch(
-      `${BASE_URL}/resellerWallet/reverser-balance`,
+      `${BASE_URL}/lcoWallet/reverse-balance`,
       {
         method: "POST",
         headers: {

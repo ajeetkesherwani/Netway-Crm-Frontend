@@ -106,7 +106,8 @@ export const permissionsConfig = [
             "changePassword",
             "addTicket",
             "planHistory",
-            "autoRechargeToggle"
+            "autoRechargeToggle",
+            "refundPackage"
         ],
     },
     {
