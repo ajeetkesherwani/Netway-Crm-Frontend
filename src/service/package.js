@@ -128,3 +128,32 @@ export const getIptvPackageListFromThirdParty = async () => {
     throw error; 
   }
 };
+
+//get ott package list from third party api
+export const getOttPackageListFromThirdParty = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/package/ott-package/list`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch OTT packages");
+    }
+
+    const result = await response.json();
+
+    if (!result.status || !Array.isArray(result.data)) {
+      throw new Error("Invalid response format from OTT packages API");
+    }
+
+    return result.data; 
+  } catch (error) {
+    console.error("getOttPackageListFromThirdParty error:", error);
+    throw error;
+  }
+};
