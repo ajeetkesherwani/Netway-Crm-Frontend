@@ -730,8 +730,8 @@ const UserRechargePackage = () => {
                         onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
                       >
                         <option>Cash</option>
-                        <option>UPI</option>
-                        <option>Bank Transfer</option>
+                        <option>Upi</option>
+                        <option>Wallet</option>
                         <option>Cheque</option>
                         <option>Online</option>
                       </select>

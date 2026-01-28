@@ -109,7 +109,7 @@ const UserPayments = () => {
                   <th className="px-4 py-3 font-semibold border-r border-gray-300 text-center">Paid</th>
                   <th className="px-4 py-3 font-semibold border-r border-gray-300 text-center">Due</th>
                   <th className="px-4 py-3 font-semibold border-r border-gray-300">Status</th>
-                  <th className="px-4 py-3 font-semibold border-r border-gray-300">Txn/Cheque No</th>
+                  {/* <th className="px-4 py-3 font-semibold border-r border-gray-300">Txn/Cheque No</th> */}
                   <th className="px-4 py-3 font-semibold border-r border-gray-300">Comment</th>
                   <th className="px-4 py-3 font-semibold text-center">Actions</th>
                 </tr>
@@ -159,10 +159,10 @@ const UserPayments = () => {
                         {pay.paymentStatus || "Unknown"}
                       </span>
                     </td>
-
+{/* 
                     <td className="px-4 py-4 border-r border-gray-200">
                       {pay.transactionNo || "—"}
-                    </td>
+                    </td> */}
 
                     <td className="px-4 py-4 border-r border-gray-200 text-gray-600">
                       {pay.comment || "—"}

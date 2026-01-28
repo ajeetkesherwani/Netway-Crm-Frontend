@@ -170,12 +170,12 @@ const ReceiptDetails = () => {
                     <dd className="font-medium">{receipt.PaymentMode || "—"}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Transaction/Cheque No</dt>
-                    <dd className="font-medium">{receipt.transactionNo || "—"}</dd>
+                    {/* <dt className="text-gray-600">Transaction/Cheque No</dt> */}
+                    {/* <dd className="font-medium">{receipt.transactionNo || "—"}</dd> */}
                   </div>
                 </dl>
               </div>
-            </div>
+            </div> 
 
             <div className="space-y-6">
               <div>

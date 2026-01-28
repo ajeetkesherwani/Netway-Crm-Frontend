@@ -310,6 +310,38 @@ export const getUserPlanHistory = async (userId) => {
   }
 };
 
+//user renew history
+export const getUserRenewHistory = async (userId) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/user/renewPlan/list/${userId}`, 
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(data.message || "Failed to fetch renewal history");
+    }
+
+    return {
+      status: true,
+      data: data.data || [], 
+    };
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message || "Network error",
+    };
+  }
+};
+
 //auto recharge
 export const toggleAutoRecharge = async (userId, enable) => {
   const res = await fetch(`${BASE_URL}/user/auto-recharge/${userId}`, {
