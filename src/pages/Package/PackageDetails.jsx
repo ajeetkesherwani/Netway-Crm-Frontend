@@ -178,10 +178,10 @@ export default function PackageDetails() {
           <Row label="Offer Package" value={pkg.offerPackage ? "Yes" : "No"} />
           <Row label="Is OTT" value={pkg.isOtt ? "Yes" : "No"} />
           {pkg.isOtt && <Row label="OTT Type" value={pkg.ottType} />}
-          {pkg.isOtt && <Row label="OTT Package ID" value={pkg.ottPackageId} />}
+          {pkg.isOtt && <Row label="OTT Package ID" value={pkg.ottPackageId?.name} />}
           <Row label="Is IPTV" value={pkg.isIptv ? "Yes" : "No"} />
           {pkg.isIptv && <Row label="IPTV Type" value={pkg.iptvType} />}
-          {pkg.isIptv && <Row label="IPTV Package ID" value={pkg.iptvPackageId} />}
+          {pkg.isIptv && <Row label="IPTV Package ID" value={pkg.iptvPackageId?.plan_name} />}
           <Row
             label="Created At"
             value={pkg.createdAt ? new Date(pkg.createdAt).toLocaleString() : "—"}
