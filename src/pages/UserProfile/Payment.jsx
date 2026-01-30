@@ -83,13 +83,13 @@ const UserPayments = () => {
   const payments = data?.payments || [];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-3 bg-gray-50 min-h-screen">
       {/* Header with Create Payment Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">User Payments</h2>
         <button
           onClick={() => navigate("/add/payment")}
-          className="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm font-medium"
+          className="px-2 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm font-medium"
         >
           Add Payment
         </button>

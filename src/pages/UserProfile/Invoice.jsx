@@ -93,7 +93,7 @@ const UserInvoices = () => {
   };
 
   return (
-    <div className="p-6 flex flex-col min-h-screen bg-gray-50">
+    <div className="p-2 flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">User Invoices</h2>

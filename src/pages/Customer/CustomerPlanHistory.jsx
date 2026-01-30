@@ -103,7 +103,7 @@
 // export default PlanHistoryPage;
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getUserPlanHistory, getUserRenewHistory } from "../../service/user"; 
+import { getUserPlanHistory, getUserRenewHistory } from "../../service/user";
 import { toast } from "react-toastify";
 import { FaArrowLeft } from "react-icons/fa";
 
@@ -161,7 +161,7 @@ const PlanHistoryPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}

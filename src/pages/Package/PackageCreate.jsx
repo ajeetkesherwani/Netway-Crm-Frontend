@@ -81,81 +81,81 @@ export default function PackageCreate() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Basic fields
-  if (!formData.name || !formData.validityNumber || !formData.categoryOfPlan) {
-    toast.error("Please fill all required fields: Name, Validity Number, and Category!");
-    return;
-  }
-
-  // OTT validation – only if checkbox is checked
-  if (formData.isOtt) {
-    if (!formData.ottType || !formData.ottType.trim()) {
-      toast.error("Please select OTT Type");
+    // Basic fields
+    if (!formData.name || !formData.validityNumber || !formData.categoryOfPlan) {
+      toast.error("Please fill all required fields: Name, Validity Number, and Category!");
       return;
     }
-    if (!formData.ottPackageId || !String(formData.ottPackageId).trim()) {
-      toast.error("Please select an OTT Package");
-      return;
-    }
-  }
 
-  // IPTV validation – only if checkbox is checked
-  if (formData.isIptv) {
-    if (!formData.iptvType || !formData.iptvType.trim()) {
-      toast.error("Please select IPTV Type");
-      return;
-    }
-    if (!formData.iptvPackageId || !String(formData.iptvPackageId).trim()) {
-      toast.error("Please select an IPTV Package");
-      return;
-    }
-  }
-
-  try {
-    const payload = {
-      name: formData.name.trim(),
-      validity: {
-        number: Number(formData.validityNumber),
-        unit: formData.validityUnit,
-      },
-      sacCode: formData.sacCode || undefined,
-      fromDate: formData.fromDate || undefined,
-      toDate: formData.toDate || undefined,
-      status: formData.status,
-      typeOfPlan: formData.typeOfPlan,
-      categoryOfPlan: formData.categoryOfPlan,
-      description: formData.description || undefined,
-      basePrice: formData.basePrice ? Number(formData.basePrice) : undefined,
-      offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
-      packageAvailable: formData.packageAvailable,
-      offerPackage: formData.offerPackage,
-    };
-
+    // OTT validation – only if checkbox is checked
     if (formData.isOtt) {
-      payload.isOtt = true;
-      payload.ottType = formData.ottType.trim();
-      payload.ottPackageId = String(formData.ottPackageId).trim(); // safe string conversion
+      if (!formData.ottType || !formData.ottType.trim()) {
+        toast.error("Please select OTT Type");
+        return;
+      }
+      if (!formData.ottPackageId || !String(formData.ottPackageId).trim()) {
+        toast.error("Please select an OTT Package");
+        return;
+      }
     }
 
+    // IPTV validation – only if checkbox is checked
     if (formData.isIptv) {
-      payload.isIptv = true;
-      payload.iptvType = formData.iptvType.trim();
-      payload.iptvPackageId = String(formData.iptvPackageId).trim(); // safe string conversion
+      if (!formData.iptvType || !formData.iptvType.trim()) {
+        toast.error("Please select IPTV Type");
+        return;
+      }
+      if (!formData.iptvPackageId || !String(formData.iptvPackageId).trim()) {
+        toast.error("Please select an IPTV Package");
+        return;
+      }
     }
 
-    console.log("Sending Payload:", payload);
+    try {
+      const payload = {
+        name: formData.name.trim(),
+        validity: {
+          number: Number(formData.validityNumber),
+          unit: formData.validityUnit,
+        },
+        sacCode: formData.sacCode || undefined,
+        fromDate: formData.fromDate || undefined,
+        toDate: formData.toDate || undefined,
+        status: formData.status,
+        typeOfPlan: formData.typeOfPlan,
+        categoryOfPlan: formData.categoryOfPlan,
+        description: formData.description || undefined,
+        basePrice: formData.basePrice ? Number(formData.basePrice) : undefined,
+        offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
+        packageAvailable: formData.packageAvailable,
+        offerPackage: formData.offerPackage,
+      };
 
-    await createPackage(payload);
-    toast.success("Package created successfully!");
-    navigate("/package/list");
-  } catch (error) {
-    const msg = error?.response?.data?.message || error.message || "Failed to create package";
-    toast.error(msg);
-    console.error("Create Package Error:", error);
-  }
-};
+      if (formData.isOtt) {
+        payload.isOtt = true;
+        payload.ottType = formData.ottType.trim();
+        payload.ottPackageId = String(formData.ottPackageId).trim(); // safe string conversion
+      }
+
+      if (formData.isIptv) {
+        payload.isIptv = true;
+        payload.iptvType = formData.iptvType.trim();
+        payload.iptvPackageId = String(formData.iptvPackageId).trim(); // safe string conversion
+      }
+
+      console.log("Sending Payload:", payload);
+
+      await createPackage(payload);
+      toast.success("Package created successfully!");
+      navigate("/package/list");
+    } catch (error) {
+      const msg = error?.response?.data?.message || error.message || "Failed to create package";
+      toast.error(msg);
+      console.error("Create Package Error:", error);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -201,7 +201,7 @@ export default function PackageCreate() {
     .find((opt) => opt.value === formData.ottPackageId) || null;
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 mx-auto bg-white shadow rounded-lg max-w-5xl">
+    <form onSubmit={handleSubmit} className="p-6 mx-auto bg-white shadow rounded-lg max-w-8xl">
       <h2 className="text-2xl font-bold mb-6 text-left">Create Package</h2>
 
       {/* Main Fields */}

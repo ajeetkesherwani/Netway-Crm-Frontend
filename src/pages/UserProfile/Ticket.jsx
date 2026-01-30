@@ -256,7 +256,7 @@ const UserTickets = () => {
   const tickets = data?.tickets || [];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-2 bg-gray-50 min-h-screen">
       {/* Header with Create Ticket Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">User Tickets</h2>
