@@ -103,7 +103,7 @@ const [downloadedFile, setDownloadedFile] = useState(null);
         {/* ACTION BUTTONS */}
         <div className="flex items-center gap-2">
           {/* EDIT BUTTON */}
-          <ProtectedAction module="reseller" action="edit">
+          <ProtectedAction module="reseller" action="Edit">
             <button
               onClick={() => navigate(`/retailer/update/${retailer?._id}`)}
               className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
@@ -113,7 +113,7 @@ const [downloadedFile, setDownloadedFile] = useState(null);
           </ProtectedAction>
 
           {/* ADD TRANSACTION BUTTON */}
-          <ProtectedAction module="reseller" action="addTransaction">
+          <ProtectedAction module="reseller" action="AddTransaction">
             <button
               onClick={() =>
                 navigate(`/retailer/wallet/create/${retailer?._id}`, {

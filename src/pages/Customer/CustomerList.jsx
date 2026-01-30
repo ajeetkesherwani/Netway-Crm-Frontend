@@ -182,9 +182,9 @@ export default function UserList() {
     setOpenMenuId(null);
   };
 
-  const handleLoginAsCustomer = () => {
-    toast.info("Login as customer - coming soon");
-  };
+  // const handleLoginAsCustomer = () => {
+  //   toast.info("Login as customer - coming soon");
+  // };
 
   if (loading) return <p className="p-4">Loading users...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
@@ -437,14 +437,14 @@ export default function UserList() {
                             </li>
 
                             {/* Login as Customer */}
-                            <li>
+                            {/* <li>
                               <button
                                 onClick={handleLoginAsCustomer}
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3"
                               >
                                 <FaUserAlt /> Login as Customer
                               </button>
-                            </li>
+                            </li> */}
 
                             {/* Delete */}
                             <ProtectedAction module="customer" action="delete">

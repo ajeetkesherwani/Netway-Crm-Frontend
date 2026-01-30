@@ -1725,7 +1725,7 @@ export default function CreateUser() {
               {/* Left: Zone Dropdown */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Zone <span className="text-red-500">*</span>
+                  Area <span className="text-red-500">*</span>
                 </label>
               <select
   value={selectedArea}
@@ -1746,7 +1746,7 @@ export default function CreateUser() {
   }}
   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 >
-  <option value="">-- Select Zone --</option>
+  <option value="">-- Select Area --</option>
   {zoneList.map((zone) => (
     <option key={zone._id} value={zone._id}>
       {zone.zoneName}
@@ -1775,7 +1775,7 @@ export default function CreateUser() {
               {/* Right: Custom Area Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sub Area<span className="text-red-500">*</span>
+                  Zone<span className="text-red-500">*</span>
                 </label>
               <select
   value={selectedSubZone}
@@ -1789,7 +1789,7 @@ export default function CreateUser() {
   required
 >
   <option value="">
-    {!selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
+    {!selectedArea ? "-- First Select Area --" : "-- Select zone --"}
   </option>
   {subZoneList.map((sz) => (
     <option key={sz._id} value={sz._id}>
@@ -1797,24 +1797,6 @@ export default function CreateUser() {
     </option>
   ))}
 </select>
-                {/* <select
-                  value={selectedSubZone}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedSubZone(value);
-                    // Save subzone ID in formData (create new field if not exists)
-                    setFieldValue("customer.subZoneId", value);
-                  }}
-                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  required
-                >
-                  <option value="">-- Select Sub Area --</option>
-                  {subZoneList.map((sz) => (
-                    <option key={sz._id} value={sz._id}>
-                      {sz.subZoneName || sz.name}
-                    </option>
-                  ))}
-                </select> */}
                 {formErrors["customer.subZoneId"] && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors["customer.subZoneId"]}
