@@ -12,6 +12,7 @@ import { toast } from "react-hot-toast";
 import ProtectedAction from "../../../components/ProtectedAction";
 
 export default function LcoEmployeeList() {
+  const { login } = useLogin();
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

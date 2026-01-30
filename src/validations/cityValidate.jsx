@@ -9,8 +9,8 @@ export const cityValidate = (city) => {
     return "City can contain only alphabets";
   }
 
-  if (trimmed.length > 10) {
-    return "City should not exceed 30 characters";
+  if (trimmed.length > 50) {
+    return "City should not exceed 50 characters";
   }
 
   return "";
