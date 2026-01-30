@@ -44,7 +44,9 @@ export default function ZoneCreate() {
       <h2 className="text-2xl font-bold mb-6">Create Zone</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block font-medium">Zone Name</label>
+          <label className="block font-medium">Zone Name
+            <span className="text-black-900 ml-1">*</span>
+          </label>
           <input
             type="text"
             name="zoneName"

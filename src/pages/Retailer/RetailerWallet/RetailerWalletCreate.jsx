@@ -183,13 +183,22 @@ export default function RetailerWalletCreate() {
   const { data } = location.state || {};
   console.log("Received data:", data);
 
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const { name, value } = e.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: name === "amount" ? Number(value) : value
+  }));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();

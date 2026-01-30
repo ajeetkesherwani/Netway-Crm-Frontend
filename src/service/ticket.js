@@ -3,13 +3,40 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
 // Get all ticket list with pagination, search, and filter
+// src/service/ticket.js
+export const getAllTicketListWithFilter = async (queryParams = "") => {
+  const url = queryParams
+    ? `${BASE_URL}/ticket/list?${queryParams}`
+    : `${BASE_URL}/ticket/list`;
 
-export const getAllTicketList = async (page = 1, limit = 10, search = "", filter = "") => {
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch tickets");
+  }
+
+  return data;
+};
+
+export const getAllTicketList = async (
+  page = 1,
+  limit = 10,
+  search = "",
+  filter = ""
+) => {
   const query = new URLSearchParams({
     page,
     limit,
     search,
-    ...(filter && { filter }), // Only include filter if provided
+    ...(filter && { filter }),
   }).toString();
 
   const res = await fetch(`${BASE_URL}/ticket/list?${query}`, {
@@ -23,7 +50,6 @@ export const getAllTicketList = async (page = 1, limit = 10, search = "", filter
   if (!res.ok) throw new Error(data.message || "Failed to fetch tickets");
   return data;
 };
-
 
 // Get all users
 export const getAllUsers = async () => {
@@ -121,8 +147,6 @@ export const deleteTicket = async (id) => {
   return data;
 };
 
-
-
 // 2. Get staff list for "Assign To" dropdown
 export const getStaffList = async () => {
   const res = await fetch(`${BASE_URL}/common/staff/roleList`, {
@@ -148,7 +172,6 @@ export const getAllRolesList = async () => {
   return data; // Expected: { data: [{ _id, fullName, email, role }, ...] }
 };
 
-
 // this list for the get ticket category list
 export const getTicketCategories = async () => {
   const res = await fetch(`${BASE_URL}/category/list`, {
@@ -163,11 +186,9 @@ export const getTicketCategories = async () => {
 };
 
 //get all renewal ticket
-export const getReassignTicketList = async (page = 1, limit = 10) => {
-  const query = new URLSearchParams({ page, limit }).toString();
-
+export const getReassignTicketList = async (queryString) => {
   const res = await fetch(
-    `${BASE_URL}/common/reassign/ticket/list?${query}`,
+    `${BASE_URL}/common/reassign/ticket/list?${queryString}`,
     {
       method: "GET",
       headers: {
@@ -195,7 +216,6 @@ export const getReassignTicketList = async (page = 1, limit = 10) => {
 //   return data;
 // };
 
-
 // // ✅ Create Ticket Reply
 // export const createTicketReply = async (ticketId, payload) => {
 //   const res = await fetch(`${BASE_URL}/ticketReply/create`, {
@@ -211,7 +231,6 @@ export const getReassignTicketList = async (page = 1, limit = 10) => {
 //   return data;
 // };
 
-
 // ✅ Fetch Timeline
 export const getTicketTimeline = async (ticketId) => {
   const res = await fetch(`${BASE_URL}/timeLine/list/${ticketId}`, {
@@ -224,7 +243,6 @@ export const getTicketTimeline = async (ticketId) => {
   if (!res.ok) throw new Error(data.message || "Failed to fetch timeline");
   return data;
 };
-
 
 // Get Ticket Details
 export const getTicketDetails = async (ticketId) => {
@@ -274,8 +292,6 @@ export const assignTicketToStaff = async (body) => {
 //   return res.json();
 // };
 
-
-
 // ✅ Get Category List
 export const getCategoryList = async () => {
   const res = await fetch(`${BASE_URL}/category/list`, {
@@ -301,7 +317,8 @@ export const getAdminTicketDetails = async (ticketId) => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch admin ticket details");
+  if (!res.ok)
+    throw new Error(data.message || "Failed to fetch admin ticket details");
   return data; // { status, data: { ticket, replies, timeline } }
 };
 
@@ -332,7 +349,8 @@ export const getTicketResolutionOptions = async () => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Failed to fetch resolution options");
+  if (!res.ok)
+    throw new Error(data.message || "Failed to fetch resolution options");
   return data; // { status, data: [{ _id, name }, ...] }
 };
 
@@ -357,8 +375,8 @@ export const updateTicketDetails = async (ticketId, data) => {
     console.log("Updating ticket with data:", data);
     const res = await fetch(`${BASE_URL}/ticket/update/${ticketId}`, {
       method: "PATCH",
-       headers: {
-        "Authorization": `Bearer ${getToken()}` // agar token chahiye
+      headers: {
+        Authorization: `Bearer ${getToken()}`, // agar token chahiye
       },
       body: data,
     });
@@ -369,7 +387,6 @@ export const updateTicketDetails = async (ticketId, data) => {
     throw err;
   }
 };
-
 
 // ✅ Create a new ticket reply option
 // service/ticket.js
@@ -388,7 +405,10 @@ export const createTicketReplyOption = async (data) => {
     // Agar backend sirf ID return karta hai (string), to handle karo
     if (!res.ok) {
       const errorText = await res.text();
-      return { status: false, message: errorText || "Failed to create reply option" };
+      return {
+        status: false,
+        message: errorText || "Failed to create reply option",
+      };
     }
 
     const text = await res.text();
@@ -423,14 +443,13 @@ export const createTicketReplyOption = async (data) => {
 //   }
 // };
 
-
 // Dropdown ke liye quick reply options
 export const getTicketReplyOptions = async () => {
   const res = await fetch(`${BASE_URL}/ticketReplyOption/list`, {
     method: "GET",
-    headers: { 
+    headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${getToken()}`,
+      Authorization: `Bearer ${getToken()}`,
     },
   });
 
@@ -447,7 +466,7 @@ export const getTicketReplyOptions = async () => {
 
   // Return the data correctly
   if (data.status) {
-    return { data: data.data };  // Assuming 'data' contains the actual reply options
+    return { data: data.data }; // Assuming 'data' contains the actual reply options
   } else {
     return { status: false, message: data.message || "Failed" };
   }
@@ -458,10 +477,11 @@ export const createTicketReply = async (ticketId, userId, description) => {
   try {
     const res = await fetch(`${BASE_URL}/ticketReply/create`, {
       method: "POST",
-      headers: { "Content-Type": "application/json",
-         "Authorization": `Bearer ${getToken()}`,
-       },
-     
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+
       body: JSON.stringify({
         ticket: ticketId,
         user: userId,
@@ -487,7 +507,7 @@ export const getTicketReplies = async (ticketId) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${getToken()}`,
+        Authorization: `Bearer ${getToken()}`,
       },
     });
 
@@ -503,7 +523,7 @@ export const getTicketReplies = async (ticketId) => {
 
     // Handle the response data
     if (data.status) {
-      return { data: data.data };  // Assuming 'data' contains the actual reply options
+      return { data: data.data }; // Assuming 'data' contains the actual reply options
     } else {
       return { status: false, message: data.message || "Failed" };
     }
@@ -511,4 +531,32 @@ export const getTicketReplies = async (ticketId) => {
     console.error("Error fetching ticket replies:", err);
     return { status: false, message: err.message || "Network error" };
   }
+};
+
+
+export const getAllManageTicketList = async (page = 1, limit = 10, search = "", filter = "Manage") => {
+  // Build query string like your existing function
+  const params = new URLSearchParams();
+  params.append("page", page);
+  params.append("limit", limit);
+  if (search) params.append("search", search);
+  params.append("filter", filter);
+
+  const url = `${BASE_URL}/ticket/manageTicket/list?${params.toString()}`;
+  
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch manage tickets");
+  }
+
+  return data;
 };

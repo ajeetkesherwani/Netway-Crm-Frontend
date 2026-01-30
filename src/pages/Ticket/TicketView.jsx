@@ -4,14 +4,13 @@ import { useParams } from "react-router-dom";
 import {
   getAdminTicketDetails,
   // createTicketReply,
-
   getStaffList,
   getCategoryList,
   updateTicket,
   updateTicketDetails,
   getTicketResolutionOptions,
   getTicketReplyOptions,
-  createTicketReply,        
+  createTicketReply,
   getTicketReplies,
 } from "../../service/ticket";
 import { FaUserCircle, FaEdit, FaSave, FaTimes } from "react-icons/fa";
@@ -68,7 +67,7 @@ export default function TicketDetails() {
           getTicketReplyOptions(),
         ]);
 
-        // console.log("replyOptRes:", replyOptRes);
+      // console.log("replyOptRes:", replyOptRes);
       // Ticket details (getAdminTicketDetails returns { status, data: { ticket, replies, timeline } })
       if (ticketRes?.status) {
         const ticketData = ticketRes.data.ticket;
@@ -153,8 +152,6 @@ export default function TicketDetails() {
         "isChargeable",
       ];
 
-      
-
       // Loop over the fields and append them to formData
       fieldsToAppend.forEach((key) => {
         const value = editableDetails[key];
@@ -199,8 +196,6 @@ export default function TicketDetails() {
       alert("Error updating ticket - see console");
     }
   };
-
-
 
   // Create reply (option or text)
   // ✅ Create reply (select or new text)
@@ -250,8 +245,6 @@ export default function TicketDetails() {
       setLoading(false); // Set loading to false after the process ends
     }
   };
-
-
 
   // Fix ticket
   const handleFixTicketClick = () => setShowFixModal(true);
@@ -469,7 +462,9 @@ export default function TicketDetails() {
                       ticketDetails[key] && (
                         <img
                           key={key}
-                          src={`${import.meta.env.VITE_IMAGE_URL}/${ticketDetails[key]}`}
+                          src={`${import.meta.env.VITE_IMAGE_URL}/${
+                            ticketDetails[key]
+                          }`}
                           alt={key}
                           className="w-16 h-16 object-cover rounded border"
                         />
@@ -619,7 +614,12 @@ export default function TicketDetails() {
                     className="border-l-4 border-[#004c70] pl-3 pb-2 ml-2 mb-2"
                   >
                     <p className="text-gray-800 text-sm">
-                      <strong>Action Type:</strong> {a.activityType == "1"? "Status Change": a.activityType == "0" ? "Assign":"Reassign"} 
+                      <strong>Action Type:</strong>{" "}
+                      {a.activityType == "1"
+                        ? "Status Change"
+                        : a.activityType == "0"
+                        ? "Assign"
+                        : "Reassign"}
                       {/* —{" "} */}
                       {a.performedBy?.name}
                     </p>
@@ -649,7 +649,7 @@ export default function TicketDetails() {
             >
               <option value="">Select Resolution</option>
               {resolutionList.map((r) => (
-                <option key={r._id} value={r.name || r.option || r._id}>
+                <option key={r._id} value={r._id}>
                   {r.name || r.option}
                 </option>
               ))}

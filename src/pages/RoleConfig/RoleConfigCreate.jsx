@@ -164,7 +164,9 @@ export default function RoleConfigCreate() {
         {/* Type Select */}
         <div className="flex items-center gap-6 mb-6">
           <div className="flex-1">
-            <label className="block font-medium mb-1">Type</label>
+            <label className="block font-medium mb-1">Type
+              <span className="text-black-900 ml-1">*</span>
+            </label>
             <select
               value={type}
               onChange={(e) => {
@@ -182,7 +184,9 @@ export default function RoleConfigCreate() {
         {/* Type ID Select */}
         <div className="flex items-center gap-6 mb-6">
           <div className="flex-1">
-            <label className="block font-medium mb-1">{type.toUpperCase()} ID</label>
+            <label className="block font-medium mb-1">{type.toUpperCase()} ID
+              <span className="text-black-900 ml-1">*</span>
+            </label>
             <select
               value={typeId}
               onChange={(e) => setTypeId(e.target.value)}

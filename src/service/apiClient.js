@@ -85,3 +85,117 @@ export async function deleteZone(id) {
     return text;
   }
 }
+
+
+//get all subzone
+export async function getAllSubZones() {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/subzone/list`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const text = await res.text().catch(() => null);
+  try {
+    const data = text ? JSON.parse(text) : null;
+    if (!res.ok) throw new Error(data?.message || data?.error || text || `Failed to fetch subzones`);
+    return data;
+  } catch (err) {
+    if (!res.ok) throw new Error(text || `Failed to fetch subzones`);
+    return text;
+  }
+}
+
+export const createSubzone = async (data) => {
+    const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/subzone`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+         Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Failed to create subzone");
+  return result;
+};
+
+export const getSubzonesByZoneId = async (zoneId) => {
+    const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/subzone/${zoneId}`, {
+    headers: {
+       Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Failed to fetch subzones");
+  return result;
+};
+
+export const updateSubzone = async (subzoneId, data) => {
+    const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/subzone/${subzoneId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Failed to update subzone");
+  return result;
+};
+
+export const deleteSubzone = async (subzoneId) => {
+    const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/subzone/${subzoneId}`, {
+    method: "DELETE",
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Failed to delete subzone");
+  return result;
+};
+
+export const getSubzonesWithZoneId = async (zoneId) => {
+  if (!zoneId) {
+    return { data: [], status: false };
+  }
+
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch(`${BASE_URL}/subZone/subzone/list/${zoneId}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch subzones");
+    }
+    return {
+      status: true,
+      data: result.data || result || [],
+    };
+  } catch (error) {
+    console.error("Error fetching subzones by zoneId:", error);
+    return {
+      status: false,
+      data: [],
+    };
+  }
+};

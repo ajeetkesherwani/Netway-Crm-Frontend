@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -143,6 +144,16 @@ import UserLogs from "./pages/UserProfile/AcitivityLog";
 import UserProfile from "./pages/UserProfile/UserProfileDetails";
 import ConnectionRequestList from "./pages/connectionRequest/connectionRequestList";
 import PackageUpdate from "./pages/Package/PackageUpdate";
+import InvoicePage from "./pages/Invoice/InvoicePage";
+import AssignedStock from "./pages/UserProfile/AssignedStock";
+import OttList from "./pages/Package/OttPackageList";
+import IptvList from "./pages/Package/IptvPackageList";
+import PlanHistoryPage from "./pages/Customer/CustomerPlanHistory";
+import SubZoneList from "./pages/Setting/SubZoneList";
+import SubZoneCreate from "./pages/Setting/SubZoneCreate";
+import AddPayment from "./pages/Payment/AddPayment";
+import ReceiptDetails from "./pages/UserProfile/ReceiptDetails";
+// import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
 
@@ -210,8 +221,7 @@ export default function App() {
 
             {/*-------------------------------------------------------------------------User Profile Details ------------------------------------------------------------------------- */}
 
-
-            <Route path="user/profile/:id" element={<ProfileHeader />}>
+            {/* <Route path="user/profile/:id" element={<ProfileHeader />}>
               <Route index element={<Profile />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="invoice" element={<UserInvoices />} />
@@ -220,8 +230,21 @@ export default function App() {
               <Route path="recharge-package" element={<UserRechargePackage />} />
               <Route path="package-details" element={<UserPackageDetails />} />
               <Route path="activity-log" element={<UserLogs />} />
-              {/* <Route path="recharge-package" element={<UserRechargePackage userId={"someValue"} />} /> */}
+              <Route path="assigned-stock" element={<AssignedStock />} />
+            </Route> */}
+
+            <Route path="/user/profile/:id" element={<ProfileHeader />}>
+              <Route index element={<Profile />} />
+              <Route path="profile" element={<UserProfile />} />
+              <Route path="invoice" element={<UserInvoices />} />
+              <Route path="tickets" element={<UserTickets />} />
+              <Route path="payment" element={<UserPayment />} />
+              <Route path="recharge-package" element={<UserRechargePackage />} />
+              <Route path="package-details" element={<UserPackageDetails />} />
+              <Route path="activity-log" element={<UserLogs />} />
+              <Route path="assigned-stock" element={<AssignedStock />} />
             </Route>
+         <Route path="payment/receipt/:userId/:receiptId" element={<ReceiptDetails />} />
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
             <Route path="staff/list" element={<StaffList />} />
@@ -323,11 +346,16 @@ export default function App() {
             <Route path="package/update/:id" element={<PackageUpdate />} />
             {/* <Route path="/package/ott-list" element={<Hello />} /> */}
             {/* <Route path="/package/iptv-list" element={< />} /> */}
+
+            <Route path="/package/ott-list" element={<OttList />} />
+            <Route path="/package/iptv-list" element={<IptvList />} />
+
             {/*----------------------------------------------------------------------------------------------Customer Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="user/list" element={<CustomerList />} />
             <Route path="user/create" element={<CreateUser />} />
             <Route path="user/:id" element={<UserDetails />} />
             <Route path="user/update/:id" element={<CustomerUpdate />} />
+            <Route path="/user/plan-history/:id" element={<PlanHistoryPage />} />
             {/* Role Permission */}
             <Route path="role/list" element={<RoleList />} />
             <Route path="/role/create" element={<CreateRole />} />
@@ -344,6 +372,11 @@ export default function App() {
             <Route path="/setting/zonelist" element={<ZoneList />} />
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
             <Route path="/setting/zone/update" element={<ZoneUpdate />} />
+
+           {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
+                 <Route path="/setting/subZone/list" element={<SubZoneList/>}/>
+                 <Route path="/setting/subzone/create" element={<SubZoneCreate/>}/>
+ 
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/hardware/list" element={<HardwareList />} />
             <Route
@@ -405,6 +438,8 @@ export default function App() {
 
             <Route path="/received/payment" element={<CompletePaymentList />} />
             <Route path="/pending/payment" element={<PendingPaymentList />} />
+            <Route path="/add/payment" element={<AddPayment />} />
+         
 
             {/*--------------------------puched plan list-------------------------------------------------------------------*/}
 
@@ -413,10 +448,9 @@ export default function App() {
               element={<PurchasedPlanList />}
             />
             <Route path="/invoice/ott-recharge" element={<OttPackageList />} />
-            <Route
-              path="/invoice/iptv-recharge"
-              element={<IptvPackageList />}
-            />
+            <Route path="/invoice/iptv-recharge" element={<IptvPackageList />} />
+            {/* <Route path="/invoice/:id" element={<InvoiceDetails/>} /> */}
+            <Route path="/invoice/details/:id" element={<InvoicePage />} />
 
             {/*-------------------------------------------------------------------------config list ------------------------------------------------------------------------- */}
             <Route path="/config/list" element={<RoleConfigList />} />
@@ -428,8 +462,10 @@ export default function App() {
 
             {/*-----------------------------connectionRequest---------------------------- */}
 
-            <Route path="/connection-request" element={<ConnectionRequestList />} />
-
+            <Route
+              path="/connection-request"
+              element={<ConnectionRequestList />}
+            />
 
             {/*-------------------------------------------------------------------------Subscriber Report list ------------------------------------------------------------------------- */}
             <Route

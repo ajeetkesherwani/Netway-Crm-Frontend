@@ -251,6 +251,11 @@ if (packageSubItems.length > 0) {
     // 💳 Payment
     const paymentSubItems = [];
     if (hasTruePermission(permissions.payment)) {
+       if (permissions.payment?.add)
+        paymentSubItems.push({
+          name: "Add Payment",
+          path: "/add/payment",
+        });
       if (permissions.payment?.success)
         paymentSubItems.push({
           name: "Received Payment",
@@ -294,6 +299,27 @@ if (packageSubItems.length > 0) {
         subItems: configSubItems,
       });
 
+// 📦 Stock Management
+const stockManagementSubItems = [];
+
+if (hasTruePermission(permissions.setting)) {
+  if (permissions.setting?.hardwareList) {
+    stockManagementSubItems.push({
+      name: "Hardware List",
+      path: "/setting/hardware/list",
+    });
+  }
+}
+
+if (stockManagementSubItems.length > 0) {
+  generatedNavItems.push({
+    name: "Stock Management",
+    icon: <FileIcon />, // any icon
+    subItems: stockManagementSubItems,
+  });
+}
+
+
     // 🧩 Settings
     const settingSubItems = [];
     if (hasTruePermission(permissions.setting)) {
@@ -317,10 +343,15 @@ if (packageSubItems.length > 0) {
           name: "Zone List",
           path: "/setting/zonelist",
         });
-      if (permissions.setting?.hardwareList)
+      // if (permissions.setting?.hardwareList)
+      //   settingSubItems.push({
+      //     name: "Hardware List",
+      //     path: "/setting/hardware/list",
+      //   });
+            if (permissions.setting?.subZoneList)
         settingSubItems.push({
-          name: "Hardware List",
-          path: "/setting/hardware/list",
+          name: "SubZone List",
+          path: "/setting/subZone/list",
         });
     }
     if (settingSubItems.length > 0)

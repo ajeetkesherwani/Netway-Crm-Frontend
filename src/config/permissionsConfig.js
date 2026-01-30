@@ -1,4 +1,3 @@
-// src/config/permissionsConfig.js
 export const permissionsConfig = [
     {
         category: "dashboard",
@@ -100,7 +99,15 @@ export const permissionsConfig = [
             "logs",
             "rechargePackageList",
             "purchasedNewPackage",
-            "renewPackage"
+            "renewPackage",
+            "assignedStockView",
+            "addPayment",
+            "statusButton",
+            "changePassword",
+            "addTicket",
+            "planHistory",
+            "autoRechargeToggle",
+            "refundPackage"
         ],
     },
     {
@@ -176,14 +183,20 @@ export const permissionsConfig = [
             "packageRechargeRemove",
             "ottRecharge",
             "iptvRecharge",
+            "invoiceDownload",
+            "packageRechargeRefund"
         ],
     },
     {
         category: "payment",
         label: "Payment",
         permissions: [
+            "add",
             "success",
             "failed",
+            "viewReceipt",
+            "editReceipt",
+            "deleteReceipt"
         ],
     },
     {
@@ -221,12 +234,21 @@ export const permissionsConfig = [
             "zoneRemove",
             "zoneUpdate",
             "zoneCreate",
+            "subZoneList",
+            "subZoneUpdate",
+            "subZoneDelete",
+            "subZoneCreate",
         ],
     },
+    // {
+    //     category: "setting",
+    //     label: "Setting",
+    //     permissions: ["listing", "create", "edit", "delete", "view", "approve"],
+    // },
     {
-        category: "setting",
-        label: "Setting",
-        permissions: ["listing", "create", "edit", "delete", "view", "approve"],
+        category: "stockManagement",
+        label: "Stock Management",
+        permissions: ["listing", "create", "edit", "delete", "view", "assign"],
     },
     {
         category: "userCms",

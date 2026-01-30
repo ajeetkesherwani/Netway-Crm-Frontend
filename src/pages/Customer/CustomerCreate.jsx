@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createUser, getAllZoneList, getLcoByRetailer } from "../../service/user";
+import {
+  createUser,
+  getAllZoneList,
+  getLcoByRetailer,
+} from "../../service/user";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
@@ -9,6 +13,16 @@ import { getStaffList } from "../../service/ticket";
 import { getAllPackageList } from "../../service/package";
 import { assignPackageToUser } from "../../service/userPackage";
 import DatePicker from "react-datepicker";
+import { characterValidate } from "../../validations/characterValidate";
+import { emailValidate } from "../../validations/emailValidate";
+import { mobileValidate } from "../../validations/mobileValidate";
+import { checkAlternateSameAsMobile } from "../../validations/validateAlternateMobile";
+import { pincodeValidate } from "../../validations/pincodeValidate";
+import { cityValidate } from "../../validations/cityValidate";
+import { stateValidate } from "../../validations/stateValidate";
+// import { getAllSubZones } from "../../service/apiClient";
+import { getSubzonesWithZoneId } from "../../service/apiClient";
+
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function CreateUser() {
@@ -31,21 +45,57 @@ export default function CreateUser() {
   const [selectedLco, setSelectedLco] = useState("");
   const [customPackagePrice, setCustomPackagePrice] = useState("");
 
+  const [subZoneList, setSubZoneList] = useState([]);
+  const [selectedSubZone, setSelectedSubZone] = useState("");
 
   const [formErrors, setFormErrors] = useState({});
-  // const [areas, setAreas] = useState(["Main Area"]);
-  // const [areas, setAreas] = useState([""]);
   const [selectedArea, setSelectedArea] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-
-  const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
+  const connectionTypes = ["ILL", "FTTH", "RF", "OTHER"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
-  const serviceOpted = ["intercom", "broadband", "corporate"]
-
+  const serviceOpted = ["intercom", "broadband", "corporate"];
+  const indianStates = [
+    "Andaman and Nicobar Islands",
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chandigarh",
+    "Chhattisgarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jammu and Kashmir",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Ladakh",
+    "Lakshadweep",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Puducherry",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+  ];
 
   const initialForm = {
     customer: {
@@ -83,7 +133,7 @@ export default function CreateUser() {
       circuitId: "",
       createdFor: {
         id: "",
-        type: "Self"
+        type: "Self",
       },
       packageDetails: {
         packageId: "",
@@ -139,40 +189,121 @@ export default function CreateUser() {
   };
 
   const [formData, setFormData] = useState(initialForm);
+  console.log("formData", formData);
 
   // FETCH ALL DATA + PACKAGES
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes] =
-          await Promise.allSettled([
-            getRoles(),
-            getRetailer(),
-            getAllLco(),
-            getStaffList?.(),
-            getAllZoneList(),
-            getAllPackageList(),
-          ]);
+  const fetchAll = async () => {
+    try {
+      const [
+        rRes,
+        resellerRes,
+        lcoRes,
+        staffRes,
+        zoneRes,
+        pkgRes,
+      ] = await Promise.allSettled([
+        getRoles(),
+        getRetailer(),
+        getAllLco(),
+        getStaffList?.(),
+        getAllZoneList(),
+        getAllPackageList(),
+      ]);
 
-        console.log("resellerRes", resellerRes);
-        if (rRes.status === "fulfilled" && rRes.value?.status)
-          setRoles(rRes.value.data);
-        if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
-          setRetailers(resellerRes.value.data);
-        if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
-          setLcos(lcoRes.value.data);
-        if (staffRes?.status === "fulfilled" && staffRes.value?.status)
-          setStaff(staffRes.value.data);
-        if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
-          setZoneList(zoneRes.value.data || []);
-        if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
-          setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
-      } catch (err) {
-        console.error("fetch error", err);
+      if (rRes.status === "fulfilled" && rRes.value?.status)
+        setRoles(rRes.value.data || []);
+
+      if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
+        setRetailers(resellerRes.value.data || []);
+
+      if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
+        setLcos(lcoRes.value.data || []);
+
+      if (staffRes?.status === "fulfilled" && staffRes.value?.status)
+        setStaff(staffRes.value.data || []);
+
+      if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
+        setZoneList(zoneRes.value.data || []);
+
+      if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
+        setPackageList(pkgRes.value.data || []);
+
+      // Start with empty subzones
+      setSubZoneList([]);
+      setSelectedSubZone("");
+
+    } catch (err) {
+      console.error("fetch error", err);
+    }
+  };
+  fetchAll();
+}, []);
+  // useEffect(() => {
+  //   const fetchAll = async () => {
+  //     try {
+  //       const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes, subZoneRes,] =
+  //         await Promise.allSettled([
+  //           getRoles(),
+  //           getRetailer(),
+  //           getAllLco(),
+  //           getStaffList?.(),
+  //           getAllZoneList(),
+  //           getAllPackageList(),
+  //         ]);
+
+  //       console.log("resellerRes", resellerRes);
+  //       if (rRes.status === "fulfilled" && rRes.value?.status)
+  //         setRoles(rRes.value.data);
+  //       if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
+  //         setRetailers(resellerRes.value.data);
+  //       if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
+  //         setLcos(lcoRes.value.data);
+  //       if (staffRes?.status === "fulfilled" && staffRes.value?.status)
+  //         setStaff(staffRes.value.data);
+  //       if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
+  //         setZoneList(zoneRes.value.data || []);
+  //       if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
+  //         setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
+  //       setSubZoneList([]);
+  //       setSelectedSubZone("");
+  //       // if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
+  //       //   setSubZoneList(subZoneRes.value.data || []);
+  //       // }
+  //     } catch (err) {
+  //       console.error("fetch error", err);
+  //     }
+  //   };
+  //   fetchAll();
+  // }, []);
+
+  useEffect(() => {
+  const fetchSubzones = async () => {
+    if (!selectedArea) {
+      setSubZoneList([]);
+      setSelectedSubZone("");
+      setFieldValue("customer.subZoneId", "");
+      return;
+    }
+
+    try {
+      const response = await getSubzonesWithZoneId(selectedArea);
+
+      if (response?.status && Array.isArray(response.data)) {
+        setSubZoneList(response.data);
+      } else {
+        setSubZoneList([]);
+        toast.error("No sub areas found for this zone");
       }
-    };
-    fetchAll();
-  }, []);
+    } catch (err) {
+      console.error("Error fetching subzones:", err);
+      setSubZoneList([]);
+      toast.error("Failed to load sub areas");
+    }
+  };
+
+  fetchSubzones();
+}, [selectedArea]);
 
   console.log("retailers", retailers);
   console.log("staff", staff);
@@ -209,11 +340,11 @@ export default function CreateUser() {
       cur[keys[keys.length - 1]] = value;
       return next;
     });
-    setFormErrors((prev) => {
-      const c = { ...prev };
-      delete c[path];
-      return c;
-    });
+    // setFormErrors((prev) => {
+    //   const c = { ...prev };
+    //   delete c[path];
+    //   return c;
+    // });
   };
 
   // Areas dynamic add/remove
@@ -229,6 +360,146 @@ export default function CreateUser() {
 
   const handleChange = (e, path) => {
     const { value, type, checked, files } = e.target;
+
+    if (path === "customer.name") {
+      const error = characterValidate(value);
+
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+    //  Email validation
+    if (path === "customer.email") {
+      const error = emailValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+    // Mobile validation
+    if (path === "customer.mobile") {
+      let value = e.target.value;
+
+      // remove alphabets
+      value = value.replace(/\D/g, "");
+
+      // limit to 10 digits
+      if (value.length > 10) {
+        value = value.slice(0, 10);
+      }
+
+      setFieldValue(path, value);
+
+      // validation
+      const error = mobileValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+
+      return;
+    }
+
+    // Alternative mobile number validation
+    if (path === "customer.alternateMobile") {
+      let value = e.target.value;
+
+      // ✅ Remove alphabets & special characters
+      value = value.replace(/\D/g, "");
+
+      // ✅ Limit to 10 digits
+      if (value.length > 10) {
+        value = value.slice(0, 10);
+      }
+
+      // ✅ Update field value (IMPORTANT)
+      setFieldValue(path, value);
+
+      const trimmedValue = value.trim();
+      const primaryMobile = formData.customer.mobile?.trim() || "";
+
+      // Validate only if user entered something
+      const formatError = trimmedValue ? mobileValidate(trimmedValue) : "";
+
+      // Check same as primary mobile
+      const sameError = checkAlternateSameAsMobile(primaryMobile, trimmedValue);
+
+      const finalError = sameError || formatError;
+
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: finalError,
+      }));
+
+      return;
+    }
+
+    //  Pincode
+    if (
+      path === "addresses.billing.pincode" ||
+      path === "addresses.permanent.pincode"
+    ) {
+      let value = e.target.value;
+      // value = value.replace(/\D/g, "");
+
+      if (value.length > 6) {
+        return;
+      }
+      const error = pincodeValidate(value);
+      setFormErrors((prev) => ({ ...prev, [path]: error }));
+    }
+
+    if (
+      path === "addresses.billing.city" ||
+      path === "addresses.permanent.city"
+    ) {
+      const error = cityValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+    if (
+      path === "addresses.billing.state" ||
+      path === "addresses.permanent.state"
+    ) {
+      const error = stateValidate(value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [path]: error,
+      }));
+    }
+
+    // if (path.includes("state")) {
+    //   const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, ""); // Remove anything that's not letter or space
+    //   setFieldValue(path, sanitizedValue);
+
+    //   // Optional: Clear error if exists
+    //   setFormErrors((prev) => {
+    //     const newErrors = { ...prev };
+    //     delete newErrors[path];
+    //     return newErrors;
+    //   });
+    //   return;
+    // }
+
+    const addressPaths = [
+      "addresses.billing.addressLine1",
+
+      "addresses.permanent.addressLine1",
+    ];
+
+    if (addressPaths.includes(path)) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[path];
+        return newErrors;
+      });
+    }
+
     if (type === "checkbox") setFieldValue(path, checked);
     else if (type === "file") {
       if (path === "documents") {
@@ -240,7 +511,6 @@ export default function CreateUser() {
       } else setFieldValue(path, files[0]);
     } else setFieldValue(path, value);
   };
-
 
   // Handle Created For change
   const handleCreatedForChange = (type) => {
@@ -276,8 +546,6 @@ export default function CreateUser() {
     setFieldValue("customer.createdFor.id", lcoId);
   };
 
-
-
   // PACKAGE SELECT → AUTO FILL NAME & PRICE
   const handlePackageChange = (packageId) => {
     const selected = packageList.find((p) => p._id === packageId);
@@ -286,7 +554,10 @@ export default function CreateUser() {
 
       // Save package ID and name
       setFieldValue("customer.packageDetails.packageId", selected._id);
-      setFieldValue("customer.packageDetails.packageName", selected.packageName || selected.name || "");
+      setFieldValue(
+        "customer.packageDetails.packageName",
+        selected.packageName || selected.name || ""
+      );
 
       // Set the original base price (for display and fallback)
       setFieldValue("customer.packageDetails.packageAmount", basePrice);
@@ -314,12 +585,17 @@ export default function CreateUser() {
   //   }
   // };
 
-
   // validation: focus on required payment fields & some basics
   const validateForm = () => {
     const errors = {};
     const c = formData.customer;
     const p = formData.payment;
+    const perm = formData.addresses.permanent;
+    // Name - Required
+    const name = (c.name || "").trim();
+    if (!name) {
+      errors["customer.name"] = "Name is required";
+    }
 
     // email
     const email = (c.email || "").trim();
@@ -329,7 +605,7 @@ export default function CreateUser() {
 
     // mobile
     const mobile = (c.mobile || "").trim();
-    if (!mobile) errors["customer.mobile"] = "Mobile is required";
+    if (!mobile) errors["customer.mobile"] = "Mobile Number is required";
     else if (!/^\d{10,}$/.test(mobile))
       errors["customer.mobile"] = "Enter valid mobile (10+ digits)";
 
@@ -343,20 +619,69 @@ export default function CreateUser() {
     if (aadhar && !/^\d{12}$/.test(aadhar))
       errors["customer.aadharNo"] = "Aadhar must be 12 digits";
 
+    // if (!c.packageDetails.packageId || !c.packageDetails.packageId.trim()) {
+    //   errors["packageDetails.packageId"] = "Package detail is required";
+    // }
+
+    // const packagePrice = c.packageDetails.packageAmount;
+    // if (!packagePrice || packagePrice <= 0) {
+    //   errors["packageDetails.packageAmount"] = "Package price is required";
+    // }
+
     // Payment - all required
     if (!p.paymentMode) errors["payment.paymentMode"] = "Payment mode required";
+    // Zone validation
+    // if (!selectedArea || selectedArea.trim() === "") {
+    //   errors["zone"] = "Zone is required";
+    // }
 
     // addresses: billing must have pincode & state & city & area
     const bill = formData.addresses.billing;
+    const billCity = (formData.addresses.billing.city || "").trim();
+    const permCity = (formData.addresses.permanent.city || "").trim();
+    const billState = (formData.addresses.billing.state || "").trim();
+    const permState = (formData.addresses.permanent.state || "").trim();
+
+    if (!bill.addressLine1)
+      errors["addresses.billing.addressLine1"] =
+        "Billing address line 1 required";
+
     if (!bill.state)
       errors["addresses.billing.state"] = "Billing state required";
-    if (!bill.city) errors["addresses.billing.city"] = "Billing city required";
+    if (!billCity) {
+      errors["addresses.billing.city"] = "Billing city is required";
+    } else {
+      const err = cityValidate(billCity);
+      if (err) errors["addresses.billing.city"] = err;
+    }
+    if (!billState) {
+      errors["addresses.billing.state"] = "Billing state is required";
+    } else {
+      const err = stateValidate(billState);
+      if (err) errors["addresses.billing.state"] = err;
+    }
     if (!bill.pincode)
       errors["addresses.billing.pincode"] = "Billing pincode required";
+    if (!perm.addressLine1)
+      errors["addresses.permanent.addressLine1"] =
+        "Permanent address line 1 required";
+    if (!permCity) {
+      errors["addresses.permanent.city"] = "Permanent city is required";
+    } else {
+      const err = cityValidate(permCity);
+      if (err) errors["addresses.permanent.city"] = err;
+    }
+    if (!permState) {
+      errors["addresses.permanent.state"] = "Permanent state is required";
+    } else {
+      const err = stateValidate(permState);
+      if (err) errors["addresses.permanent.state"] = err;
+    }
+    if (!perm.pincode)
+      errors["addresses.permanent.pincode"] = "Permanent pincode required";
 
     return errors;
   };
-
 
   //handle submit
   const handleSubmit = async (e) => {
@@ -366,6 +691,7 @@ export default function CreateUser() {
     const errors = validateForm();
     if (Object.keys(errors).length) {
       setFormErrors(errors);
+      console.log("Erros - ", errors);
       toast.error("Please fix form errors");
       setLoading(false);
       return;
@@ -378,6 +704,7 @@ export default function CreateUser() {
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
       payload.append("area", selectedArea);
+      payload.append("subZone", selectedSubZone);
 
       formData.documents.forEach((doc) => {
         if (doc.file && doc.type) {
@@ -391,7 +718,6 @@ export default function CreateUser() {
 
       toast.success("Customer created & package assigned successfully!");
       navigate("/user/list");
-
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create customer");
     } finally {
@@ -500,7 +826,6 @@ export default function CreateUser() {
   //   }
   // };
 
-
   const handleClear = () => {
     setFormData(initialForm);
     setFormErrors({});
@@ -509,45 +834,75 @@ export default function CreateUser() {
   };
 
   const documentTypes = [
-    "Address Proof", 
-    "Profile Photo", 
-    "Addhar Card", 
-    "Passport", 
+    "Address Proof",
+    "Profile Photo",
+    "Addhar Card",
+    "Passport",
     "Signature",
-    "Pan Card", 
-    "Driving Licence", 
-    "GST", 
-    "Other"
-    // "ID proof",
-    // "Profile Id",
-    // "Aadhar Card",
-    // "Insurence Paper",
-    // "Signature",
-    // "Pan Card",
-    // "Other"
+    "Pan Card",
+    "Driving Licence",
+    "GST",
+    "Caf Form",
+    "Other",
   ];
   const addDocumentRow = () =>
     setFormData((prev) => ({
       ...prev,
-      documents: [...prev.documents, { type: "", file: null }],
+      documents: [...prev.documents, { type: "", file: null, preview: "" }], // ← add preview: ""
     }));
+  // const addDocumentRow = () =>
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     documents: [...prev.documents, { type: "", file: null }],
+  //   }));
   const updateDocumentType = (i, v) =>
     setFormData((prev) => {
       const d = [...prev.documents];
       d[i].type = v;
       return { ...prev, documents: d };
     });
-  const updateDocumentFile = (i, f) =>
+  const updateDocumentFile = (i, f) => {
+    if (!f) return;
+
+    // Create preview only for images
+    const isImage = f.type.startsWith("image/");
+    const preview = isImage ? URL.createObjectURL(f) : "";
+
     setFormData((prev) => {
       const d = [...prev.documents];
-      d[i].file = f;
+      d[i] = {
+        ...d[i],
+        file: f,
+        preview: preview,
+      };
       return { ...prev, documents: d };
     });
+  };
+  // const updateDocumentFile = (i, f) =>
+  //   setFormData((prev) => {
+  //     const d = [...prev.documents];
+  //     d[i].file = f;
+  //     return { ...prev, documents: d };
+  //   });
   const removeDocumentRow = (i) =>
-    setFormData((prev) => ({
-      ...prev,
-      documents: prev.documents.filter((_, idx) => idx !== i),
-    }));
+    setFormData((prev) => {
+      const d = [...prev.documents];
+
+      // Clean up old preview URL to prevent memory leak
+      if (d[i]?.preview) {
+        URL.revokeObjectURL(d[i].preview);
+      }
+
+      return {
+        ...prev,
+        documents: d.filter((_, idx) => idx !== i),
+      };
+    });
+  // const removeDocumentRow = (i) =>
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     documents: prev.documents.filter((_, idx) => idx !== i),
+  //   }));
 
   return (
     <div className="max-w-[1400px] mx-auto p-4 bg-white shadow rounded">
@@ -629,58 +984,73 @@ export default function CreateUser() {
               )}
             </div>
 
-               {/* dob */}
-               <div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Date of Birth
-  </label>
-  <div className="relative">
-    <DatePicker
-      selected={formData.additional.dob ? new Date(formData.additional.dob) : null}
-      onChange={(date) => {
-        const formatted = date ? date.toISOString().split("T")[0] : "";
-        setFieldValue("additional.dob", formatted);
-      }}
-      dateFormat="dd/MM/yyyy"
-      placeholderText="dd/mm/yyyy"
-      className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
-      showMonthDropdown
-      showYearDropdown
-      dropdownMode="select"
-      maxDate={new Date()}
-      yearDropdownItemNumber={80}
-      scrollableYearDropdown
-      popperPlacement="bottom-start"
-      // This allows clicking the icon to open calendar
-      onClickOutside={() => {}}
-      // Ensures calendar opens on icon click
-      showPopperArrow={false}
-    />
+            {/* dob */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth
+              </label>
+              <div className="relative">
+                <DatePicker
+                  selected={
+                    formData.additional.dob
+                      ? new Date(formData.additional.dob)
+                      : null
+                  }
+                  onChange={(date) => {
+                    const formatted = date
+                      ? date.toISOString().split("T")[0]
+                      : "";
+                    setFieldValue("additional.dob", formatted);
+                  }}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="dd/mm/yyyy"
+                  className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                  maxDate={new Date()}
+                  yearDropdownItemNumber={80}
+                  scrollableYearDropdown
+                  popperPlacement="bottom-start"
+                  // This allows clicking the icon to open calendar
+                  onClickOutside={() => { }}
+                  // Ensures calendar opens on icon click
+                  showPopperArrow={false}
+                />
 
-    {/* Calendar Icon Inside Input - Clickable */}
-    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          // Trigger the DatePicker to open
-          document.querySelector('.react-datepicker__input-container input')?.focus();
-        }}
-        className="text-gray-400 hover:text-gray-600 focus:outline-none"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-      </button>
-    </div>
-  </div>
-</div>
+                {/* Calendar Icon Inside Input - Clickable */}
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Trigger the DatePicker to open
+                      document
+                        .querySelector(
+                          ".react-datepicker__input-container input"
+                        )
+                        ?.focus();
+                    }}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
             {/* <div>
               <label className="block text-sm">DOB</label>
               <input
@@ -696,6 +1066,12 @@ export default function CreateUser() {
               <input
                 value={formData.customer.mobile}
                 onChange={(e) => handleChange(e, "customer.mobile")}
+                // onKeyDown={(e) => {
+                //   if (!/[0-9]/.test(e.key)) {
+                //     e.preventDefault(); // Block alphabets & special characters
+                //   }
+                // }}
+
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Mobile Number"
@@ -717,6 +1093,11 @@ export default function CreateUser() {
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Alternate Mobile"
+              // onKeyDown={(e) => {
+              //   if (!/[0-9]/.test(e.key)) {
+              //     e.preventDefault(); // Block alphabets & special characters
+              //   }
+              // }}
               />
               {formErrors["customer.alternateMobile"] && (
                 <p className="text-red-500 text-sm">
@@ -781,13 +1162,13 @@ export default function CreateUser() {
               {/* CLEAN & MINIMAL MULTI-SELECT DROPDOWN */}
               <div className="relative">
                 <div
-                  onClick={() => setShowDropdown(prev => !prev)}
+                  onClick={() => setShowDropdown((prev) => !prev)}
                   className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
                 >
                   <div className="flex flex-wrap gap-2">
                     {formData.customer.installationBy?.length > 0 ? (
                       formData.customer.installationBy.map((id) => {
-                        const person = staff.find(s => s._id === id);
+                        const person = staff.find((s) => s._id === id);
                         return person ? (
                           <span
                             key={id}
@@ -798,8 +1179,14 @@ export default function CreateUser() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const updated = formData.customer.installationBy.filter(x => x !== id);
-                                setFieldValue("customer.installationBy", updated);
+                                const updated =
+                                  formData.customer.installationBy.filter(
+                                    (x) => x !== id
+                                  );
+                                setFieldValue(
+                                  "customer.installationBy",
+                                  updated
+                                );
                               }}
                               className="ml-1 hover:text-blue-900"
                             >
@@ -809,11 +1196,24 @@ export default function CreateUser() {
                         ) : null;
                       })
                     ) : (
-                      <span className="text-gray-500 text-sm">Select installer(s)</span>
+                      <span className="text-gray-500 text-sm">
+                        Select installer(s)
+                      </span>
                     )}
                   </div>
-                  <svg className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
+                      }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </div>
 
@@ -823,7 +1223,8 @@ export default function CreateUser() {
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {staff.length > 0 ? (
                         staff.map((s) => {
-                          const isChecked = formData.customer.installationBy?.includes(s._id);
+                          const isChecked =
+                            formData.customer.installationBy?.includes(s._id);
                           return (
                             <label
                               key={s._id}
@@ -834,23 +1235,37 @@ export default function CreateUser() {
                                 type="checkbox"
                                 checked={isChecked || false}
                                 onChange={() => {
-                                  let updated = [...(formData.customer.installationBy || [])];
+                                  let updated = [
+                                    ...(formData.customer.installationBy || []),
+                                  ];
                                   if (isChecked) {
-                                    updated = updated.filter(id => id !== s._id);
+                                    updated = updated.filter(
+                                      (id) => id !== s._id
+                                    );
                                   } else {
                                     updated.push(s._id);
-                                    setFieldValue("customer.installationByName", ""); // Clear manual
+                                    setFieldValue(
+                                      "customer.installationByName",
+                                      ""
+                                    ); // Clear manual
                                   }
-                                  setFieldValue("customer.installationBy", updated);
+                                  setFieldValue(
+                                    "customer.installationBy",
+                                    updated
+                                  );
                                 }}
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                               />
-                              <span className="font-medium text-sm">{s.staffName || s.name}</span>
+                              <span className="font-medium text-sm">
+                                {s.staffName || s.name}
+                              </span>
                             </label>
                           );
                         })
                       ) : (
-                        <div className="px-4 py-3 text-sm text-gray-500">No staff available</div>
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          No staff available
+                        </div>
                       )}
                     </div>
 
@@ -892,7 +1307,9 @@ export default function CreateUser() {
 
               {/* Error */}
               {formErrors.installationBy && (
-                <p className="mt-2 text-red-600 text-sm">{formErrors.installationBy}</p>
+                <p className="mt-2 text-red-600 text-sm">
+                  {formErrors.installationBy}
+                </p>
               )}
             </div>
             <div>
@@ -1011,27 +1428,29 @@ export default function CreateUser() {
                 value={selectedCreatedFor}
                 onChange={(e) => handleCreatedForChange(e.target.value)}
               >
-                <option value="" disabled selected>Select</option>
+                <option value="" disabled selected>
+                  Select
+                </option>
                 <option value="Admin">Admin</option>
                 <option value="Retailer">Reseller</option>
                 <option value="Lco">Lco</option>
               </select>
             </div>
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
-            {(selectedCreatedFor === "reseller" ||
-              selectedCreatedFor === "lco") && (
+            {(selectedCreatedFor === "Retailer" ||
+              selectedCreatedFor === "Lco") && (
                 <div>
                   <label className="block text-sm font-medium">Reseller</label>
                   <select
                     name="reseller"
                     className="mt-1 p-2 border rounded w-full"
                     value={
-                      selectedCreatedFor === "lco"
+                      selectedCreatedFor === "Lco"
                         ? selectedRetailerForLco
                         : formData.customer.createdFor.id
                     }
                     onChange={(e) => {
-                      if (selectedCreatedFor === "lco") {
+                      if (selectedCreatedFor === "Lco") {
                         handleRetailerForLcoChange(e.target.value);
                       } else {
                         // if just reseller, set ID directly
@@ -1053,7 +1472,7 @@ export default function CreateUser() {
                 </div>
               )}
             {/* LCO Dropdown - Show only if Created For is Lco */}
-            {selectedCreatedFor === "lco" && (
+            {selectedCreatedFor === "Lco" && (
               <div>
                 <label className="block text-sm font-medium">Lco</label>
                 <select
@@ -1071,7 +1490,6 @@ export default function CreateUser() {
                 </select>
               </div>
             )}
-
           </div>
         </section>
 
@@ -1083,7 +1501,7 @@ export default function CreateUser() {
           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Billing Address */}
             <div className="border rounded p-3">
-              <h3 className="font-semibold mb-2">Billing Address</h3>
+              <h3 className="font-semibold mb-2">Installation Address</h3>
               <label className="text-sm">Address Line 1 *</label>
               <input
                 value={formData.addresses.billing.addressLine1}
@@ -1094,7 +1512,14 @@ export default function CreateUser() {
                   ? "border-red-500"
                   : ""
                   }`}
+                placeholder="Address Line 1 (Required)"
               />
+
+              {formErrors["addresses.billing.addressLine1"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["addresses.billing.addressLine1"]}
+                </p>
+              )}
               <label className="text-sm mt-2">Address Line 2</label>
               <input
                 value={formData.addresses.billing.addressLine2}
@@ -1111,6 +1536,9 @@ export default function CreateUser() {
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
                     }`}
                 />
+                {/* {formErrors["addresses.billing.city"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
+                )} */}
                 <input
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
@@ -1120,17 +1548,30 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
+                {/* {formErrors["addresses.billing.state"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
+                )} */}
               </div>
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.billing.pincode}
                   onChange={(e) => handleChange(e, "addresses.billing.pincode")}
                   placeholder="Pincode *"
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault(); // Blocks any non-digit key
+                    }
+                  }}
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"]
                     ? "border-red-500"
                     : ""
                     }`}
                 />
+                {formErrors["addresses.billing.pincode"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["addresses.billing.pincode"]}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -1142,11 +1583,18 @@ export default function CreateUser() {
                 onChange={(e) =>
                   handleChange(e, "addresses.permanent.addressLine1")
                 }
-                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
+                className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.permanent.addressLine1"]
                   ? "border-red-500"
                   : ""
                   }`}
+                placeholder="Address Line 1 (Required)"
               />
+
+              {formErrors["addresses.permanent.addressLine1"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["addresses.permanent.addressLine1"]}
+                </p>
+              )}
               <label className="text-sm mt-2">Address Line 2</label>
               <input
                 value={formData.addresses.permanent.addressLine2}
@@ -1160,9 +1608,15 @@ export default function CreateUser() {
                   value={formData.addresses.permanent.city}
                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
                   placeholder="City *"
-                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"] ? "border-red-500" : ""
+                  className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"]
+                    ? "border-red-500"
+                    : ""
                     }`}
                 />
+                {/* {formErrors["addresses.permanent.city"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
+                )} */}
+
                 <input
                   value={formData.addresses.permanent.state}
                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
@@ -1172,23 +1626,38 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
+                {/* {formErrors["addresses.permanent.state"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
+                )} */}
               </div>
               <div className="flex gap-2 mt-2">
                 <input
                   value={formData.addresses.permanent.pincode}
-                  onChange={(e) => handleChange(e, "addresses.permanent.pincode")}
+                  onChange={(e) =>
+                    handleChange(e, "addresses.permanent.pincode")
+                  }
                   placeholder="Pincode *"
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault(); // Blocks any non-digit key
+                    }
+                  }}
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"]
                     ? "border-red-500"
                     : ""
                     }`}
                 />
+                {formErrors["addresses.permanent.pincode"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["addresses.permanent.pincode"]}
+                  </p>
+                )}
               </div>
             </div>
 
             {/* Installation Address */}
             <div className="border rounded p-3">
-              <h3 className="font-semibold mb-2">Installation Address</h3>
+              <h3 className="font-semibold mb-2">Billing Address</h3>
               <label className="inline-flex items-center text-sm">
                 <input
                   type="checkbox"
@@ -1198,7 +1667,7 @@ export default function CreateUser() {
                   }
                   className="mr-2"
                 />
-                Different as Billing address
+                Different as Installation address
               </label>
 
               {!formData.addresses.installation.sameAsBilling && (
@@ -1251,31 +1720,6 @@ export default function CreateUser() {
               )}
             </div>
 
-            {/* dynamic area editor (bottom row across grid) */}
-
-            {/* SINGLE AREA (ZONE) DROPDOWN  */}
-            {/* <div className="md:col-span-3 mt-6 p-5 rounded-xl border-2 ">
-              <label className="block text-lg font-bold text-blue-900 mb-3">
-                Select Area (Zone) <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedArea}
-                onChange={(e) => setSelectedArea(e.target.value)}
-                className="w-full p-4 text-lg border-2  outline-none transition"
-              >
-                <option value="">-- Select Area / Zone --</option>
-                {zoneList.map((zone) => (
-                  <option key={zone._id} value={zone._id}>
-                    {zone.zoneName}
-                  </option>
-                ))}
-              </select>
-
-              {formErrors.area && (
-                <p className="text-red-600 font-medium mt-2">{formErrors.area}</p>
-              )}
-            </div> */}
-
             {/* ZONE + CUSTOM AREA - SIMPLE & CLEAN (Same as other inputs) */}
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {/* Left: Zone Dropdown */}
@@ -1283,7 +1727,33 @@ export default function CreateUser() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Select Zone <span className="text-red-500">*</span>
                 </label>
-                <select
+              <select
+  value={selectedArea}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSelectedArea(value);
+
+    // Reset subzone when zone changes
+    setSelectedSubZone("");
+    setFieldValue("customer.subZoneId", "");
+
+    // Clear related errors
+    setFormErrors((prev) => ({
+      ...prev,
+      ["customer.subZoneId"]: undefined,
+      zone: undefined,
+    }));
+  }}
+  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+>
+  <option value="">-- Select Zone --</option>
+  {zoneList.map((zone) => (
+    <option key={zone._id} value={zone._id}>
+      {zone.zoneName}
+    </option>
+  ))}
+</select>
+                {/* <select
                   value={selectedArea}
                   onChange={(e) => setSelectedArea(e.target.value)}
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
@@ -1294,25 +1764,64 @@ export default function CreateUser() {
                       {zone.zoneName}
                     </option>
                   ))}
-                </select>
+                </select> */}
+                {formErrors["zone"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["zone"]}
+                  </p>
+                )}
               </div>
 
               {/* Right: Custom Area Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-              Area 
+                  Sub Area<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={formData.customer.customArea || ""}
-                  onChange={(e) => setFieldValue("customer.customArea", e.target.value)}
-                  placeholder="e.g. Shivaji Nagar, Near Temple"
+              <select
+  value={selectedSubZone}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSelectedSubZone(value);
+    setFieldValue("customer.subZoneId", value);
+  }}
+  disabled={!selectedArea}
+  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+  required
+>
+  <option value="">
+    {!selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
+  </option>
+  {subZoneList.map((sz) => (
+    <option key={sz._id} value={sz._id}>
+      {sz.subZoneName || sz.name}
+    </option>
+  ))}
+</select>
+                {/* <select
+                  value={selectedSubZone}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedSubZone(value);
+                    // Save subzone ID in formData (create new field if not exists)
+                    setFieldValue("customer.subZoneId", value);
+                  }}
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                />
+                  required
+                >
+                  <option value="">-- Select Sub Area --</option>
+                  {subZoneList.map((sz) => (
+                    <option key={sz._id} value={sz._id}>
+                      {sz.subZoneName || sz.name}
+                    </option>
+                  ))}
+                </select> */}
+                {formErrors["customer.subZoneId"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["customer.subZoneId"]}
+                  </p>
+                )}
               </div>
             </div>
-
-
           </div>
         </section>
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
@@ -1341,6 +1850,11 @@ export default function CreateUser() {
                   </option>
                 ))}
               </select>
+              {formErrors["packageDetails.packageId"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["packageDetails.packageId"]}
+                </p>
+              )}
 
               {/* <div className="mt-4">
                 <label className="block text-sm font-medium">
@@ -1356,12 +1870,18 @@ export default function CreateUser() {
               <div className="mt-4">
                 <label className="block text-sm font-medium">
                   Package Price <span className="text-red-500">*</span>
-                  {customPackagePrice && formData.customer.packageDetails.packageAmount !== customPackagePrice && (
-                    <span className="text-xs text-orange-600 ml-2">(Customized)</span>
-                  )}
+                  {customPackagePrice &&
+                    formData.customer.packageDetails.packageAmount !==
+                    customPackagePrice && (
+                      <span className="text-xs text-orange-600 ml-2">
+                        (Customized)
+                      </span>
+                    )}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">₹</span>
+                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
+                    ₹
+                  </span>
                   <input
                     type="number"
                     value={customPackagePrice}
@@ -1369,7 +1889,10 @@ export default function CreateUser() {
                       const value = e.target.value;
                       setCustomPackagePrice(value);
                       // Update the form data so it gets submitted
-                      setFieldValue("customer.packageDetails.packageAmount", value);
+                      setFieldValue(
+                        "customer.packageDetails.packageAmount",
+                        value
+                      );
                     }}
                     className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
                     placeholder="Enter custom price"
@@ -1377,35 +1900,23 @@ export default function CreateUser() {
                     step="1"
                   />
                 </div>
+                {formErrors["packageDetails.packageAmount"] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors["packageDetails.packageAmount"]}
+                  </p>
+                )}
                 {formData.customer.packageDetails.packageAmount && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Original price: ₹{formData.customer.packageDetails.packageAmount}
-                    {customPackagePrice && customPackagePrice !== formData.customer.packageDetails.packageAmount &&
-                      ` → Now: ₹${customPackagePrice}`
-                    }
+                    Original price: ₹
+                    {formData.customer.packageDetails.packageAmount}
+                    {customPackagePrice &&
+                      customPackagePrice !==
+                      formData.customer.packageDetails.packageAmount &&
+                      ` → Now: ₹${customPackagePrice}`}
                   </p>
                 )}
               </div>
             </div>
-
-            {/* NETWORK TYPE */}
-            {/* <div>
-              <label className="block text-sm font-medium">Network Type</label>
-              <select
-                value={formData.customer.networkType || ""}
-                onChange={(e) =>
-                  setFieldValue("customer.networkType", e.target.value)
-                }
-                className="mt-1 p-2 border rounded w-full"
-              >
-                <option value="">Select Network Type</option>
-                {networkTypes.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div> */}
           </div>
         </section>
 
@@ -1438,9 +1949,10 @@ export default function CreateUser() {
                       <option
                         key={dt}
                         value={dt}
-                        disabled={formData.documents.some(
-                          (d, i) => d.type === dt && i !== index
-                        )} // prevent duplicates
+                        disabled={
+                          dt !== "Other" &&
+                          formData.documents.some((d, i) => d.type === dt && i !== index)
+                        }
                       >
                         {dt}
                       </option>
@@ -1449,7 +1961,56 @@ export default function CreateUser() {
                 </div>
 
                 {/* File Upload */}
-                <div className="md:col-span-1">
+                {/* File Upload + Preview */}
+                <div className="md:col-span-2">
+                  <label className="text-sm">Upload File</label>
+                  <input
+                    type="file"
+                    onChange={(e) =>
+                      updateDocumentFile(index, e.target.files[0])
+                    }
+                    className="mt-1 p-2 border rounded w-full"
+                    disabled={!doc.type}
+                  />
+
+                  {/* Show filename always */}
+                  {doc.file && (
+                    <p className="text-sm mt-2 text-gray-700">
+                      Selected: <span className="font-medium">{doc.file.name}</span>
+                    </p>
+                  )}
+
+                  {/* Show image preview only if it's an image */}
+                  {doc.preview && (
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-blue-700 mb-2">Preview:</p>
+                      <img
+                        src={doc.preview}
+                        alt="Document preview"
+                        className="w-16 h-16 object-cover border rounded-md shadow-sm"
+                      />
+                    </div>
+                  )}
+
+                  {/* Show message for non-image files */}
+                  {doc.file && !doc.preview && (
+                    <p className="text-sm text-gray-500 mt-3 italic">
+                      (Preview not available for non-image files like PDF)
+                    </p>
+                  )}
+                </div>
+
+                {/* Remove Button */}
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={() => removeDocumentRow(index)}
+                    className="px-3 py-2 bg-red-600 text-white text-sm rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* <div className="md:col-span-1">
                   <label className="text-sm">Upload File</label>
                   <input
                     type="file"
@@ -1464,10 +2025,10 @@ export default function CreateUser() {
                       {doc.file.name}
                     </p>
                   )}
-                </div>
+                </div> */}
 
                 {/* Remove Button */}
-                <div className="flex items-end justify-end">
+                {/* <div className="flex items-end justify-end">
                   <button
                     type="button"
                     onClick={() => removeDocumentRow(index)}
@@ -1475,7 +2036,7 @@ export default function CreateUser() {
                   >
                     Remove
                   </button>
-                </div>
+                </div> */}
               </div>
             ))}
 
@@ -1484,7 +2045,11 @@ export default function CreateUser() {
               type="button"
               onClick={addDocumentRow}
               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
-              disabled={formData.documents.length >= documentTypes.length} // can't exceed available types
+              // disabled={formData.documents.length >= documentTypes.length} 
+              disabled={
+                formData.documents.length >= documentTypes.length &&
+                !formData.documents.some(doc => doc.type === "Other")
+              }
             >
               + Add Document
             </button>
@@ -1504,16 +2069,6 @@ export default function CreateUser() {
             Additional
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* <div>
-              <label className="block text-sm">DOB</label>
-              <input
-                type="date"
-                value={formData.additional.dob}
-                onChange={(e) => handleChange(e, "additional.dob")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div> */}
-
             <div>
               <label className="block text-sm">eKYC (Aadhar Verified)</label>
               <div className="mt-1 flex items-center gap-3">

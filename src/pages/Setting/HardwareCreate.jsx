@@ -69,7 +69,10 @@ export default function HardwareCreate() {
             <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label className="text-sm block mb-1">Hardware Name</label>
+                        <label className="text-sm block mb-1">Hardware Name
+                            <span className="text-black-900 ml-1">*</span>
+                        </label>
+                        
                         <input name="hardwareName" value={form.hardwareName} onChange={handleChange} className="w-full border p-2 rounded" required />
                     </div>
                     {/* <div>
@@ -77,7 +80,9 @@ export default function HardwareCreate() {
             <input name="hardwareType" value={form.hardwareType} onChange={handleChange} className="w-full border p-2 rounded" />
           </div> */}
                     <div>
-                        <label className="text-sm block mb-1">Hardware Type</label>
+                        <label className="text-sm block mb-1">Hardware Type
+                            <span className="text-black-900 ml-1">*</span>
+                        </label>
                         <select
                             name="hardwareType"
                             value={form.hardwareType}

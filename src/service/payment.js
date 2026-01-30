@@ -29,3 +29,54 @@ export const getPendingPayments = async () => {
     if (!res.ok) throw new Error(data.message || "Failed to fetch pending payments");
     return data;
 };
+
+
+export const getFilteredPayments = async (queryString = "") => {
+  const res = await fetch(
+    `${BASE_URL}/payment/filter/payments${queryString ? `?${queryString}` : ""}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch payments");
+  }
+
+  // Backend returns { data: [...], total: number }
+  return {
+    data: data.data || [],
+    total: data.total || 0,
+  };
+};
+
+export const getPaymentReceiptDetails = async (userId, receiptId) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/user/receipt/${userId}/${receiptId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to fetch receipt details");
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

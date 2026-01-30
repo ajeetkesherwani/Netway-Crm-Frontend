@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createLco } from "../../service/lco";
@@ -32,7 +30,7 @@ export default function CreateLco() {
     area: "",
     subArea: "",
     mobileNo: "",
-    phoneNo: "",
+    telephone: "",
     fax: "",
     email: "",
     website: "",
@@ -41,8 +39,8 @@ export default function CreateLco() {
     anniversaryDate: "",
     latitude: "",
     longitude: "",
-    gstNo: "",
-    panNumber: "",
+    gst: "",
+    panNo: "",
     lcoCode: "",
     balance: "",
     dashboard: "Lco",
@@ -58,6 +56,7 @@ export default function CreateLco() {
     panCard: null,
     license: null,
     other: null,
+    documents: []
   };
 
   const initialEmployeeData = {
@@ -111,13 +110,13 @@ export default function CreateLco() {
   const validateLco = () => {
     const errors = {};
     if (!formData.lcoName) errors.lcoName = "LCO Name is required";
-     if (!formData.email) errors.email = "LCO Email is required";
+    if (!formData.email) errors.email = "LCO Email is required";
     // if (!formData.password) errors.password = "Password is required";
     if (!formData.mobileNo) errors.mobileNo = "Mobile Number is required";
     if (formData.mobileNo && !/^[0-9]{10}$/.test(formData.mobileNo))
       errors.mobileNo = "Mobile Number must be 10 digits";
-    if (formData.phoneNo && !/^[0-9]{10}$/.test(formData.phoneNo))
-      errors.phoneNo = "Phone Number must be 10 digits";
+    if (formData.telephone && !/^[0-9]{10}$/.test(formData.telephone))
+      errors.telephone = "Phone Number must be 10 digits";
     if (formData.contactPersonNumber && !/^[0-9]{10}$/.test(formData.contactPersonNumber))
       errors.contactPersonNumber = "Contact Person Number must be 10 digits";
     if (formData.whatsAppNumber && !/^[0-9]{10}$/.test(formData.whatsAppNumber))
@@ -172,9 +171,29 @@ export default function CreateLco() {
     }));
   };
 
-  const handleFileChange = (e, field) => {
+  // const handleFileChange = (e, field) => {
+  //   const file = e.target.files[0];
+  //   setFormData((prev) => ({ ...prev, [field]: file }));
+  // };
+
+  // New – with preview
+  const handleDocumentChange = (e, fieldName) => {
     const file = e.target.files[0];
-    setFormData((prev) => ({ ...prev, [field]: file }));
+    if (!file) return;
+
+    const isImage = file.type.startsWith("image/");
+    const preview = isImage ? URL.createObjectURL(file) : null;
+
+    setFormData((prev) => {
+      const existing = prev.documents.filter(d => d.fieldName !== fieldName);
+      return {
+        ...prev,
+        documents: [
+          ...existing,
+          { fieldName, file, preview, name: file.name }
+        ]
+      };
+    });
   };
 
   const handleNext = () => {
@@ -225,17 +244,37 @@ export default function CreateLco() {
     setLoading(true);
     try {
       const submitData = new FormData();
+
       for (const key in formData) {
-        if (formData[key] !== null && formData[key] !== undefined) {
-          if (Array.isArray(formData[key])) {
-            submitData.append(key, JSON.stringify(formData[key]));
-          } else {
-            submitData.append(key, formData[key]);
-          }
+        if (key === "documents") continue; 
+
+        if (Array.isArray(formData[key])) {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else if (formData[key] !== null && formData[key] !== undefined) {
+          submitData.append(key, formData[key]);
         }
       }
 
+      // Now append document files with their original field names
+      formData.documents.forEach((doc) => {
+        if (doc.file) {
+          submitData.append(doc.fieldName, doc.file);
+        }
+      });
+
       await createLco(submitData);
+      // const submitData = new FormData();
+      // for (const key in formData) {
+      //   if (formData[key] !== null && formData[key] !== undefined) {
+      //     if (Array.isArray(formData[key])) {
+      //       submitData.append(key, JSON.stringify(formData[key]));
+      //     } else {
+      //       submitData.append(key, formData[key]);
+      //     }
+      //   }
+      // }
+
+      // await createLco(submitData);
       toast.success("LCO created successfully");
       navigate("/lco/list");
     } catch (err) {
@@ -265,7 +304,7 @@ export default function CreateLco() {
         </button>
         <button
           className={`px-4 py-2 font-medium ${activeTab === "lcoDocument" ? "border-b-2 border-blue-500" : ""}`}
-          onClick={() =>  setActiveTab("lcoDocument")}
+          onClick={() => setActiveTab("lcoDocument")}
         >
           LCO Document
         </button>
@@ -292,7 +331,7 @@ export default function CreateLco() {
                 className={`border p-2 w-full rounded ${formErrors.lcoName ? "border-red-500" : ""}`} />
               {formErrors.lcoName && <p className="text-red-500 text-sm">{formErrors.lcoName}</p>}
             </div>
-{/* 
+            {/* 
             <div>
               <label className="block font-medium">Password *</label>
               <input type="password" name="password" value={formData.password} onChange={handleChange} required
@@ -325,13 +364,13 @@ export default function CreateLco() {
               {formErrors.mobileNo && <p className="text-red-500 text-sm">{formErrors.mobileNo}</p>}
             </div>
 
-            <div><label className="block font-medium">Phone No</label><input type="text" name="phoneNo" value={formData.phoneNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">Phone No</label><input type="text" name="telephone" value={formData.telephone} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             <div><label className="block font-medium">Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">GST No</label><input type="text" name="gstNo" value={formData.gstNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">PAN Number</label><input type="text" name="panNumber" value={formData.panNumber} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div><label className="block font-medium">GST No</label><input type="text" name="gst" value={formData.gst} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div><label className="block font-medium">PAN Number</label><input type="text" name="panNo" value={formData.panNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             {/* <div><label className="block font-medium">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
-            <div><label className="block font-medium">Balance</label><input type="number" name="balance" value={formData.balance} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            {/* <div><label className="block font-medium">Balance</label><input type="number" name="balance" value={formData.balance} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
 
             <div>
               <label className="block font-medium">Reseller *</label>
@@ -346,7 +385,7 @@ export default function CreateLco() {
             </div>
 
             <div className="col-span-2">
-              <label className="block font-medium">Description</label>
+              <label className="block font-medium">description</label>
               <textarea name="description" value={formData.description} onChange={handleChange} className="border p-2 w-full rounded h-24"></textarea>
             </div>
           </div>
@@ -417,7 +456,7 @@ export default function CreateLco() {
         )}
 
         {/* Document Tab - EXACT SAME */}
-        {activeTab === "lcoDocument" && (
+        {/* {activeTab === "lcoDocument" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block font-medium mb-1">Aadhaar Card</label>
@@ -439,6 +478,53 @@ export default function CreateLco() {
               <input type="file" onChange={(e) => handleFileChange(e, "other")} className="w-full border border-gray-300 rounded-md p-2" />
               {formData.other && <p className="text-sm text-gray-600 mt-1">{formData.other.name}</p>}
             </div>
+          </div>
+        )} */}
+        {activeTab === "lcoDocument" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { label: "Aadhaar Card", field: "aadhaarCard" },
+              { label: "PAN Card", field: "panCard" },
+              { label: "License", field: "license" },
+              { label: "Other Document", field: "other" },
+            ].map(({ label, field }) => {
+              const doc = formData.documents.find(d => d.fieldName === field);
+
+              return (
+                <div key={field} className="border rounded-lg p-4 bg-gray-50">
+                  <label className="block font-medium mb-2">{label}</label>
+
+                  <input
+                    type="file"
+                    onChange={(e) => handleDocumentChange(e, field)}
+                    className="w-full border border-gray-300 rounded-md p-2 cursor-pointer"
+                    accept="image/*,.pdf"
+                  />
+
+                  {doc && (
+                    <div className="mt-3">
+                      <p className="text-sm text-gray-700">
+                        Selected: <strong>{doc.name}</strong>
+                      </p>
+
+                      {doc.preview ? (
+                        <div className="mt-3">
+                          <img
+                            src={doc.preview}
+                            alt={`${label} preview`}
+                            className="max-w-full h-32 object-contain border rounded shadow-sm"
+                          />
+                        </div>
+                      ) : doc.file ? (
+                        <p className="mt-2 text-sm text-gray-500 italic">
+                          Preview not available (PDF or unsupported format)
+                        </p>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

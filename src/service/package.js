@@ -61,3 +61,99 @@ export const updatePackage = async (id, packageData) => {
   if (!res.ok) throw new Error(data.message || "Failed to update package");
   return data;
 };
+
+
+//get ott package list
+export const getOttPackageList = async () => {
+  const res = await fetch(`${BASE_URL}/common/filterPackage/list?type=ott`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch OTT packages");
+  }
+
+  return res.json();
+};
+
+
+//get iptv package list
+export const getIptvPackageList = async () => {
+  const res = await fetch(`${BASE_URL}/common/filterPackage/list?type=iptv`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch IPTV packages");
+  }
+
+  return res.json();
+};
+
+//get iptv package list from third party api
+export const getIptvPackageListFromThirdParty = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/package/iptv-packages/list`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+         Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch IPTV packages");
+    }
+
+    const result = await response.json();
+
+    if (!result.status || !result.data?.packages) {
+      throw new Error("Invalid response format from IPTV packages API");
+    }
+
+    return result.data.packages; 
+  } catch (error) {
+    console.error("getIptvPackageList error:", error);
+    throw error; 
+  }
+};
+
+//get ott package list from third party api
+export const getOttPackageListFromThirdParty = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/package/ott-package/list`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to fetch OTT packages");
+    }
+
+    const result = await response.json();
+
+    if (!result.status || !Array.isArray(result.data)) {
+      throw new Error("Invalid response format from OTT packages API");
+    }
+
+    return result.data; 
+  } catch (error) {
+    console.error("getOttPackageListFromThirdParty error:", error);
+    throw error;
+  }
+};
