@@ -835,7 +835,7 @@ export default function PriceBookCreate() {
           />
         </div>
         <div>
-          <label className="block font-medium text-gray-700">From Date *</label>
+          <label className="block font-medium text-gray-700">From Date</label>
           <input
             type="datetime-local"
             name="fromDate"
@@ -846,7 +846,7 @@ export default function PriceBookCreate() {
           />
         </div>
         <div>
-          <label className="block font-medium text-gray-700">To Date *</label>
+          <label className="block font-medium text-gray-700">To Date</label>
           <input
             type="datetime-local"
             name="toDate"

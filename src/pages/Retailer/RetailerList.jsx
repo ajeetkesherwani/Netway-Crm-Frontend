@@ -405,7 +405,7 @@ export default function RetailerList() {
           >
             Download as Excel
           </button>
-          <ProtectedAction module="reseller" action="create">
+          <ProtectedAction module="reseller" action="Create">
             <button
               onClick={() => navigate("/retailer/create")}
               className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -482,7 +482,7 @@ export default function RetailerList() {
                                 <FaEye /> View
                               </button>
                             </li>
-                            <ProtectedAction module="reseller" action="edit">
+                            <ProtectedAction module="reseller" action="Edit">
                               <li>
                                 <button
                                   onClick={() => handleEdit(retailer._id)}
@@ -492,7 +492,7 @@ export default function RetailerList() {
                                 </button>
                               </li>
                             </ProtectedAction>
-                            <ProtectedAction module="reseller" action="delete">
+                            <ProtectedAction module="reseller" action="Delete">
                               <li>
                                 <button
                                   onClick={() => handleDelete(retailer._id)}
@@ -503,7 +503,7 @@ export default function RetailerList() {
                               </li>
                             </ProtectedAction>
 
-                            <ProtectedAction module="reseller" action="addTransaction">
+                            <ProtectedAction module="reseller" action="AddTransaction">
                               <li>
                                 <button
                                   onClick={() =>

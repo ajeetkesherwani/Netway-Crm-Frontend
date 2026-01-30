@@ -432,7 +432,7 @@ export default function StaffPage() {
           >
             Download as Excel
           </button>
-          <ProtectedAction module="staff" action="create">
+          <ProtectedAction module="staff" action="Create">
             <button
               onClick={() => navigate("/staff/create")}
               className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -531,7 +531,7 @@ export default function StaffPage() {
                           >
                             <FaSignInAlt /> Login as Staff
                           </button>
-                          <ProtectedAction module="staff" action="delete">
+                          <ProtectedAction module="staff" action="Delete">
                             <button
                               onClick={() => handleDelete(staff._id)}
                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

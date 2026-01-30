@@ -174,12 +174,12 @@ export default function PurchasedPlanList() {
   //   }
   // };
 
-  const handleRefund = (invoiceId) => {
-    if (window.confirm("Are you sure you want to refund this plan?")) {
-      toast.success(`Refund processed for ${invoiceId} (mock)`);
-      setOpenMenuId(null);
-    }
-  };
+  // const handleRefund = (invoiceId) => {
+  //   if (window.confirm("Are you sure you want to refund this plan?")) {
+  //     toast.success(`Refund processed for ${invoiceId} (mock)`);
+  //     setOpenMenuId(null);
+  //   }
+  // };
 
   // Close menu on outside click
   useEffect(() => {
@@ -420,14 +420,14 @@ export default function PurchasedPlanList() {
                             </button>
                           </ProtectedAction>
 
-                          <ProtectedAction module="invoice" action="packageRechargeRefund">
+                          {/* <ProtectedAction module="invoice" action="packageRechargeRefund">
                             <button
                               onClick={() => handleRefund(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-100"
                             >
                               <FaUndo className="mr-2" /> Refund Plan
                             </button>
-                          </ProtectedAction>
+                          </ProtectedAction> */}
 
                           <ProtectedAction module="invoice" action="packageRechargeRemove">
                             <button

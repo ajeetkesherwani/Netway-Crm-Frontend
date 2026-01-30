@@ -64,12 +64,12 @@ const AppSidebar: React.FC = () => {
 const staffSubItems = [];
 
 // Add Staff List if permission exists
-if (permissions.staff?.listing) {
+if (permissions.staff?.Listing) {
   staffSubItems.push({ name: "Staff List", path: "/staff/list" });
 }
 
 // Add Role List under Staff if permission exists
-if (permissions.rolepermission?.listing) {
+if (permissions.rolepermission?.Listing) {
   staffSubItems.push({ name: "Role List", path: "/role/list" });
 }
 
@@ -96,12 +96,12 @@ if (staffSubItems.length > 0) {
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
-    if (permissions.reseller?.listing)
+    if (permissions.reseller?.Listing)
       resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
-    if (permissions.lco?.listing)
+    if (permissions.lco?.Listing)
       resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
     if (resellerSubItems.length > 0)
-         if (permissions.pricebook?.listing)
+         if (permissions.pricebook?.Listing)
       resellerSubItems.push({
         name: "Price Book List",
         path: "/pricebook/list",
@@ -122,7 +122,7 @@ if (staffSubItems.length > 0) {
     const packageSubItems = [];
 
 // Existing Package List
-if (permissions.package?.listing) {
+if (permissions.package?.Listing) {
   packageSubItems.push({ 
     name: "Package List", 
     path: "/package/list" 
@@ -130,7 +130,7 @@ if (permissions.package?.listing) {
 }
 
 // NEW — OTT Package List
-if (permissions.package?.ottListing) {
+if (permissions.package?.OttListing) {
   packageSubItems.push({ 
     name: "OTT Package", 
     path: "/package/ott-list" 
@@ -138,7 +138,7 @@ if (permissions.package?.ottListing) {
 }
 
 // NEW — IPTV Package List
-if (permissions.package?.iptvListing) {
+if (permissions.package?.IptvListing) {
   packageSubItems.push({ 
     name: "IPTV Package ", 
     path: "/package/iptv-list" 
@@ -165,7 +165,7 @@ if (packageSubItems.length > 0) {
 
     // 👤 Customer
     const customerSubItems = [];
-    if (permissions.customer?.listing)
+    if (permissions.customer?.Listing)
       customerSubItems.push({ name: "Customer List", path: "/user/list" });
     if (customerSubItems.length > 0)
       generatedNavItems.push({
@@ -187,7 +187,7 @@ if (packageSubItems.length > 0) {
 
     // 📊 Reports
     const reportsSubItems = [];
-    if (hasTruePermission(permissions.report))
+    if (hasTruePermission(permissions.Report))
       reportsSubItems.push({ name: "Report List", path: "/report/list" });
     if (reportsSubItems.length > 0)
       generatedNavItems.push({
@@ -199,20 +199,20 @@ if (packageSubItems.length > 0) {
     // 🎫 Tickets (fixed naming and all keys)
 
     const ticketsSubItems = [];
-    if (permissions.tickets?.create)
+    if (permissions.tickets?.Create)
       ticketsSubItems.push({ name: "Create Ticket", path: "/ticket/create" });
-    if (permissions.tickets?.manageOpenList)
+    if (permissions.tickets?.ManageOpenList)
       ticketsSubItems.push({ name: "Manage Ticket", path: "/ticket/manage" });
-    if (permissions.tickets?.closeTicketList)
+    if (permissions.tickets?.CloseTicketList)
       ticketsSubItems.push({ name: "Close Ticket", path: "/ticket/close" });
-    if (permissions.tickets?.allTicketList)
+    if (permissions.tickets?.AllTicketList)
       ticketsSubItems.push({ name: "All Ticket", path: "/ticket/all" });
-    if (permissions.tickets?.approvalTicketList)
+    if (permissions.tickets?.ApprovalTicketList)
       ticketsSubItems.push({
         name: "Approval Ticket",
         path: "/ticket/approval",
       });
-    if (permissions.tickets?.renewalTicketList)
+    if (permissions.tickets?.RenewalTicketList)
       ticketsSubItems.push({ name: "Renewal Ticket", path: "/ticket/renewal" });
     if (ticketsSubItems.length > 0)
       generatedNavItems.push({
@@ -225,17 +225,17 @@ if (packageSubItems.length > 0) {
     // 💰 Invoice
     const invoiceSubItems = [];
     if (hasTruePermission(permissions.invoice)) {
-      if (permissions.invoice?.packageRechargeList)
+      if (permissions.invoice?.PackageRechargeList)
         invoiceSubItems.push({
           name: "Package Recharge",
           path: "/invoice/package-recharge",
         });
-      if (permissions.invoice?.ottRecharge)
+      if (permissions.invoice?.OttRecharge)
         invoiceSubItems.push({
           name: "OTT Recharge",
           path: "/invoice/ott-recharge",
         });
-      if (permissions.invoice?.iptvRecharge)
+      if (permissions.invoice?.IptvRecharge)
         invoiceSubItems.push({
           name: "IPTV Recharge",
           path: "/invoice/iptv-recharge",
@@ -251,17 +251,17 @@ if (packageSubItems.length > 0) {
     // 💳 Payment
     const paymentSubItems = [];
     if (hasTruePermission(permissions.payment)) {
-       if (permissions.payment?.add)
+       if (permissions.payment?.Add)
         paymentSubItems.push({
           name: "Add Payment",
           path: "/add/payment",
         });
-      if (permissions.payment?.success)
+      if (permissions.payment?.Success)
         paymentSubItems.push({
           name: "Received Payment",
           path: "/received/payment",
         });
-      if (permissions.payment?.failed)
+      if (permissions.payment?.Failed)
         paymentSubItems.push({
           name: "Pending Payment",
           path: "/pending/payment",
@@ -290,7 +290,7 @@ if (packageSubItems.length > 0) {
 
     // ⚙️ Config
     const configSubItems = [];
-    if (permissions.configlist?.listing)
+    if (permissions.configlist?.Listing)
       configSubItems.push({ name: "Config List", path: "/config/list" });
     if (configSubItems.length > 0)
       generatedNavItems.push({
@@ -303,7 +303,7 @@ if (packageSubItems.length > 0) {
 const stockManagementSubItems = [];
 
 if (hasTruePermission(permissions.setting)) {
-  if (permissions.setting?.hardwareList) {
+  if (permissions.setting?.HardwareList) {
     stockManagementSubItems.push({
       name: "Hardware List",
       path: "/setting/hardware/list",
@@ -322,23 +322,23 @@ if (stockManagementSubItems.length > 0) {
 
     // 🧩 Settings
     const settingSubItems = [];
-    if (hasTruePermission(permissions.setting)) {
-      if (permissions.setting?.ticketReplyList)
+    if (hasTruePermission(permissions.Setting)) {
+      if (permissions.setting?.TicketReplyList)
         settingSubItems.push({
           name: "Ticket Reply",
           path: "/setting/ticketReplyOption/List",
         });
-      if (permissions.setting?.ticketResolutionList)
+      if (permissions.setting?.TicketResolutionList)
         settingSubItems.push({
           name: "Resolution",
           path: "/setting/resolution/List",
         });
-      if (permissions.setting?.ticketCategoryList)
+      if (permissions.setting?.TicketCategoryList)
         settingSubItems.push({
           name: "Ticket Category",
           path: "/setting/ticketcattogry",
         });
-      if (permissions.setting?.zoneList)
+      if (permissions.setting?.ZoneList)
         settingSubItems.push({
           name: "Zone List",
           path: "/setting/zonelist",
@@ -348,7 +348,7 @@ if (stockManagementSubItems.length > 0) {
       //     name: "Hardware List",
       //     path: "/setting/hardware/list",
       //   });
-            if (permissions.setting?.subZoneList)
+            if (permissions.setting?.SubZoneList)
         settingSubItems.push({
           name: "SubZone List",
           path: "/setting/subZone/list",
@@ -365,7 +365,7 @@ if (stockManagementSubItems.length > 0) {
 
     // Others (Static)
     setOthersItems([
-      ...(permissions.userCms?.listing
+      ...(permissions.userCms?.Listing
         ? [
             {
               icon: <FileIcon />,
