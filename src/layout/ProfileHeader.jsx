@@ -438,7 +438,7 @@ const ProfileHeader = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-8 bg-gray-50 min-h-screen">
+      <div className="p-2 bg-gray-50 min-h-screen">
         <Outlet />
       </div>
 

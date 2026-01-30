@@ -75,7 +75,7 @@ const ReceiptDetails = () => {
   if (error || !receipt) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-8 text-center">
+        <div className="max-w-8xl mx-auto bg-white rounded-lg shadow p-8 text-center">
           <h2 className="text-2xl font-semibold text-red-600 mb-4">Error</h2>
           <p className="text-gray-700 mb-6">{error || "Receipt not found"}</p>
           <button
@@ -90,8 +90,8 @@ const ReceiptDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -132,7 +132,7 @@ const ReceiptDetails = () => {
           </div>
 
           {/* Details Grid */}
-          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">

@@ -383,7 +383,7 @@ const UserRechargePackage = () => {
   return (
     <>
       <div className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-8xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
 
           <div className="flex justify-end gap-6 mb-8">

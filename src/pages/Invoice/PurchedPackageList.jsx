@@ -193,7 +193,7 @@ export default function PurchasedPlanList() {
   }, []);
 
   return (
-    <div className="p-6 flex flex-col min-h-screen w-7xl">
+    <div className="p-6 flex flex-col min-h-screen w-8xl">
       {/* Header with extra search & Excel */}
       {/* <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
