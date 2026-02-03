@@ -184,7 +184,7 @@ const UserPayments = () => {
                           ref={menuRef}
                           className="absolute right-0 top-10 z-50 bg-white border rounded shadow-lg w-48 py-1"
                         >
-                          <ProtectedAction module="payment" action="viewReceipt">
+                          <ProtectedAction module="payment" action="ViewReceipt">
                             <button
                               onClick={() => handleViewReceipt(pay._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -202,7 +202,7 @@ const UserPayments = () => {
                             </button>
                           </ProtectedAction> */}
 
-                          <ProtectedAction module="payment" action="deleteReceipt">
+                          <ProtectedAction module="payment" action="DeleteReceipt">
                             <button
                               onClick={() => handleDeletePayment(pay._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"

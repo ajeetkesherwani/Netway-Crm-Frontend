@@ -112,7 +112,7 @@ export default function LcoEmployeeList() {
       <div className="flex items-center justify-between h-0">
         <div></div>
         <div className="space-x-2 flex">
-          <ProtectedAction module="lco" action="addEmployee">
+          <ProtectedAction module="lco" action="AddEmployee">
           <button
             onClick={() => navigate(`/lco/employee/create/${lcoId}`)}
             className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
@@ -171,7 +171,7 @@ export default function LcoEmployeeList() {
                     {/* ✅ Action buttons */}
                     <td className="px-[2px] py-[2px] text-left">
                       <div className="flex items-center justify-start gap-1">
-                        <ProtectedAction module="lco" action="editEmployee">
+                        <ProtectedAction module="lco" action="EditEmployee">
                           <button
                             onClick={() => handleEdit(employee._id)}
                             className="p-1 text-gray-600 hover:text-green-600 rounded"
@@ -180,7 +180,7 @@ export default function LcoEmployeeList() {
                             <FaEdit />
                           </button>
                         </ProtectedAction>
-                        <ProtectedAction module="lco" action="deleteEmployee">
+                        <ProtectedAction module="lco" action="DeleteEmployee">
                         <button
                           onClick={() => handleDelete(employee._id)}
                           className="p-1 text-red-600 hover:text-red-700 rounded"
@@ -194,7 +194,7 @@ export default function LcoEmployeeList() {
 
                     {/* ✅ Login button */}
                     <td className="px-[2px] py-[2px]">
-                      <ProtectedAction module="lco" action="employeeLogin">
+                      <ProtectedAction module="lco" action="EmployeeLogin">
                       <button
                         onClick={() => handleLcoLogin(employee)}
                         className="text-blue-600 hover:text-blue-800 text-sm"

@@ -192,7 +192,7 @@ import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/
 import CustomerPurchasePlanList from "./CustomerPurchasePlans/CustomerPurchasePlanList";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const BASE_FILE_URL = `${BASE_URL}/`; // e.g. http://localhost:5004/ or your production URL
+const BASE_FILE_URL = "http://localhost:5004/public/"; 
 
 export default function UserDetails() {
   const { id } = useParams();
@@ -268,6 +268,7 @@ export default function UserDetails() {
   const add = user.additionalInformation || {};
   const docs = user.document || [];
   const area = a.area || {};
+  const subZone = a.subZone || {};
 
   const formatDate = (date) => (date ? new Date(date).toLocaleString() : "");
 
@@ -338,7 +339,7 @@ export default function UserDetails() {
           <Row label="CAF No" value={g.cafNo} />
           <Row label="GST" value={g.gst} />
           <Row label="Aadhar No" value={g.adharNo} />
-          <Row label="Payment Method" value={g.paymentMethod} />
+          <Row label="Wallet Balance" value={user.walletBalance} />
 
           {/* Installation By – multiple */}
           {Array.isArray(g.installationBy) && g.installationBy.length > 0 && (
@@ -406,12 +407,18 @@ export default function UserDetails() {
           </div>
         </div>
 
-        {/* Area / Zone */}
+        {/* Area */}
         {hasValue(area.zoneName) && (
           <div className="p-4 border-t">
-            <Row label="Zone / Area" value={area.zoneName} />
+            <Row label="Area" value={area.zoneName} />
+             {hasValue(subZone.name) && (
+            <Row label="Zone" value={subZone.name} />
+        )}
           </div>
         )}
+
+       
+
       </div>
 
       {/* Additional Information */}
@@ -458,7 +465,8 @@ export default function UserDetails() {
                       <img
                         src={url}
                         alt={doc.documentType}
-                        className="w-full h-40 object-cover rounded mb-3 cursor-pointer border"
+                        // className="w-full h-40 object-cover rounded mb-3 cursor-pointer border"
+                         className="w-35 h-35 object-contain rounded mb-2 cursor-pointer border bg-gray-50 mx-auto"
                         onClick={() => window.open(url, "_blank")}
                         onError={(e) => {
                           e.target.src = "/placeholder-image.jpg"; // fallback
@@ -491,7 +499,6 @@ export default function UserDetails() {
         <div className="grid grid-cols-1 md:grid-cols-2">
           <Row label="User ID" value={user._id} />
           <Row label="Status" value={user.status} />
-          <Row label="Wallet Balance" value={user.walletBalance} />
           <Row label="Credit Balance" value={user.creditBalance} />
           <Row label="Created At" value={formatDate(user.createdAt)} />
           <Row label="Updated At" value={formatDate(user.updatedAt)} />

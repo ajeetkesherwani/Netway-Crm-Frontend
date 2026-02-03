@@ -207,7 +207,7 @@ export const permissionsConfig = [
     {
         category: "configlist",
         label: "Config List",
-        permissions: ["Listing", "Create", "Edit", "Delete", "View"],
+        permissions: ["Listing", "Create", "Edit", "Delete", "View", "ChangeStatus"],
     },
     {
         category: "setting",

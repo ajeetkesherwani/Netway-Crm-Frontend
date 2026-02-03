@@ -42,6 +42,7 @@ export default function TicketFilter({ setSearchParams }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedZone, setSelectedZone] = useState(null);
   const [selectedSubZone, setSelectedSubZone] = useState(null);
+  const [resolvedBy, setResolvedBy] = useState("");
 
   /* ───────────── FETCH DATA ───────────── */
   useEffect(() => {
@@ -81,9 +82,9 @@ export default function TicketFilter({ setSearchParams }) {
     z.zoneName?.toLowerCase().includes(zoneText.toLowerCase())
   );
 
- const filteredSubZones = subZones.filter((sz) =>
-  sz.name?.toLowerCase().includes(subZoneText.toLowerCase())
-);
+  const filteredSubZones = subZones.filter((sz) =>
+    sz.name?.toLowerCase().includes(subZoneText.toLowerCase())
+  );
 
   const filteredCategoryes = categoryes.filter((c) =>
     c.name?.toLowerCase().includes(categoryText.toLowerCase())
@@ -103,6 +104,8 @@ export default function TicketFilter({ setSearchParams }) {
     setZoneText("");
     setSelectedSubZone(null);
     setSubZoneText("");
+    setResolvedBy("");
+    
 
 
     const sp = new URLSearchParams();
@@ -116,6 +119,7 @@ export default function TicketFilter({ setSearchParams }) {
     sp.delete("resellerId");
     sp.delete("callSource");
     sp.delete("subZoneId");
+    sp.delete("fixedBy");
 
     setSearchParams(sp);
   };
@@ -184,6 +188,7 @@ export default function TicketFilter({ setSearchParams }) {
     if (selectedLco) sp.set("lcoId", selectedLco?._id);
     if (selectedReseller) sp.set("resellerId", selectedReseller?._id);
     if (callSource.trim()) sp.set("callSource", callSource.trim());
+    if (resolvedBy.trim()) sp.set("fixedBy", resolvedBy.trim());
 
     setSearchParams(sp);
   };
@@ -354,49 +359,6 @@ export default function TicketFilter({ setSearchParams }) {
         </div> */}
 
         {/* ───────────── CATEGORY SEARCHABLE ───────────── */}
-        {/* <div ref={categoryRef} className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Select Category
-          </label>
-
-          <input
-            type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Select Category"
-            value={categoryText}
-            onFocus={() => setShowCatagory(true)}
-            onChange={(e) => {
-              setCategoryText(e.target.value);
-              setShowCatagory(true);
-              handleChange("category", e.target.value);
-            }}
-          />
-
-          <MdArrowDropDown className="absolute right-3 top-9 text-gray-500 pointer-events-none" />
-
-          {showCategory && (
-            <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow">
-              {filteredCategoryes.length === 0 ? (
-                <div className="px-4 py-2 text-gray-500">No Category found</div>
-              ) : (
-                filteredCategoryes.map((cat) => (
-                  <div
-                    key={cat._id}
-                    onClick={() => {
-                      setCategoryText(cat.name);
-                      handleChange("category", cat._id);
-                      setShowCatagory(false);
-                    }}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-                  >
-                    {cat.name}
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div> */}
-        {/* ───────────── CATEGORY SEARCHABLE ───────────── */}
         <div ref={categoryRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select Category
@@ -533,7 +495,23 @@ export default function TicketFilter({ setSearchParams }) {
             inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
           />
         </div>
+
+        {/* Resolved By */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Resolved By
+          </label>
+          <input
+            type="text"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            value={resolvedBy}
+            onChange={(e) => setResolvedBy(e.target.value)}
+            placeholder="Type name (Admin / Reseller / LCO / Staff)"
+          />
+        </div>
       </div>
+
+
 
       {/* Buttons */}
       <div className="flex justify-end gap-4 mt-6">

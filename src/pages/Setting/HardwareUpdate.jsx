@@ -209,7 +209,7 @@ export default function HardwareUpdate() {
 
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => navigate("/setting/hardware/list")} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-          {/* <ProtectedAction module="hardware" action="edit"> */}
+          {/* <ProtectedAction module="hardware" action="Edit"> */}
             <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60">
               {saving ? "Updating..." : "Update Hardware"}
             </button>

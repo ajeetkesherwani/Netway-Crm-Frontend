@@ -1,4 +1,3 @@
-// src/pages/RoleConfig/RoleConfigList.jsx
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -133,7 +132,7 @@ export default function RoleConfigList() {
         <div>
           <h1 className="text-xl font-semibold text-gray-800 leading-tight">
             Config List
-            
+
           </h1>
         </div>
 
@@ -156,7 +155,7 @@ export default function RoleConfigList() {
             </button>
           </div>
 
-          <ProtectedAction module="configlist" action="create">
+          <ProtectedAction module="configlist" action="Create">
             <button
               onClick={() => navigate("/config/create")}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -225,25 +224,25 @@ export default function RoleConfigList() {
                             className="absolute right-10 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <ProtectedAction module="configlist" action="view">
+                            <ProtectedAction module="configlist" action="View">
                               <button
                                 onClick={() => handleView(config._id)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                               >
-                               <FaEye className="text-blue-600" /> View
+                                <FaEye className="text-blue-600" /> View
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="configlist" action="edit">
+                            <ProtectedAction module="configlist" action="Edit">
                               <button
                                 onClick={() => handleEdit(config._id)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                               >
-                               <FaEdit className="text-green-600" /> Edit
+                                <FaEdit className="text-green-600" /> Edit
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="configlist" action="delete">
+                            <ProtectedAction module="configlist" action="Delete">
                               <button
                                 onClick={() =>
                                   handleDelete(
@@ -253,9 +252,10 @@ export default function RoleConfigList() {
                                 }
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
                               >
-                               <FaTrash /> Delete
+                                <FaTrash /> Delete
                               </button>
                             </ProtectedAction>
+
                           </div>
                         )}
                       </td>
@@ -300,13 +300,13 @@ export default function RoleConfigList() {
                     }}
                     className="p-2 hover:bg-gray-100 rounded-full"
                   >
-                   <FaEllipsisV className="text-gray-600" />
+                    <FaEllipsisV className="text-gray-600" />
                   </button>
                 </div>
 
                 {openMenuId === config._id && (
                   <div className="mt-4 border-t pt-4">
-                    <ProtectedAction module="configlist" action="view">
+                    <ProtectedAction module="configlist" action="View">
                       <button
                         onClick={() => handleView(config._id)}
                         className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -315,7 +315,7 @@ export default function RoleConfigList() {
                       </button>
                     </ProtectedAction>
 
-                    <ProtectedAction module="configlist" action="edit">
+                    <ProtectedAction module="configlist" action="Edit">
                       <button
                         onClick={() => handleEdit(config._id)}
                         className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -324,7 +324,7 @@ export default function RoleConfigList() {
                       </button>
                     </ProtectedAction>
 
-                    <ProtectedAction module="configlist" action="delete">
+                    <ProtectedAction module="configlist" action="Delete">
                       <button
                         onClick={() =>
                           handleDelete(

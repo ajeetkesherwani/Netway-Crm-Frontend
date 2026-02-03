@@ -214,7 +214,7 @@ const UserInvoices = () => {
                           ref={menuRef}
                           className="absolute right-0 top-10 z-50 bg-white border rounded shadow-lg w-48 py-1"
                         >
-                          <ProtectedAction module="invoice" action="packageRechargeView">
+                          <ProtectedAction module="invoice" action="PackageRechargeView">
                             <button
                               onClick={() => handleViewInvoice(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -223,7 +223,7 @@ const UserInvoices = () => {
                             </button>
                           </ProtectedAction>
 
-                          <ProtectedAction module="invoice" action="invoiceDownload">
+                          <ProtectedAction module="invoice" action="InvoiceDownload">
                             <button
                               onClick={() =>
                                 handleDirectDownload(invoice._id, invoice.invoiceNumber)
@@ -234,7 +234,7 @@ const UserInvoices = () => {
                             </button>
                           </ProtectedAction>
 
-                          <ProtectedAction module="invoice" action="packageRechargeRefund">
+                          <ProtectedAction module="invoice" action="PackageRechargeRefund">
                             <button
                               onClick={() => handleRefund(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-orange-600 hover:bg-gray-100"
@@ -243,7 +243,7 @@ const UserInvoices = () => {
                             </button>
                           </ProtectedAction>
 
-                          <ProtectedAction module="invoice" action="packageRechargeRemove">
+                          <ProtectedAction module="invoice" action="PackageRechargeRemove">
                             <button
                               onClick={() => handleDelete(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"

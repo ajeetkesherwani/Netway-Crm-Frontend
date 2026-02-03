@@ -15,6 +15,7 @@ export default function PurchasedPlanList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
+  const [openingInvoiceId, setOpeningInvoiceId] = useState(null);
   const menuRef = useRef(null);
 
   const [filters, setFilters] = useState({
@@ -135,17 +136,35 @@ export default function PurchasedPlanList() {
 
   // PDF Actions
   const handleViewInvoice = async (invoiceId) => {
+    if (openingInvoiceId) return; // prevent double click
+
+    setOpeningInvoiceId(invoiceId);
+
     try {
       const blob = await fetchInvoicePdfBlob(invoiceId);
       const blobUrl = URL.createObjectURL(blob);
       window.open(blobUrl, "_blank");
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-      setOpenMenuId(null);
     } catch (err) {
       toast.error("Failed to open PDF");
+    } finally {
+      setOpeningInvoiceId(null);
       setOpenMenuId(null);
     }
   };
+
+  // const handleViewInvoice = async (invoiceId) => {
+  //   try {
+  //     const blob = await fetchInvoicePdfBlob(invoiceId);
+  //     const blobUrl = URL.createObjectURL(blob);
+  //     window.open(blobUrl, "_blank");
+  //     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+  //     setOpenMenuId(null);
+  //   } catch (err) {
+  //     toast.error("Failed to open PDF");
+  //     setOpenMenuId(null);
+  //   }
+  // };
 
   const handleDirectDownload = (invoiceId, invoiceNumber) => {
     downloadInvoicePdf(invoiceId, invoiceNumber);
@@ -194,29 +213,6 @@ export default function PurchasedPlanList() {
 
   return (
     <div className="p-6 flex flex-col min-h-screen w-8xl">
-      {/* Header with extra search & Excel */}
-      {/* <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              placeholder="Search by package name..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-10 pr-4 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <FaSearch className="absolute left-3 text-gray-400 pointer-events-none" />
-          </div>
-          <button
-            onClick={downloadExcel}
-            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700"
-          >
-            Download Excel
-          </button>
-        </div>
-      </div> */}
-
       {/* Header with search, download + status legend */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
@@ -341,11 +337,21 @@ export default function PurchasedPlanList() {
 
                     <td className="border px-4 py-3">
                       <span
+                        onClick={() => handleViewInvoice(invoice._id)}
+                        className={`underline ${openingInvoiceId === invoice._id
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-blue-600 cursor-pointer hover:text-blue-800"
+                          }`}
+                      >
+                        {openingInvoiceId === invoice._id ? "Opening invoice..." : invoice.invoiceNumber}
+                      </span>
+
+                      {/* <span
                         className="text-blue-600 underline cursor-pointer hover:text-blue-800"
                         onClick={() => handleViewInvoice(invoice._id)}
                       >
                         {invoice.invoiceNumber || "—"}
-                      </span>
+                      </span> */}
                     </td>
 
                     <td className="border px-4 py-3">{invoice.packageName || "—"}</td>
@@ -354,10 +360,10 @@ export default function PurchasedPlanList() {
                     <td className="border px-4 py-3 text-center">
                       <span
                         className={`px-2 py-1 rounded text-white text-xs font-medium ${amountColor === "green" ? "bg-green-500" :
-                            amountColor === "red" ? "bg-red-500" :
-                              amountColor === "blue" ? "bg-blue-500" :
-                                amountColor === "yellow" ? "bg-yellow-500" :
-                                  "bg-gray-500"
+                          amountColor === "red" ? "bg-red-500" :
+                            amountColor === "blue" ? "bg-blue-500" :
+                              amountColor === "yellow" ? "bg-yellow-500" :
+                                "bg-gray-500"
                           }`}
                       >
                         ₹{invoice.amount || 0}
@@ -400,7 +406,7 @@ export default function PurchasedPlanList() {
                           ref={menuRef}
                           className="absolute right-0 top-10 z-50 bg-white border rounded shadow-lg w-48 py-1"
                         >
-                          <ProtectedAction module="invoice" action="packageRechargeView">
+                          <ProtectedAction module="invoice" action="PackageRechargeView">
                             <button
                               onClick={() => handleViewInvoice(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -409,7 +415,7 @@ export default function PurchasedPlanList() {
                             </button>
                           </ProtectedAction>
 
-                          <ProtectedAction module="invoice" action="invoiceDownload">
+                          <ProtectedAction module="invoice" action="InvoiceDownload">
                             <button
                               onClick={() =>
                                 handleDirectDownload(invoice._id, invoice.invoiceNumber)
@@ -429,7 +435,7 @@ export default function PurchasedPlanList() {
                             </button>
                           </ProtectedAction> */}
 
-                          <ProtectedAction module="invoice" action="packageRechargeRemove">
+                          <ProtectedAction module="invoice" action="PackageRechargeRemove">
                             <button
                               onClick={() => handleDelete(invoice._id)}
                               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -464,8 +470,8 @@ export default function PurchasedPlanList() {
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             className={`px-5 py-2 rounded-md text-sm font-medium ${currentPage === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
           >
             ← Previous
@@ -479,8 +485,8 @@ export default function PurchasedPlanList() {
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             className={`px-5 py-2 rounded-md text-sm font-medium ${currentPage === totalPages
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
           >
             Next →

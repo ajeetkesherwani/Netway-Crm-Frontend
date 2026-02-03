@@ -105,7 +105,7 @@ export default function LcoDetails() {
 
           {/* EDIT BUTTON — comes FIRST */}
 
-          <ProtectedAction module="lco" action="edit">
+          <ProtectedAction module="lco" action="Edit">
             <button
               onClick={() =>
                 navigate(`/lco/update/${lco?._id}`, {
@@ -119,7 +119,7 @@ export default function LcoDetails() {
           </ProtectedAction>
 
           {/* ADD TRANSACTION BUTTON — comes AFTER */}
-          <ProtectedAction module="lco" action="addTransaction">
+          <ProtectedAction module="lco" action="AddTransaction">
             <button
               onClick={() =>
                 navigate(`/lco/wallet/create/${lco?._id}`, {

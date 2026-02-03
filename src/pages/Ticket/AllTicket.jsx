@@ -1227,7 +1227,7 @@ export default function AllTicket() {
                         <div className="action-menu absolute -top-8 right-0 bg-white border rounded-lg shadow-xl w-40 z-50">
                           <ProtectedAction
                             module="tickets"
-                            action="allTicketReomve"
+                            action="AllTicketRemove"
                           >
                             <button
                               onClick={(e) => {

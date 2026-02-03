@@ -17,5 +17,6 @@ export const getSearchParamsVal = (searchParams) => {
     lcoId: searchParams.get("lcoId") ?? "",
     resellerId: searchParams.get("resellerId") ?? "",
     filter: searchParams.get("status") ?? "",
+    fixedBy: searchParams.get("fixedBy") || "",
   };
 };

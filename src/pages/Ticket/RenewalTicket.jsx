@@ -147,7 +147,7 @@ export default function ReassignTicketList() {
                   <td className="px-3 py-1 border text-gray-700 text-sm">
                     {(page - 1) * limit + index + 1}
                   </td>
-                  <ProtectedAction module="tickets" action="renewalTicketView">
+                  <ProtectedAction module="tickets" action="RenewalTicketView">
                     {(allowed) => (
                       <td
                         className={
@@ -228,7 +228,7 @@ export default function ReassignTicketList() {
                           <div className="absolute right-0 top-6 w-36 bg-white border shadow-md rounded z-20 text-left action-menu">
                             <ProtectedAction
                               module="tickets"
-                              action="renewalTicketRemove"
+                              action="RenewalTicketRemove"
                             >
                               <button
                                 onClick={() => handleRemove(ticket._id)}
@@ -237,9 +237,9 @@ export default function ReassignTicketList() {
                                 Remove
                               </button>
                             </ProtectedAction>
-                            <ProtectedAction
+                            {/* <ProtectedAction
                               module="tickets"
-                              action="renewalTicketResolve"
+                              action="RenewalTicketResolve"
                             >
                               <button
                                 onClick={() => handleResolve(ticket._id)}
@@ -247,10 +247,10 @@ export default function ReassignTicketList() {
                               >
                                 Resolve
                               </button>
-                            </ProtectedAction>
-                            <ProtectedAction
+                            </ProtectedAction> */}
+                            {/* <ProtectedAction
                               module="tickets"
-                              action="renewalTicketHistory"
+                              action="RenewalTicketHistory"
                             >
                               <button
                                 onClick={() => handleHistory(ticket._id)}
@@ -258,7 +258,7 @@ export default function ReassignTicketList() {
                               >
                                 Ticket History
                               </button>
-                            </ProtectedAction>
+                            </ProtectedAction> */}
                           </div>
                         )}
                       </div>

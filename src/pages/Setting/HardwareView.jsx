@@ -69,7 +69,7 @@ export default function HardwareView() {
         <h1 className="text-xl font-semibold">{hw.hardwareName || "Hardware Details"}</h1>
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Back</button>
-          <ProtectedAction module="hardware" action="edit">
+          <ProtectedAction module="hardware" action="Edit">
             <button onClick={() => navigate(`/setting/hardware/update/${hw._id || hw.id}`)} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 flex items-center">
               <FaEdit className="mr-2" /> Edit
             </button>

@@ -1077,7 +1077,7 @@ export default function PriceBookList() {
             Download as Excel
           </button>
 
-          <ProtectedAction module="pricebook" action="create">
+          <ProtectedAction module="pricebook" action="Create">
             <button
               onClick={() => navigate("/pricebook/create")}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -1108,7 +1108,7 @@ export default function PriceBookList() {
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">S.No</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Price Book Name</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Count</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">No of Relseller/Lco</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Assigned</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Created</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Modified By</th>
@@ -1199,7 +1199,7 @@ export default function PriceBookList() {
                             className="absolute right-4 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <ProtectedAction module="pricebook" action="view">
+                            <ProtectedAction module="pricebook" action="View">
                               <button
                                 onClick={() => handleView(pb._id)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -1208,7 +1208,7 @@ export default function PriceBookList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="pricebook" action="edit">
+                            <ProtectedAction module="pricebook" action="Edit">
                               <button
                                 onClick={() => handleEdit(pb._id)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -1217,7 +1217,7 @@ export default function PriceBookList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="pricebook" action="edit">
+                            <ProtectedAction module="pricebook" action="Edit">
                               <button
                                 onClick={() => handleToggleStatus(pb._id, pb.status)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -1227,7 +1227,7 @@ export default function PriceBookList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="pricebook" action="delete">
+                            <ProtectedAction module="pricebook" action="Delete">
                               <button
                                 onClick={() => handleDelete(pb._id, pb.priceBookName)}
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
@@ -1324,7 +1324,7 @@ export default function PriceBookList() {
                         <FaEdit /> {pb.status === "active" ? "Deactivate" : "Activate"}
                       </button>
                     </ProtectedAction>
-                    <ProtectedAction module="pricebook" action="delete">
+                    <ProtectedAction module="pricebook" action="Delete">
                       <button
                         onClick={() => handleDelete(pb._id, pb.priceBookName)}
                         className="w-full text-left py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

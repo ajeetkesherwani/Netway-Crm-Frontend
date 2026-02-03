@@ -47,14 +47,14 @@ const ProfileHeader = () => {
   const currentPath = location.pathname.split("/").pop() || "profile";
 
   const tabs = [
-    { id: "profile", label: "Profile", path: `/user/profile/${id}/profile`, module: "customer", action: "profile" },
-    { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details`, module: "customer", action: "packageDetailView" },
-    { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice`, module: "customer", action: "invoice" },
-    { id: "payment", label: "Payments", path: `/user/profile/${id}/payment`, module: "customer", action: "payments" },
-    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "tickets" },
-    { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log`, module: "customer", action: "logs" },
-    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package`, module: "customer", action: "rechargePackageList" },
-    { id: "assigned-stock", label: "Assigned Stock", path: `/user/profile/${id}/assigned-stock`, module: "customer", action: "assignedStockView" },
+    { id: "profile", label: "Profile", path: `/user/profile/${id}/profile`, module: "customer", action: "Profile" },
+    { id: "package-details", label: "Package Details", path: `/user/profile/${id}/package-details`, module: "customer", action: "PackageDetailView" },
+    { id: "invoice", label: "Invoices", path: `/user/profile/${id}/invoice`, module: "customer", action: "Invoice" },
+    { id: "payment", label: "Payments", path: `/user/profile/${id}/payment`, module: "customer", action: "Payments" },
+    { id: "tickets", label: "Tickets", path: `/user/profile/${id}/tickets`, module: "customer", action: "Tickets" },
+    { id: "activity-log", label: "Logs", path: `/user/profile/${id}/activity-log`, module: "customer", action: "ActivityLogs" },
+    { id: "recharge-package", label: "Recharge Package", path: `/user/profile/${id}/recharge-package`, module: "customer", action: "RechargePackageList" },
+    { id: "assigned-stock", label: "Assigned Stock", path: `/user/profile/${id}/assigned-stock`, module: "customer", action: "AssignedStockView" },
   ];
 
   useEffect(() => {
@@ -199,7 +199,7 @@ const ProfileHeader = () => {
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-2xl font-bold text-gray-800">User Profile</h2>
 
-          <ProtectedAction module="customer" action="edit">
+          <ProtectedAction module="customer" action="Edit">
             <button
               onClick={() => navigate(`/user/update/${id}`)}
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition shadow-sm hover:shadow-md text-sm font-medium"
@@ -293,7 +293,7 @@ const ProfileHeader = () => {
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
               <div className="py-2">
 
-                <ProtectedAction module="customer" action="addPayment">
+                <ProtectedAction module="customer" action="AddPayment">
                   <button
                     onClick={() => {
                       navigate("/add/payment");
@@ -316,7 +316,7 @@ const ProfileHeader = () => {
                 </button>
 
 
-                <ProtectedAction module="customer" action="changePassword">
+                <ProtectedAction module="customer" action="ChangePassword">
                   <button
                     onClick={() => {
                       setShowPasswordModal(true);
@@ -328,7 +328,7 @@ const ProfileHeader = () => {
                   </button>
                 </ProtectedAction>
 
-                <ProtectedAction module="customer" action="statusButton">
+                <ProtectedAction module="customer" action="StatusButton">
                   <button
                     onClick={() => {
                       handleSetInactive();
@@ -345,7 +345,7 @@ const ProfileHeader = () => {
                   <FaUserAlt /> Login as User
                 </button>
 
-                <ProtectedAction module="customer" action="planHistory">
+                <ProtectedAction module="customer" action="PlanHistory">
                   <button
                     onClick={() => {
                       navigate(`/user/plan-history/${id}`);
@@ -357,7 +357,7 @@ const ProfileHeader = () => {
                   </button>
                 </ProtectedAction>
 
-                <ProtectedAction module="customer" action="addTicket">
+                <ProtectedAction module="customer" action="AddTicket">
                   <button
                     onClick={() => {
                       navigate(`/ticket/create?userId=${id}`);
@@ -369,7 +369,7 @@ const ProfileHeader = () => {
                   </button>
                 </ProtectedAction>
 
-                <ProtectedAction module="customer" action="autoRechargeToggle">
+                <ProtectedAction module="customer" action="AutoRechargeToggle">
                   <button
                     onClick={handleToggleAutoRecharge}
                     disabled={toggleLoading}

@@ -74,3 +74,22 @@ export const deleteRole = async (id) => {
   if (!res.ok) throw new Error("Failed to delete role");
   return res.json();
 };
+
+// ✅ Update role status
+export const updateRoleStatus = async (id, isActive) => {
+  const res = await fetch(`${BASE_URL}/role/toggle-status/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ isActive }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || "Failed to update role status");
+  }
+
+  return res.json();
+};

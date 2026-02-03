@@ -377,3 +377,43 @@ export const addWalletPayment = async (userId, formData) => {
 
   return res.json();
 };
+
+// Get packages by role (Admin / Reseller / LCO)// Get packages by role (Admin / Reseller / LCO / Self)
+export const getPackagesByRole = async ({ targetRole, targetId  }) => {
+  try {
+    const params = new URLSearchParams();
+
+    // Only append if valid
+    if (targetRole && targetRole !== "undefined" && targetRole !== "null") {
+      params.append("targetRole", targetRole);
+    }
+
+    if (targetId && targetId !== "undefined" && targetId !== "null") {
+      params.append("targetId", targetId);
+    }
+
+    const res = await fetch(
+      `${BASE_URL}/package/packageList/byRole${
+        params.toString() ? `?${params.toString()}` : ""
+      }`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok || data?.status !== true) {
+      throw new Error(data?.message || "Failed to fetch packages");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("getPackagesByRole error:", error);
+    throw error;
+  }
+};

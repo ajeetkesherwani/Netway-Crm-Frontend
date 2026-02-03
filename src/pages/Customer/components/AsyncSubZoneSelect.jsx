@@ -54,7 +54,7 @@ const AsyncSubZoneSelect = ({ onSelect, className = "" }) => {
         className="border p-1 rounded cursor-pointer"
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        {selected ? selected.name : "Select SubZone..."}
+        {selected ? selected.name : "Select Zone..."}
       </div>
 
       {/* Dropdown */}

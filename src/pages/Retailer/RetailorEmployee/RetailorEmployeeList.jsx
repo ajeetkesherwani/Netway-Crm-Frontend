@@ -114,7 +114,7 @@ export default function RetailerEmployeeList() {
       <div className="flex items-center justify-between h-0">
         <div></div>
         <div className="space-x-2 flex">
-          <ProtectedAction module="reseller" action="addEmployee">
+          <ProtectedAction module="reseller" action="AddEmployee">
             <button
               onClick={() => navigate(`/retailer/employee/create/${retailerId}`)}
               className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"
@@ -171,7 +171,7 @@ export default function RetailerEmployeeList() {
                     </td>
                     <td className="px-[2px] py-[2px] text-left">
                       <div className="flex items-center justify-start gap-1">
-                        <ProtectedAction module="reseller" action="editEmployee">
+                        <ProtectedAction module="reseller" action="EditEmployee">
                           <button
                             onClick={() => handleEdit(employee._id)}
                             className="p-1 text-gray-600 hover:text-green-600 rounded"
@@ -180,7 +180,7 @@ export default function RetailerEmployeeList() {
                             <FaEdit />
                           </button>
                         </ProtectedAction>
-                        <ProtectedAction module="reseller" action="deleteEmployee">
+                        <ProtectedAction module="reseller" action="DeleteEmployee">
                           <button
                             onClick={() => handleDelete(employee._id)}
                             className="p-1 text-red-600 hover:text-red-700 rounded"
@@ -191,7 +191,7 @@ export default function RetailerEmployeeList() {
                         </ProtectedAction>
                       </div>
                     </td>
-                    <ProtectedAction module="reseller" action="employeeLogin">
+                    <ProtectedAction module="reseller" action="EmployeeLogin">
                       <td className="px-[2px] py-[2px]">
                         <button
                           onClick={() => handleRetailerLogin(employee)}

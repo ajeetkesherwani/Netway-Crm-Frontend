@@ -401,7 +401,7 @@ export default function LcoList() {
           >
             Download as Excel
           </button>
-          <ProtectedAction module="lco" action="create">
+          <ProtectedAction module="lco" action="Create">
             <button
               onClick={() => navigate("/lco/create")}
               className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
@@ -480,7 +480,7 @@ export default function LcoList() {
                                 <FaEye /> View
                               </button>
                             </li>
-                            <ProtectedAction module="lco" action="edit">
+                            <ProtectedAction module="lco" action="Edit">
                               <li>
                                 <button
                                   onClick={() => handleEdit(lco._id)}
@@ -490,7 +490,7 @@ export default function LcoList() {
                                 </button>
                               </li>
                             </ProtectedAction>
-                            <ProtectedAction module="lco" action="delete">
+                            <ProtectedAction module="lco" action="Delete">
                               <li>
                                 <button
                                   onClick={() => handleDelete(lco._id)}
@@ -501,7 +501,7 @@ export default function LcoList() {
                               </li>
                             </ProtectedAction>
 
-                            <ProtectedAction module="lco" action="addTransaction">
+                            <ProtectedAction module="lco" action="AddTransaction">
                               <li>
                                 <button
                                   onClick={() =>
@@ -599,7 +599,7 @@ export default function LcoList() {
                       >
                         <FaEye /> View
                       </button>
-                      <ProtectedAction module="lco" action="edit">
+                      <ProtectedAction module="lco" action="Edit">
                         <button
                           onClick={() => handleEdit(lco._id)}
                           className="w-full text-left flex items-center gap-3 text-green-600"
@@ -607,7 +607,7 @@ export default function LcoList() {
                           <FaEdit /> Edit
                         </button>
                       </ProtectedAction>
-                      <ProtectedAction module="lco" action="delete">
+                      <ProtectedAction module="lco" action="Delete">
                         <button
                           onClick={() => handleDelete(lco._id)}
                           className="w-full text-left flex items-center gap-3 text-red-600"
@@ -616,7 +616,7 @@ export default function LcoList() {
                         </button>
                       </ProtectedAction>
 
-                      <ProtectedAction module="lco" action="addTransaction">
+                      <ProtectedAction module="lco" action="AddTransaction">
                         <li>
                           <button
                             onClick={() =>

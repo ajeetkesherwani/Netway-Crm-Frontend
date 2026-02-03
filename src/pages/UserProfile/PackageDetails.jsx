@@ -558,11 +558,11 @@ const UserPackageDetails = () => {
               <th className="py-3 px-3 text-left">End</th>
               <ProtectedAction
                 module="customer"
-                action="updateAssignPackageStatus"
+                action="UpdateAssignPackageStatus"
               >
                 <th className="py-3 px-3 text-left">Status</th>
               </ProtectedAction>
-              <ProtectedAction module="customer" action="deleteAssignPackage">
+              <ProtectedAction module="customer" action="DeleteAssignPackage">
                 <th className="py-3 px-3 text-left">Action</th>
               </ProtectedAction>
               <th className="py-3 px-3 text-left">Ott / Iptv</th>
@@ -624,7 +624,7 @@ const UserPackageDetails = () => {
 
                   <ProtectedAction
                     module="customer"
-                    action="updateAssignPackageStatus"
+                    action="UpdateAssignPackageStatus"
                   >
                     <td className="py-3 px-3">
                       {/* Tailwind Toggle Switch */}
@@ -646,7 +646,7 @@ const UserPackageDetails = () => {
                       </label>
                     </td>
                   </ProtectedAction>
-                  <ProtectedAction module="customer" action="deleteAssignPackage">
+                  <ProtectedAction module="customer" action="DeleteAssignPackage">
                     <td className="py-3 px-3">
                       <div className="flex gap-2 items-center">
                         {isEditing ? (
@@ -749,7 +749,7 @@ const UserPackageDetails = () => {
             })}
 
             {/* ADD NEW ROW */}
-            <ProtectedAction module="customer" action="assignPackage">
+            <ProtectedAction module="customer" action="AssignPackage">
               {addRow && (
                 <tr className="bg-blue-50 border-b border-gray-300">
                   <td className="py-3 px-3 relative">

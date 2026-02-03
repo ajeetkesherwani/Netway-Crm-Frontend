@@ -1,16 +1,1957 @@
+// import { useState, useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { createUser, getAllZoneList, getLcoByRetailer, getPackagesByRole } from "../../service/user";
+// import { getRoles } from "../../service/role";
+// import { getRetailer } from "../../service/retailer";
+// import { getAllLco } from "../../service/lco";
+// import { toast } from "react-toastify";
+// import { getStaffList } from "../../service/ticket";
+// // import { getAllPackageList } from "../../service/package";
+// import { assignPackageToUser } from "../../service/userPackage";
+// import DatePicker from "react-datepicker";
+// import { characterValidate } from "../../validations/characterValidate";
+// import { emailValidate } from "../../validations/emailValidate";
+// import { mobileValidate } from "../../validations/mobileValidate";
+// import { checkAlternateSameAsMobile } from "../../validations/validateAlternateMobile";
+// import { pincodeValidate } from "../../validations/pincodeValidate";
+// import { cityValidate } from "../../validations/cityValidate";
+// import { stateValidate } from "../../validations/stateValidate";
+// import { getSubzonesWithZoneId } from "../../service/apiClient";
+// import { getAllSubZones } from "../../service/apiClient";
+
+// import "react-datepicker/dist/react-datepicker.css";
+
+// export default function CreateUser() {
+//   const navigate = useNavigate();
+//   const [loading, setLoading] = useState(false);
+
+//   // reference data
+//   const [roles, setRoles] = useState([]);
+//   const [retailers, setRetailers] = useState([]);
+//   const [lcos, setLcos] = useState([]);
+//   const [staff, setStaff] = useState([]);
+//   const [zoneList, setZoneList] = useState([]);
+//   const [packageList, setPackageList] = useState([]); // ← PACKAGE LIST STATE
+//   const [installationBy, setInstallationBy] = useState("");
+
+//   // Inhe existing states ke saath add karein
+//   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Admin");
+//   const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
+//   const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
+//   const [selectedLco, setSelectedLco] = useState("");
+//   const [customPackagePrice, setCustomPackagePrice] = useState("");
+
+//   const [subZoneList, setSubZoneList] = useState([]);
+//   const [selectedSubZone, setSelectedSubZone] = useState("");
+
+//   const [formErrors, setFormErrors] = useState({});
+//   const [selectedArea, setSelectedArea] = useState("");
+//   const [showDropdown, setShowDropdown] = useState(false);
+
+//   const [roleSpecificPackages, setRoleSpecificPackages] = useState([]);
+//   const [packageLoading, setPackageLoading] = useState(false);
+
+//   const connectionTypes = ["ILL", "FTTH", "RF", "OTHER"];
+//   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
+//   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
+//   const ipTypes = ["Static IP", "Dynamic IP Pool"];
+//   const CustomeripTypes = ["static", "dynamic"];
+//   const serviceOpted = ["intercom", "broadband", "corporate"];
+//   const indianStates = [
+//     "Andaman and Nicobar Islands",
+//     "Andhra Pradesh",
+//     "Arunachal Pradesh",
+//     "Assam",
+//     "Bihar",
+//     "Chandigarh",
+//     "Chhattisgarh",
+//     "Dadra and Nagar Haveli and Daman and Diu",
+//     "Delhi",
+//     "Goa",
+//     "Gujarat",
+//     "Haryana",
+//     "Himachal Pradesh",
+//     "Jammu and Kashmir",
+//     "Jharkhand",
+//     "Karnataka",
+//     "Kerala",
+//     "Ladakh",
+//     "Lakshadweep",
+//     "Madhya Pradesh",
+//     "Maharashtra",
+//     "Manipur",
+//     "Meghalaya",
+//     "Mizoram",
+//     "Nagaland",
+//     "Odisha",
+//     "Puducherry",
+//     "Punjab",
+//     "Rajasthan",
+//     "Sikkim",
+//     "Tamil Nadu",
+//     "Telangana",
+//     "Tripura",
+//     "Uttar Pradesh",
+//     "Uttarakhand",
+//     "West Bengal",
+//   ];
+
+//   const initialForm = {
+//     customer: {
+//       title: "Mr",
+//       name: "",
+//       billingName: "",
+//       differentBillingName: false,
+//       username: "",
+//       password: "",
+//       email: "",
+//       mobile: "",
+//       alternateMobile: "",
+//       gender: "Male",
+//       aadharNo: "",
+//       panCard: "",
+//       accountId: "",
+//       registrationDate: new Date().toISOString().slice(0, 10),
+//       roleId: "",
+//       retailerId: "",
+//       lcoId: "",
+//       selsExecutive: "",
+//       installationBy: [],
+//       installationByName: "",
+//       serialNo: "",
+//       macId: "",
+//       serviceOpted: "",
+//       connectionType: "ILL",
+//       ipAddress: "",
+//       ipType: "Static IP",
+//       dynamicIpPool: "",
+//       customArea: "", //new
+//       nas: [],
+//       stbNo: "",
+//       vcNo: "",
+//       circuitId: "",
+//       createdFor: {
+//         id: "",
+//         type: "Admin",
+//       },
+//       packageDetails: {
+//         packageId: "",
+//         packageName: "",
+//         packageAmount: "",
+//         packageStart: "",
+//         packageEnd: "",
+//       },
+//     },
+//     addresses: {
+//       billing: {
+//         addressLine1: "",
+//         addressLine2: "",
+//         state: "",
+//         city: "",
+//         pincode: "",
+//         area: "",
+//       },
+//       permanent: {
+//         addressLine1: "",
+//         addressLine2: "",
+//         state: "",
+//         city: "",
+//         pincode: "",
+//         area: "",
+//       },
+//       installation: {
+//         sameAsBilling: true,
+//         addressLine1: "",
+//         addressLine2: "",
+//         state: "",
+//         city: "",
+//         pincode: "",
+//         area: "",
+//       },
+//     },
+//     payment: {
+//       paymentMode: "Online",
+//       invoiceNo: "",
+//       paymentRef: "",
+//       amount: "",
+//       paymentDate: new Date().toISOString().slice(0, 10),
+//       rechargeThresholdLimit: 0,
+//     },
+//     documents: [],
+//     additional: {
+//       dob: "",
+//       description: "",
+//       aadharPermanentAddress: "",
+//       ekYC: false,
+//       status: true,
+//     },
+//   };
+
+//   const [formData, setFormData] = useState(initialForm);
+//   console.log("formData", formData);
+
+//   // FETCH ALL DATA + PACKAGES
+//   useEffect(() => {
+//     const fetchAll = async () => {
+//       try {
+//         const [
+//           rRes,
+//           resellerRes,
+//           lcoRes,
+//           staffRes,
+//           zoneRes,
+//           pkgRes,
+//           subZoneRes
+//         ] = await Promise.allSettled([
+//           getRoles(),
+//           getRetailer(),
+//           getAllLco(),
+//           getStaffList?.(),
+//           getAllZoneList(),
+//           // getAllPackageList(),
+//           getAllSubZones(),
+//         ]);
+
+//         if (rRes.status === "fulfilled" && rRes.value?.status)
+//           setRoles(rRes.value.data || []);
+
+//         if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
+//           setRetailers(resellerRes.value.data || []);
+
+//         if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
+//           setLcos(lcoRes.value.data || []);
+
+//         if (staffRes?.status === "fulfilled" && staffRes.value?.status)
+//           setStaff(staffRes.value.data || []);
+
+//         if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
+//           setZoneList(zoneRes.value.data || []);
+
+//         // if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
+//         //   setPackageList(pkgRes.value.data || []);
+
+//         if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
+//           setSubZoneList(subZoneRes.value.data || []);
+//         }
+//       } catch (err) {
+//         console.error("fetch error", err);
+//       }
+//     };
+//     fetchAll();
+//   }, []);
+
+
+//   console.log("retailers", retailers);
+//   console.log("staff", staff);
+//   // AUTO COPY BILLING → INSTALLATION
+//   useEffect(() => {
+//     if (formData.addresses.installation.sameAsBilling) {
+//       setFormData((prev) => ({
+//         ...prev,
+//         addresses: {
+//           ...prev.addresses,
+//           installation: {
+//             sameAsBilling: true,
+//             addressLine1: prev.addresses.billing.addressLine1,
+//             addressLine2: prev.addresses.billing.addressLine2,
+//             state: prev.addresses.billing.state,
+//             city: prev.addresses.billing.city,
+//             pincode: prev.addresses.billing.pincode,
+//             area: prev.addresses.billing.area,
+//           },
+//         },
+//       }));
+//     }
+//   }, [
+//     formData.addresses.billing,
+//     formData.addresses.installation.sameAsBilling,
+//   ]);
+
+//   const setFieldValue = (path, value) => {
+//     const keys = path.split(".");
+//     setFormData((prev) => {
+//       const next = JSON.parse(JSON.stringify(prev));
+//       let cur = next;
+//       for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
+//       cur[keys[keys.length - 1]] = value;
+//       return next;
+//     });
+//   };
+
+//   // Areas dynamic add/remove
+//   const addArea = () => {
+//     setAreas((prev) => [...prev, ""]);
+//   };
+//   const updateArea = (index, value) => {
+//     setAreas((prev) => prev.map((a, i) => (i === index ? value : a)));
+//   };
+//   const removeArea = (index) => {
+//     setAreas((prev) => prev.filter((_, i) => i !== index));
+//   };
+
+//   const handleChange = (e, path) => {
+//     const { value, type, checked, files } = e.target;
+
+//     if (path === "customer.name") {
+//       const error = characterValidate(value);
+
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: error,
+//       }));
+//     }
+//     //  Email validation
+//     if (path === "customer.email") {
+//       const error = emailValidate(value);
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: error,
+//       }));
+//     }
+
+//     // Mobile validation
+//     if (path === "customer.mobile") {
+//       let value = e.target.value;
+
+//       // remove alphabets
+//       value = value.replace(/\D/g, "");
+
+//       // limit to 10 digits
+//       if (value.length > 10) {
+//         value = value.slice(0, 10);
+//       }
+
+//       setFieldValue(path, value);
+
+//       // validation
+//       const error = mobileValidate(value);
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: error,
+//       }));
+
+//       return;
+//     }
+
+//     // Alternative mobile number validation
+//     if (path === "customer.alternateMobile") {
+//       let value = e.target.value;
+
+//       // ✅ Remove alphabets & special characters
+//       value = value.replace(/\D/g, "");
+
+//       // ✅ Limit to 10 digits
+//       if (value.length > 10) {
+//         value = value.slice(0, 10);
+//       }
+
+//       // ✅ Update field value (IMPORTANT)
+//       setFieldValue(path, value);
+
+//       const trimmedValue = value.trim();
+//       const primaryMobile = formData.customer.mobile?.trim() || "";
+
+//       // Validate only if user entered something
+//       const formatError = trimmedValue ? mobileValidate(trimmedValue) : "";
+
+//       // Check same as primary mobile
+//       const sameError = checkAlternateSameAsMobile(primaryMobile, trimmedValue);
+
+//       const finalError = sameError || formatError;
+
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: finalError,
+//       }));
+
+//       return;
+//     }
+
+//     //  Pincode
+//     if (
+//       path === "addresses.billing.pincode" ||
+//       path === "addresses.permanent.pincode"
+//     ) {
+//       let value = e.target.value;
+//       // value = value.replace(/\D/g, "");
+
+//       if (value.length > 6) {
+//         return;
+//       }
+//       const error = pincodeValidate(value);
+//       setFormErrors((prev) => ({ ...prev, [path]: error }));
+//     }
+
+//     if (
+//       path === "addresses.billing.city" ||
+//       path === "addresses.permanent.city"
+//     ) {
+//       const error = cityValidate(value);
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: error,
+//       }));
+//     }
+
+//     if (
+//       path === "addresses.billing.state" ||
+//       path === "addresses.permanent.state"
+//     ) {
+//       const error = stateValidate(value);
+//       setFormErrors((prev) => ({
+//         ...prev,
+//         [path]: error,
+//       }));
+//     }
+
+
+//     const addressPaths = [
+//       "addresses.billing.addressLine1",
+
+//       "addresses.permanent.addressLine1",
+//     ];
+
+//     if (addressPaths.includes(path)) {
+//       setFormErrors((prev) => {
+//         const newErrors = { ...prev };
+//         delete newErrors[path];
+//         return newErrors;
+//       });
+//     }
+
+//     if (type === "checkbox") setFieldValue(path, checked);
+//     else if (type === "file") {
+//       if (path === "documents") {
+//         const arr = Array.from(files);
+//         setFormData((prev) => ({
+//           ...prev,
+//           documents: [...prev.documents, ...arr],
+//         }));
+//       } else setFieldValue(path, files[0]);
+//     } else setFieldValue(path, value);
+//   };
+
+//   // Handle Created For change
+//   const handleCreatedForChange = (type) => {
+//     setSelectedCreatedFor(type);
+//     setFieldValue("customer.createdFor.type", type);
+//     setFieldValue("customer.createdFor.id", "");
+//     setSelectedRetailerForLco("");
+//     setSelectedLco("");
+//     setLcosForSelectedRetailer([]);
+//   };
+
+//   // Handle Retailer selection for LCO
+//   const handleRetailerForLcoChange = async (retailerId) => {
+//     if (selectedRetailerForLco === retailerId) {
+//       setSelectedRetailerForLco("");
+//       setLcosForSelectedRetailer([]);
+//       setSelectedLco("");
+//       return;
+//     }
+//     setSelectedRetailerForLco(retailerId);
+//     try {
+//       const res = await getLcoByRetailer(retailerId);
+//       setLcosForSelectedRetailer(res.data || []);
+//     } catch (err) {
+//       console.error("Error fetching LCOs:", err);
+//       setLcosForSelectedRetailer([]);
+//     }
+//   };
+
+//   // Handle LCO selection
+//   const handleLcoChange = (lcoId) => {
+//     setSelectedLco(lcoId);
+//     setFieldValue("customer.createdFor.id", lcoId);
+//   };
+
+//   // PACKAGE SELECT → AUTO FILL NAME & PRICE
+// const handlePackageChange = (packageId) => {
+//   const selected = roleSpecificPackages.find((p) => p._id === packageId);
+
+//   if (selected) {
+//     const basePrice = selected.basePrice || selected.price || 0;
+
+//     setFieldValue("customer.packageDetails.packageId", selected._id);
+//     setFieldValue(
+//       "customer.packageDetails.packageName",
+//       selected.packageName || selected.name || ""
+//     );
+//     setFieldValue("customer.packageDetails.packageAmount", basePrice);
+//     setCustomPackagePrice(basePrice.toString());
+//   } else {
+//     setFieldValue("customer.packageDetails.packageId", "");
+//     setFieldValue("customer.packageDetails.packageName", "");
+//     setFieldValue("customer.packageDetails.packageAmount", "");
+//     setCustomPackagePrice("");
+//   }
+// };
+
+// const fetchPackagesForRole = async () => {
+//   // Get type safely - NEVER allow undefined
+//   let type = formData?.customer?.createdFor?.type?.trim?.() || "Admin";
+
+//   // Last line of defense: force Admin if something is wrong
+//   if (!type || type === "" || type === "undefined" || type === "null") {
+//     type = "Admin";
+//     console.warn("[FETCH GUARD] Invalid type detected → forced to Admin");
+//   }
+
+//   const targetId = formData?.customer?.createdFor?.id?.trim?.() || "";
+
+//   console.log(`[FETCH] Attempting → type="${type}", targetId="${targetId || 'none'}"`);
+
+//   // Skip if Reseller/Lco and no ID selected yet
+//   if ((type === "Retailer" || type === "Lco") && !targetId) {
+//     console.log(`[FETCH] Skipped: ${type} requires targetId but none set yet`);
+//     setRoleSpecificPackages([]);
+//     setPackageLoading(false);
+//     return;
+//   }
+
+//   setPackageLoading(true);
+
+//   try {
+//     console.log("[FETCH] Calling API now...");
+//     const res = await getPackagesByRole(type, targetId);
+
+//     if (res?.status === true) {
+//       let pkgs = [];
+
+//       if (type === "Admin" || type === "Self") {
+//         pkgs = res.data || [];
+//       } else {
+//         pkgs = res.data
+//           .flatMap((assigned) => assigned.packages || [])
+//           .map((pkg) => ({
+//             _id: pkg.packageId || pkg._id,
+//             name: pkg.name || "Unnamed",
+//             packageName: pkg.name || "Unnamed",
+//             basePrice: pkg.basePrice || pkg.price || 0,
+//             price: pkg.price || pkg.basePrice || 0,
+//             status: pkg.status || "active",
+//           }))
+//           .filter((pkg) => pkg._id && pkg.name.trim() !== "");
+
+//         console.log(`[FETCH SUCCESS] ${pkgs.length} packages loaded`);
+//       }
+
+//       setRoleSpecificPackages(pkgs);
+//     } else {
+//       setRoleSpecificPackages([]);
+//     }
+//   } catch (err) {
+//     console.error("[FETCH ERROR]", err.message || err);
+//     setRoleSpecificPackages([]);
+//   } finally {
+//     setPackageLoading(false);
+//   }
+// };
+
+// useEffect(() => {
+//   // 1. Force default to Admin on initial load
+//   if (!formData.customer.createdFor.type) {
+//     console.log("[INIT] Forcing default to Admin");
+//     setSelectedCreatedFor("Admin");
+//     setFieldValue("customer.createdFor.type", "Admin");
+//     setFieldValue("customer.createdFor.id", "");
+//   }
+
+//   // 2. Fetch packages after forcing default
+//   fetchPackagesForRole();
+// }, []); // runs only once on mount
+
+//   // const handlePackageChange = (packageId) => {
+//   //   const selected = packageList.find((p) => p._id === packageId);
+//   //   if (selected) {
+//   //     const basePrice = selected.basePrice || selected.price || "";
+
+//   //     // Save package ID and name
+//   //     setFieldValue("customer.packageDetails.packageId", selected._id);
+//   //     setFieldValue(
+//   //       "customer.packageDetails.packageName",
+//   //       selected.packageName || selected.name || ""
+//   //     );
+
+//   //     // Set the original base price (for display and fallback)
+//   //     setFieldValue("customer.packageDetails.packageAmount", basePrice);
+
+//   //     // Also set the editable custom price to base price initially
+//   //     setCustomPackagePrice(basePrice);
+//   //   } else {
+//   //     // Reset everything if no package selected
+//   //     setFieldValue("customer.packageDetails.packageId", "");
+//   //     setFieldValue("customer.packageDetails.packageName", "");
+//   //     setFieldValue("customer.packageDetails.packageAmount", "");
+//   //     setCustomPackagePrice("");
+//   //   }
+//   // };
+
+
+//   // validation: focus on required payment fields & some basics
+//   const validateForm = () => {
+//     const errors = {};
+//     const c = formData.customer;
+//     const p = formData.payment;
+//     const perm = formData.addresses.permanent;
+//     // Name - Required
+//     const name = (c.name || "").trim();
+//     if (!name) {
+//       errors["customer.name"] = "Name is required";
+//     }
+
+//     // email
+//     const email = (c.email || "").trim();
+//     if (!email) errors["customer.email"] = "Email is required";
+//     else if (!/^\S+@\S+\.\S+$/.test(email))
+//       errors["customer.email"] = "Invalid email";
+
+//     // mobile
+//     const mobile = (c.mobile || "").trim();
+//     if (!mobile) errors["customer.mobile"] = "Mobile Number is required";
+//     else if (!/^\d{10,}$/.test(mobile))
+//       errors["customer.mobile"] = "Enter valid mobile (10+ digits)";
+
+//     // alternate mobile optional but if filled validate
+//     const alt = (c.alternateMobile || "").trim();
+//     if (alt && !/^\d{10,}$/.test(alt))
+//       errors["customer.alternateMobile"] = "Enter valid mobile";
+
+//     // aadhar basic check (12 digits)
+//     const aadhar = (c.aadharNo || "").trim();
+//     if (aadhar && !/^\d{12}$/.test(aadhar))
+//       errors["customer.aadharNo"] = "Aadhar must be 12 digits";
+
+//     // if (!c.packageDetails.packageId || !c.packageDetails.packageId.trim()) {
+//     //   errors["packageDetails.packageId"] = "Package detail is required";
+//     // }
+
+//     // const packagePrice = c.packageDetails.packageAmount;
+//     // if (!packagePrice || packagePrice <= 0) {
+//     //   errors["packageDetails.packageAmount"] = "Package price is required";
+//     // }
+
+//     // Payment - all required
+//     if (!p.paymentMode) errors["payment.paymentMode"] = "Payment mode required";
+//     // Zone validation
+//     // if (!selectedArea || selectedArea.trim() === "") {
+//     //   errors["zone"] = "Zone is required";
+//     // }
+
+//     // addresses: billing must have pincode & state & city & area
+//     const bill = formData.addresses.billing;
+//     const billCity = (formData.addresses.billing.city || "").trim();
+//     const permCity = (formData.addresses.permanent.city || "").trim();
+//     const billState = (formData.addresses.billing.state || "").trim();
+//     const permState = (formData.addresses.permanent.state || "").trim();
+
+//     if (!bill.addressLine1)
+//       errors["addresses.billing.addressLine1"] =
+//         "Billing address line 1 required";
+
+//     if (!bill.state)
+//       errors["addresses.billing.state"] = "Billing state required";
+//     if (!billCity) {
+//       errors["addresses.billing.city"] = "Billing city is required";
+//     } else {
+//       const err = cityValidate(billCity);
+//       if (err) errors["addresses.billing.city"] = err;
+//     }
+//     if (!billState) {
+//       errors["addresses.billing.state"] = "Billing state is required";
+//     } else {
+//       const err = stateValidate(billState);
+//       if (err) errors["addresses.billing.state"] = err;
+//     }
+//     if (!bill.pincode)
+//       errors["addresses.billing.pincode"] = "Billing pincode required";
+//     if (!perm.addressLine1)
+//       errors["addresses.permanent.addressLine1"] =
+//         "Permanent address line 1 required";
+//     if (!permCity) {
+//       errors["addresses.permanent.city"] = "Permanent city is required";
+//     } else {
+//       const err = cityValidate(permCity);
+//       if (err) errors["addresses.permanent.city"] = err;
+//     }
+//     if (!permState) {
+//       errors["addresses.permanent.state"] = "Permanent state is required";
+//     } else {
+//       const err = stateValidate(permState);
+//       if (err) errors["addresses.permanent.state"] = err;
+//     }
+//     if (!perm.pincode)
+//       errors["addresses.permanent.pincode"] = "Permanent pincode required";
+
+//     return errors;
+//   };
+
+//   //handle submit
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+
+//     const errors = validateForm();
+//     if (Object.keys(errors).length) {
+//       setFormErrors(errors);
+//       console.log("Erros - ", errors);
+//       toast.error("Please fix form errors");
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const payload = new FormData();
+//       payload.append("customer", JSON.stringify(formData.customer));
+//       payload.append("addresses", JSON.stringify(formData.addresses));
+//       payload.append("payment", JSON.stringify(formData.payment));
+//       payload.append("additional", JSON.stringify(formData.additional));
+//       payload.append("area", selectedArea);
+//       payload.append("subZone", selectedSubZone);
+
+//       formData.documents.forEach((doc) => {
+//         if (doc.file && doc.type) {
+//           payload.append("documents", doc.file);
+//           payload.append("documentTypes[]", doc.type);
+//         }
+//       });
+
+//       // Sirf ek call → User + Package dono ban jayenge
+//       await createUser(payload);
+
+//       toast.success("Customer created & package assigned successfully!");
+//       navigate("/user/list");
+//     } catch (err) {
+//       toast.error(err.response?.data?.message || "Failed to create customer");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleClear = () => {
+//     setFormData(initialForm);
+//     setFormErrors({});
+//     setSelectedArea("");
+//     setCustomPackagePrice("");
+//   };
+
+//   const documentTypes = [
+//     "Address Proof",
+//     "Profile Photo",
+//     "Addhar Card",
+//     "Passport",
+//     "Signature",
+//     "Pan Card",
+//     "Driving Licence",
+//     "GST",
+//     "Caf Form",
+//     "Other",
+//   ];
+//   const addDocumentRow = () =>
+//     setFormData((prev) => ({
+//       ...prev,
+//       documents: [...prev.documents, { type: "", file: null, preview: "" }], // ← add preview: ""
+//     }));
+
+//   const updateDocumentType = (i, v) =>
+//     setFormData((prev) => {
+//       const d = [...prev.documents];
+//       d[i].type = v;
+//       return { ...prev, documents: d };
+//     });
+//   const updateDocumentFile = (i, f) => {
+//     if (!f) return;
+
+//     // Create preview only for images
+//     const isImage = f.type.startsWith("image/");
+//     const preview = isImage ? URL.createObjectURL(f) : "";
+
+//     setFormData((prev) => {
+//       const d = [...prev.documents];
+//       d[i] = {
+//         ...d[i],
+//         file: f,
+//         preview: preview,
+//       };
+//       return { ...prev, documents: d };
+//     });
+//   };
+
+//   const removeDocumentRow = (i) =>
+//     setFormData((prev) => {
+//       const d = [...prev.documents];
+
+//       // Clean up old preview URL to prevent memory leak
+//       if (d[i]?.preview) {
+//         URL.revokeObjectURL(d[i].preview);
+//       }
+
+//       return {
+//         ...prev,
+//         documents: d.filter((_, idx) => idx !== i),
+//       };
+//     });
+
+//   return (
+//     <div className="max-w-[1400px] mx-auto p-4 bg-white shadow rounded">
+//       <h1 className="text-xl font-semibold mb-4">Create Customer</h1>
+
+//       <form onSubmit={handleSubmit} className="space-y-6">
+//         {/* ---------------- Customer Details (top area) ---------------- */}
+//         <section className="border rounded">
+//           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
+//             Customer Details
+//           </div>
+//           <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+//             {/* column layout inspired by screenshot: 4 columns */}
+//             <div>
+//               <label className="block text-sm font-medium">Title</label>
+//               <select
+//                 value={formData.customer.title}
+//                 onChange={(e) => handleChange(e, "customer.title")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               >
+//                 <option>Mr</option>
+//                 <option>Mrs</option>
+//                 <option>Ms</option>
+//                 <option>M/s</option>
+//               </select>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Name *</label>
+//               <input
+//                 value={formData.customer.name}
+//                 onChange={(e) => handleChange(e, "customer.name")}
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.name"] ? "border-red-500" : ""
+//                   }`}
+//                 placeholder="Name"
+//               />
+//               {formErrors["customer.name"] && (
+//                 <p className="text-red-500 text-sm">
+//                   {formErrors["customer.name"]}
+//                 </p>
+//               )}
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Billing Name</label>
+//               <input
+//                 value={formData.customer.billingName}
+//                 onChange={(e) => handleChange(e, "customer.billingName")}
+//                 className="mt-1 p-2 border rounded w-full bg-gray-50"
+//                 placeholder="Billing Name"
+//               />
+//               <label className="inline-flex items-center mt-1 text-sm">
+//                 <input
+//                   type="checkbox"
+//                   checked={formData.customer.differentBillingName}
+//                   onChange={(e) =>
+//                     handleChange(e, "customer.differentBillingName")
+//                   }
+//                   className="mr-2"
+//                 />
+//                 Different From Name
+//               </label>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Email *</label>
+//               <input
+//                 type="email"
+//                 value={formData.customer.email}
+//                 onChange={(e) => handleChange(e, "customer.email")}
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.email"] ? "border-red-500" : ""
+//                   }`}
+//                 placeholder="Email"
+//               />
+//               {formErrors["customer.email"] && (
+//                 <p className="text-red-500 text-sm">
+//                   {formErrors["customer.email"]}
+//                 </p>
+//               )}
+//             </div>
+
+//             {/* dob */}
+//             <div>
+//               <label className="block text-sm font-medium text-gray-700 mb-1">
+//                 Date of Birth
+//               </label>
+//               <div className="relative">
+//                 <DatePicker
+//                   selected={
+//                     formData.additional.dob
+//                       ? new Date(formData.additional.dob)
+//                       : null
+//                   }
+//                   onChange={(date) => {
+//                     const formatted = date
+//                       ? date.toISOString().split("T")[0]
+//                       : "";
+//                     setFieldValue("additional.dob", formatted);
+//                   }}
+//                   dateFormat="dd/MM/yyyy"
+//                   placeholderText="dd/mm/yyyy"
+//                   className="mt-1 p-3 pr-12 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition cursor-pointer text-base"
+//                   showMonthDropdown
+//                   showYearDropdown
+//                   dropdownMode="select"
+//                   maxDate={new Date()}
+//                   yearDropdownItemNumber={80}
+//                   scrollableYearDropdown
+//                   popperPlacement="bottom-start"
+//                   // This allows clicking the icon to open calendar
+//                   onClickOutside={() => { }}
+//                   // Ensures calendar opens on icon click
+//                   showPopperArrow={false}
+//                 />
+
+//                 {/* Calendar Icon Inside Input - Clickable */}
+//                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+//                   <button
+//                     type="button"
+//                     onClick={(e) => {
+//                       e.preventDefault();
+//                       e.stopPropagation();
+//                       // Trigger the DatePicker to open
+//                       document
+//                         .querySelector(
+//                           ".react-datepicker__input-container input"
+//                         )
+//                         ?.focus();
+//                     }}
+//                     className="text-gray-400 hover:text-gray-600 focus:outline-none"
+//                   >
+//                     <svg
+//                       className="w-5 h-5"
+//                       fill="none"
+//                       stroke="currentColor"
+//                       viewBox="0 0 24 24"
+//                     >
+//                       <path
+//                         strokeLinecap="round"
+//                         strokeLinejoin="round"
+//                         strokeWidth={2}
+//                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+//                       />
+//                     </svg>
+//                   </button>
+//                 </div>
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Mobile *</label>
+//               <input
+//                 value={formData.customer.mobile}
+//                 onChange={(e) => handleChange(e, "customer.mobile")}
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
+//                   }`}
+//                 placeholder="Mobile Number"
+//               />
+//               {formErrors["customer.mobile"] && (
+//                 <p className="text-red-500 text-sm">
+//                   {formErrors["customer.mobile"]}
+//                 </p>
+//               )}
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">
+//                 Alternate Mobile
+//               </label>
+//               <input
+//                 value={formData.customer.alternateMobile}
+//                 onChange={(e) => handleChange(e, "customer.alternateMobile")}
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
+//                   }`}
+//                 placeholder="Alternate Mobile"
+//               />
+//               {formErrors["customer.alternateMobile"] && (
+//                 <p className="text-red-500 text-sm">
+//                   {formErrors["customer.alternateMobile"]}
+//                 </p>
+//               )}
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">
+//                 {/* Account Id (IPACCT Id) */}
+//                 IPACCT ID/H8
+//               </label>
+//               <input
+//                 value={formData.customer.accountId}
+//                 onChange={(e) => handleChange(e, "customer.accountId")}
+//                 className="mt-1 p-2 border rounded w-full"
+//                 placeholder="Account Id / IPACCT"
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">
+//                 Connection Type
+//               </label>
+//               <select
+//                 value={formData.customer.connectionType}
+//                 onChange={(e) => handleChange(e, "customer.connectionType")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               >
+//                 {connectionTypes.map((c) => (
+//                   <option key={c} value={c}>
+//                     {c}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">
+//                 Sales Executive
+//               </label>
+//               <select
+//                 value={formData.customer.selsExecutive}
+//                 onChange={(e) => handleChange(e, "customer.selsExecutive")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               >
+//                 <option value="">Select Staff</option>
+//                 {staff.map((s) => (
+//                   <option key={s._id} value={s._id}>
+//                     {s.staffName}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             <div className="md:col-span-2">
+//               <label className="block text-sm font-medium text-gray-700 mb-2">
+//                 Installation By <span className="text-red-500">*</span>
+//               </label>
+
+//               {/* CLEAN & MINIMAL MULTI-SELECT DROPDOWN */}
+//               <div className="relative">
+//                 <div
+//                   onClick={() => setShowDropdown((prev) => !prev)}
+//                   className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
+//                 >
+//                   <div className="flex flex-wrap gap-2">
+//                     {formData.customer.installationBy?.length > 0 ? (
+//                       formData.customer.installationBy.map((id) => {
+//                         const person = staff.find((s) => s._id === id);
+//                         return person ? (
+//                           <span
+//                             key={id}
+//                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md"
+//                           >
+//                             {person.staffName || person.name}
+//                             <button
+//                               type="button"
+//                               onClick={(e) => {
+//                                 e.stopPropagation();
+//                                 const updated =
+//                                   formData.customer.installationBy.filter(
+//                                     (x) => x !== id
+//                                   );
+//                                 setFieldValue(
+//                                   "customer.installationBy",
+//                                   updated
+//                                 );
+//                               }}
+//                               className="ml-1 hover:text-blue-900"
+//                             >
+//                               ×
+//                             </button>
+//                           </span>
+//                         ) : null;
+//                       })
+//                     ) : (
+//                       <span className="text-gray-500 text-sm">
+//                         Select installer(s)
+//                       </span>
+//                     )}
+//                   </div>
+//                   <svg
+//                     className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
+//                       }`}
+//                     fill="none"
+//                     stroke="currentColor"
+//                     viewBox="0 0 24 24"
+//                   >
+//                     <path
+//                       strokeLinecap="round"
+//                       strokeLinejoin="round"
+//                       strokeWidth={2}
+//                       d="M19 9l-7 7-7-7"
+//                     />
+//                   </svg>
+//                 </div>
+
+//                 {/* Dropdown Options */}
+//                 {showDropdown && (
+//                   <>
+//                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+//                       {staff.length > 0 ? (
+//                         staff.map((s) => {
+//                           const isChecked =
+//                             formData.customer.installationBy?.includes(s._id);
+//                           return (
+//                             <label
+//                               key={s._id}
+//                               className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition"
+//                               onMouseDown={(e) => e.preventDefault()}
+//                             >
+//                               <input
+//                                 type="checkbox"
+//                                 checked={isChecked || false}
+//                                 onChange={() => {
+//                                   let updated = [
+//                                     ...(formData.customer.installationBy || []),
+//                                   ];
+//                                   if (isChecked) {
+//                                     updated = updated.filter(
+//                                       (id) => id !== s._id
+//                                     );
+//                                   } else {
+//                                     updated.push(s._id);
+//                                     setFieldValue(
+//                                       "customer.installationByName",
+//                                       ""
+//                                     ); // Clear manual
+//                                   }
+//                                   setFieldValue(
+//                                     "customer.installationBy",
+//                                     updated
+//                                   );
+//                                 }}
+//                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+//                               />
+//                               <span className="font-medium text-sm">
+//                                 {s.staffName || s.name}
+//                               </span>
+//                             </label>
+//                           );
+//                         })
+//                       ) : (
+//                         <div className="px-4 py-3 text-sm text-gray-500">
+//                           No staff available
+//                         </div>
+//                       )}
+//                     </div>
+
+//                     {/* Click outside to close */}
+//                     <div
+//                       className="fixed inset-0 z-40"
+//                       onClick={() => setShowDropdown(false)}
+//                     />
+//                   </>
+//                 )}
+//               </div>
+
+//               {/* Manual Input (Without OR Divider) */}
+//               <div className="mt-4">
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Or Enter Manual Installer Name
+//                 </label>
+//                 <input
+//                   type="text"
+//                   value={formData.customer.installationByName || ""}
+//                   onChange={(e) => {
+//                     const name = e.target.value;
+//                     setFieldValue("customer.installationByName", name);
+//                     if (name.trim()) {
+//                       setFieldValue("customer.installationBy", []);
+//                     }
+//                   }}
+//                   placeholder="e.g. Ramu Kaka, Local Technician"
+//                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+//                 />
+//               </div>
+
+//               {/* Show Manual Name */}
+//               {formData.customer.installationByName && (
+//                 <p className="mt-2 text-sm font-medium text-green-700">
+//                   Manual Installer: {formData.customer.installationByName}
+//                 </p>
+//               )}
+
+//               {/* Error */}
+//               {formErrors.installationBy && (
+//                 <p className="mt-2 text-red-600 text-sm">
+//                   {formErrors.installationBy}
+//                 </p>
+//               )}
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium">IP Address</label>
+//               <input
+//                 value={formData.customer.ipAddress}
+//                 onChange={(e) => handleChange(e, "customer.ipAddress")}
+//                 className="mt-1 p-2 border rounded w-full"
+//                 placeholder="IP Address"
+//               />
+//             </div>
+
+//             {formData.customer.ipType === "Dynamic IP Pool" && (
+//               <div>
+//                 <label className="block text-sm font-medium">
+//                   Dynamic IP Pool
+//                 </label>
+//                 <input
+//                   value={formData.customer.dynamicIpPool}
+//                   onChange={(e) => handleChange(e, "customer.dynamicIpPool")}
+//                   className="mt-1 p-2 border rounded w-full"
+//                 />
+//               </div>
+//             )}
+
+//             <div>
+//               <label className="block text-sm font-medium">Serial No</label>
+//               <input
+//                 value={formData.customer.serialNo}
+//                 onChange={(e) => handleChange(e, "customer.serialNo")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">MAC ID</label>
+//               <input
+//                 value={formData.customer.macId}
+//                 onChange={(e) => handleChange(e, "customer.macId")}
+//                 className="mt-1 p-2 border rounded w-full"
+//                 placeholder="MAC ID"
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Service Opted</label>
+//               <select
+//                 value={formData.customer.serviceOpted || ""}
+//                 onChange={(e) => handleChange(e, "customer.serviceOpted")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               >
+//                 <option value="">-- Select Service --</option>
+//                 {serviceOpted.map((opt) => (
+//                   <option key={opt} value={opt}>
+//                     {opt.charAt(0).toUpperCase() + opt.slice(1)}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">STB No.</label>
+//               <input
+//                 value={formData.customer.stbNo}
+//                 onChange={(e) => handleChange(e, "customer.stbNo")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">VC No.</label>
+//               <input
+//                 value={formData.customer.vcNo}
+//                 onChange={(e) => handleChange(e, "customer.vcNo")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium">Circuit ID</label>
+//               <input
+//                 value={formData.customer.circuitId}
+//                 onChange={(e) => handleChange(e, "customer.circuitId")}
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//             </div>
+//             <div>
+//               <label className="block text-sm font-medium">Created For</label>
+//               <select
+//                 name="createdFor"
+//                 className="mt-1 p-2 border rounded w-full"
+//                 value={selectedCreatedFor}
+//                 onChange={(e) => handleCreatedForChange(e.target.value)}
+//               >
+//                 <option value="" disabled selected>
+//                   Select
+//                 </option>
+//                 <option value="Admin">Admin</option>
+//                 <option value="Retailer">Reseller</option>
+//                 <option value="Lco">Lco</option>
+//               </select>
+//             </div>
+//             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
+//             {(selectedCreatedFor === "Retailer" ||
+//               selectedCreatedFor === "Lco") && (
+//                 <div>
+//                   <label className="block text-sm font-medium">Reseller</label>
+//                   <select
+//                     name="reseller"
+//                     className="mt-1 p-2 border rounded w-full"
+//                     value={
+//                       selectedCreatedFor === "Lco"
+//                         ? selectedRetailerForLco
+//                         : formData.customer.createdFor.id
+//                     }
+//                     onChange={(e) => {
+//                       if (selectedCreatedFor === "Lco") {
+//                         handleRetailerForLcoChange(e.target.value);
+//                       } else {
+//                         // if just reseller, set ID directly
+//                         setFieldValue("customer.createdFor.id", e.target.value);
+//                       }
+//                     }}
+//                   >
+//                     <option value="" disabled>
+//                       Select Reseller
+//                     </option>
+//                     {retailers
+//                       .filter((r) => r.resellerName)
+//                       .map((r) => (
+//                         <option key={r._id} value={r._id}>
+//                           {r.resellerName}
+//                         </option>
+//                       ))}
+//                   </select>
+//                 </div>
+//               )}
+//             {/* LCO Dropdown - Show only if Created For is Lco */}
+//             {selectedCreatedFor === "Lco" && (
+//               <div>
+//                 <label className="block text-sm font-medium">Lco</label>
+//                 <select
+//                   className="mt-1 p-2 border rounded w-full"
+//                   value={selectedLco} // or formData.customer.createdFor.id
+//                   onChange={(e) => handleLcoChange(e.target.value)}
+//                   disabled={!selectedRetailerForLco} // disable if no reseller selected
+//                 >
+//                   <option value="">Select LCO</option>
+//                   {lcosForSelectedRetailer.map((l) => (
+//                     <option key={l._id} value={l._id}>
+//                       {l.lcoName || l.lcoName}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+//             )}
+//           </div>
+//         </section>
+
+//         {/* ---------------- Address Details ---------------- */}
+//         <section className="border rounded">
+//           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
+//             Address Details
+//           </div>
+//           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+//             {/* Billing Address */}
+//             <div className="border rounded p-3">
+//               <h3 className="font-semibold mb-2">Installation Address</h3>
+//               <label className="text-sm">Address Line 1 *</label>
+//               <input
+//                 value={formData.addresses.billing.addressLine1}
+//                 onChange={(e) =>
+//                   handleChange(e, "addresses.billing.addressLine1")
+//                 }
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.billing.addressLine1"]
+//                   ? "border-red-500"
+//                   : ""
+//                   }`}
+//                 placeholder="Address Line 1 (Required)"
+//               />
+
+//               {formErrors["addresses.billing.addressLine1"] && (
+//                 <p className="text-red-500 text-sm mt-1">
+//                   {formErrors["addresses.billing.addressLine1"]}
+//                 </p>
+//               )}
+//               <label className="text-sm mt-2">Address Line 2</label>
+//               <input
+//                 value={formData.addresses.billing.addressLine2}
+//                 onChange={(e) =>
+//                   handleChange(e, "addresses.billing.addressLine2")
+//                 }
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//               <div className="flex gap-2 mt-2">
+//                 <input
+//                   value={formData.addresses.billing.city}
+//                   onChange={(e) => handleChange(e, "addresses.billing.city")}
+//                   placeholder="City *"
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
+//                     }`}
+//                 />
+
+//                 <input
+//                   value={formData.addresses.billing.state}
+//                   onChange={(e) => handleChange(e, "addresses.billing.state")}
+//                   placeholder="State *"
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.state"]
+//                     ? "border-red-500"
+//                     : ""
+//                     }`}
+//                 />
+
+//               </div>
+//               <div className="flex gap-2 mt-2">
+//                 <input
+//                   value={formData.addresses.billing.pincode}
+//                   onChange={(e) => handleChange(e, "addresses.billing.pincode")}
+//                   placeholder="Pincode *"
+//                   onKeyPress={(e) => {
+//                     if (!/[0-9]/.test(e.key)) {
+//                       e.preventDefault(); // Blocks any non-digit key
+//                     }
+//                   }}
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.pincode"]
+//                     ? "border-red-500"
+//                     : ""
+//                     }`}
+//                 />
+//                 {formErrors["addresses.billing.pincode"] && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     {formErrors["addresses.billing.pincode"]}
+//                   </p>
+//                 )}
+//               </div>
+//             </div>
+
+//             <div className="border rounded p-3">
+//               <h3 className="font-semibold mb-2">Permanent Address (Aadhar)</h3>
+//               <label className="text-sm">Address Line 1 *</label>
+//               <input
+//                 value={formData.addresses.permanent.addressLine1}
+//                 onChange={(e) =>
+//                   handleChange(e, "addresses.permanent.addressLine1")
+//                 }
+//                 className={`mt-1 p-2 border rounded w-full ${formErrors["addresses.permanent.addressLine1"]
+//                   ? "border-red-500"
+//                   : ""
+//                   }`}
+//                 placeholder="Address Line 1 (Required)"
+//               />
+
+//               {formErrors["addresses.permanent.addressLine1"] && (
+//                 <p className="text-red-500 text-sm mt-1">
+//                   {formErrors["addresses.permanent.addressLine1"]}
+//                 </p>
+//               )}
+//               <label className="text-sm mt-2">Address Line 2</label>
+//               <input
+//                 value={formData.addresses.permanent.addressLine2}
+//                 onChange={(e) =>
+//                   handleChange(e, "addresses.permanent.addressLine2")
+//                 }
+//                 className="mt-1 p-2 border rounded w-full"
+//               />
+//               <div className="flex gap-2 mt-2">
+//                 <input
+//                   value={formData.addresses.permanent.city}
+//                   onChange={(e) => handleChange(e, "addresses.permanent.city")}
+//                   placeholder="City *"
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.city"]
+//                     ? "border-red-500"
+//                     : ""
+//                     }`}
+//                 />
+
+//                 <input
+//                   value={formData.addresses.permanent.state}
+//                   onChange={(e) => handleChange(e, "addresses.permanent.state")}
+//                   placeholder="State *"
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.state"]
+//                     ? "border-red-500"
+//                     : ""
+//                     }`}
+//                 />
+
+//               </div>
+//               <div className="flex gap-2 mt-2">
+//                 <input
+//                   value={formData.addresses.permanent.pincode}
+//                   onChange={(e) =>
+//                     handleChange(e, "addresses.permanent.pincode")
+//                   }
+//                   placeholder="Pincode *"
+//                   onKeyPress={(e) => {
+//                     if (!/[0-9]/.test(e.key)) {
+//                       e.preventDefault(); // Blocks any non-digit key
+//                     }
+//                   }}
+//                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.permanent.pincode"]
+//                     ? "border-red-500"
+//                     : ""
+//                     }`}
+//                 />
+//                 {formErrors["addresses.permanent.pincode"] && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     {formErrors["addresses.permanent.pincode"]}
+//                   </p>
+//                 )}
+//               </div>
+//             </div>
+
+//             {/* Installation Address */}
+//             <div className="border rounded p-3">
+//               <h3 className="font-semibold mb-2">Billing Address</h3>
+//               <label className="inline-flex items-center text-sm">
+//                 <input
+//                   type="checkbox"
+//                   checked={formData.addresses.installation.sameAsBilling}
+//                   onChange={(e) =>
+//                     handleChange(e, "addresses.installation.sameAsBilling")
+//                   }
+//                   className="mr-2"
+//                 />
+//                 Different as Installation address
+//               </label>
+
+//               {!formData.addresses.installation.sameAsBilling && (
+//                 <>
+//                   <input
+//                     value={formData.addresses.installation.addressLine1}
+//                     onChange={(e) =>
+//                       handleChange(e, "addresses.installation.addressLine1")
+//                     }
+//                     className="mt-2 p-2 border rounded w-full"
+//                     placeholder="Address Line 1"
+//                   />
+//                   <input
+//                     value={formData.addresses.installation.addressLine2}
+//                     onChange={(e) =>
+//                       handleChange(e, "addresses.installation.addressLine2")
+//                     }
+//                     className="mt-2 p-2 border rounded w-full"
+//                     placeholder="Address Line 2"
+//                   />
+//                   <div className="flex gap-2 mt-2">
+//                     <input
+//                       value={formData.addresses.installation.city}
+//                       onChange={(e) =>
+//                         handleChange(e, "addresses.installation.city")
+//                       }
+//                       placeholder="City"
+//                       className="p-2 border rounded w-1/2"
+//                     />
+//                     <input
+//                       value={formData.addresses.installation.state}
+//                       onChange={(e) =>
+//                         handleChange(e, "addresses.installation.state")
+//                       }
+//                       placeholder="State"
+//                       className="p-2 border rounded w-1/2"
+//                     />
+//                   </div>
+//                   <div className="flex gap-2 mt-2">
+//                     <input
+//                       value={formData.addresses.installation.pincode}
+//                       onChange={(e) =>
+//                         handleChange(e, "addresses.installation.pincode")
+//                       }
+//                       placeholder="Pincode"
+//                       className="p-2 border rounded w-1/2"
+//                     />
+//                   </div>
+//                 </>
+//               )}
+//             </div>
+
+//             {/* ZONE + CUSTOM AREA - SIMPLE & CLEAN (Same as other inputs) */}
+//             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+//               {/* Left: Zone Dropdown */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Area <span className="text-red-500">*</span>
+//                 </label>
+//                 <select
+//                   value={selectedArea}
+//                   onChange={(e) => {
+//                     const value = e.target.value;
+//                     setSelectedArea(value);
+
+//                     // Reset subzone when zone changes
+//                     setSelectedSubZone("");
+//                     setFieldValue("customer.subZoneId", "");
+
+//                     // Clear related errors
+//                     setFormErrors((prev) => ({
+//                       ...prev,
+//                       ["customer.subZoneId"]: undefined,
+//                       zone: undefined,
+//                     }));
+//                   }}
+//                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+//                 >
+//                   <option value="">-- Select Area --</option>
+//                   {zoneList.map((zone) => (
+//                     <option key={zone._id} value={zone._id}>
+//                       {zone.zoneName}
+//                     </option>
+//                   ))}
+//                 </select>
+
+//                 {formErrors["zone"] && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     {formErrors["zone"]}
+//                   </p>
+//                 )}
+//               </div>
+
+//               {/* Right: Custom Area Input */}
+//               <div>
+//                 <label className="block text-sm font-medium text-gray-700 mb-1">
+//                   Zone <span className="text-red-500">*</span>
+//                 </label>
+//                 <select
+//                   value={selectedSubZone}
+//                   onChange={(e) => {
+//                     const value = e.target.value;
+//                     setSelectedSubZone(value);
+//                     setFieldValue("customer.subZoneId", value);
+//                   }}
+//                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+//                 // required
+//                 >
+//                   <option value="">
+//                     {subZoneList.length === 0 ? "-- Loading sub zones..." : "-- Select Zone --"}
+//                   </option>
+//                   {subZoneList.map((sz) => (
+//                     <option key={sz._id} value={sz._id}>
+//                       {sz.subZoneName || sz.name || sz.zoneName || "Unnamed"}
+//                     </option>
+//                   ))}
+//                 </select>
+//                 {formErrors["customer.subZoneId"] && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     {formErrors["customer.subZoneId"]}
+//                   </p>
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//         </section>
+//         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
+//         <section className="border rounded">
+//           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
+//             Package Details
+//           </div>
+//           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+//             {/* PACKAGE DROPDOWN + AUTO PRICE */}
+//             <div>
+//               <label className="block text-sm font-semibold mb-2">
+//                 Select Package *
+//               </label>
+//               {/* <select
+//                 onChange={(e) => handlePackageChange(e.target.value)}
+//                 className="w-full p-2 border rounded"
+//                 defaultValue=""
+//               >
+//                 <option value="" disabled>
+//                   -- Select Package --
+//                 </option>
+//                 {packageList.map((pkg) => (
+//                   <option key={pkg._id} value={pkg._id}>
+//                     {pkg.packageName || pkg.name}{" "}
+//                     {pkg.basePrice ? `₹${pkg.basePrice}` : ""}
+//                   </option>
+//                 ))}
+//               </select> */}
+//               <select
+//                 onChange={(e) => handlePackageChange(e.target.value)}
+//                 className="w-full p-2 border rounded"
+//                 value={formData.customer.packageDetails.packageId || ""}
+//                 disabled={packageLoading || roleSpecificPackages.length === 0}
+//               >
+//                 <option value="" disabled>
+//                   {packageLoading
+//                     ? "Loading packages..."
+//                     : roleSpecificPackages.length === 0
+//                       ? "-- No packages available --"
+//                       : "-- Select Package --"}
+//                 </option>
+
+//                 {roleSpecificPackages.map((pkg) => (
+//                   <option key={pkg._id} value={pkg._id}>
+//                     {pkg.packageName || pkg.name || "Unnamed"}{" "}
+//                     {(pkg.basePrice || pkg.price) && `₹${pkg.basePrice || pkg.price}`}
+//                   </option>
+//                 ))}
+//               </select>
+//               {formErrors["packageDetails.packageId"] && (
+//                 <p className="text-red-500 text-sm mt-1">
+//                   {formErrors["packageDetails.packageId"]}
+//                 </p>
+//               )}
+
+//               <div className="mt-4">
+//                 <label className="block text-sm font-medium">
+//                   Package Price <span className="text-red-500">*</span>
+//                   {customPackagePrice &&
+//                     formData.customer.packageDetails.packageAmount !==
+//                     customPackagePrice && (
+//                       <span className="text-xs text-orange-600 ml-2">
+//                         (Customized)
+//                       </span>
+//                     )}
+//                 </label>
+//                 <div className="relative">
+//                   <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
+//                     ₹
+//                   </span>
+//                   <input
+//                     type="number"
+//                     value={customPackagePrice}
+//                     onChange={(e) => {
+//                       const value = e.target.value;
+//                       setCustomPackagePrice(value);
+//                       // Update the form data so it gets submitted
+//                       setFieldValue(
+//                         "customer.packageDetails.packageAmount",
+//                         value
+//                       );
+//                     }}
+//                     className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
+//                     placeholder="Enter custom price"
+//                     min="0"
+//                     step="1"
+//                   />
+//                 </div>
+//                 {formErrors["packageDetails.packageAmount"] && (
+//                   <p className="text-red-500 text-sm mt-1">
+//                     {formErrors["packageDetails.packageAmount"]}
+//                   </p>
+//                 )}
+//                 {formData.customer.packageDetails.packageAmount && (
+//                   <p className="text-xs text-gray-500 mt-1">
+//                     Original price: ₹
+//                     {formData.customer.packageDetails.packageAmount}
+//                     {customPackagePrice &&
+//                       customPackagePrice !==
+//                       formData.customer.packageDetails.packageAmount &&
+//                       ` → Now: ₹${customPackagePrice}`}
+//                   </p>
+//                 )}
+//               </div>
+//             </div>
+//           </div>
+//         </section>
+
+//         <section className="border rounded">
+//           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
+//             Documents
+//           </div>
+
+//           <div className="p-4">
+//             <label className="block text-sm font-medium mb-2">
+//               Upload Documents
+//             </label>
+
+//             {/* Document Rows */}
+//             {formData.documents.map((doc, index) => (
+//               <div
+//                 key={index}
+//                 className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 p-3 border rounded"
+//               >
+//                 {/* Document Type */}
+//                 <div>
+//                   <label className="text-sm">Document Type</label>
+//                   <select
+//                     value={doc.type}
+//                     onChange={(e) => updateDocumentType(index, e.target.value)}
+//                     className="mt-1 p-2 border rounded w-full"
+//                   >
+//                     <option value="">Select Type</option>
+//                     {documentTypes.map((dt) => (
+//                       <option
+//                         key={dt}
+//                         value={dt}
+//                         disabled={
+//                           dt !== "Other" &&
+//                           formData.documents.some((d, i) => d.type === dt && i !== index)
+//                         }
+//                       >
+//                         {dt}
+//                       </option>
+//                     ))}
+//                   </select>
+//                 </div>
+
+//                 {/* File Upload */}
+//                 {/* File Upload + Preview */}
+//                 <div className="md:col-span-2">
+//                   <label className="text-sm">Upload File</label>
+//                   <input
+//                     type="file"
+//                     onChange={(e) =>
+//                       updateDocumentFile(index, e.target.files[0])
+//                     }
+//                     className="mt-1 p-2 border rounded w-full"
+//                     disabled={!doc.type}
+//                   />
+
+//                   {/* Show filename always */}
+//                   {doc.file && (
+//                     <p className="text-sm mt-2 text-gray-700">
+//                       Selected: <span className="font-medium">{doc.file.name}</span>
+//                     </p>
+//                   )}
+
+//                   {/* Show image preview only if it's an image */}
+//                   {doc.preview && (
+//                     <div className="mt-3">
+//                       <p className="text-sm font-medium text-blue-700 mb-2">Preview:</p>
+//                       <img
+//                         src={doc.preview}
+//                         alt="Document preview"
+//                         className="w-16 h-16 object-cover border rounded-md shadow-sm"
+//                       />
+//                     </div>
+//                   )}
+
+//                   {/* Show message for non-image files */}
+//                   {doc.file && !doc.preview && (
+//                     <p className="text-sm text-gray-500 mt-3 italic">
+//                       (Preview not available for non-image files like PDF)
+//                     </p>
+//                   )}
+//                 </div>
+
+//                 {/* Remove Button */}
+//                 <div className="flex items-end">
+//                   <button
+//                     type="button"
+//                     onClick={() => removeDocumentRow(index)}
+//                     className="px-3 py-2 bg-red-600 text-white text-sm rounded"
+//                   >
+//                     Remove
+//                   </button>
+//                 </div>
+//               </div>
+//             ))}
+
+//             {/* Add More Button */}
+//             <button
+//               type="button"
+//               onClick={addDocumentRow}
+//               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
+//               disabled={
+//                 formData.documents.length >= documentTypes.length &&
+//                 !formData.documents.some(doc => doc.type === "Other")
+//               }
+//             >
+//               + Add Document
+//             </button>
+
+//             {/* No Docs */}
+//             {formData.documents.length === 0 && (
+//               <p className="text-sm mt-2 text-gray-500">
+//                 No documents added yet
+//               </p>
+//             )}
+//           </div>
+//         </section>
+
+//         {/* ---------------- Additional & Actions ---------------- */}
+//         <section className="border rounded">
+//           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
+//             Additional
+//           </div>
+//           <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+//             <div>
+//               <label className="block text-sm">eKYC (Aadhar Verified)</label>
+//               <div className="mt-1 flex items-center gap-3">
+//                 <label className="inline-flex items-center">
+//                   <input
+//                     type="radio"
+//                     name="ekyc"
+//                     checked={formData.additional.ekYC === true}
+//                     onChange={() => setFieldValue("additional.ekYC", true)}
+//                     className="mr-2"
+//                   />
+//                   Yes
+//                 </label>
+
+//                 <label className="inline-flex items-center">
+//                   <input
+//                     type="radio"
+//                     name="ekyc"
+//                     checked={formData.additional.ekYC === false}
+//                     onChange={() => setFieldValue("additional.ekYC", false)}
+//                     className="mr-2"
+//                   />
+//                   No
+//                 </label>
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm">Status</label>
+//               <select
+//                 value={formData.additional.status ? "Active" : "Inactive"}
+//                 onChange={(e) =>
+//                   setFieldValue(
+//                     "additional.status",
+//                     e.target.value === "Active"
+//                   )
+//                 }
+//                 className="mt-1 p-2 border rounded w-full"
+//               >
+//                 <option value="Active">Active</option>
+//                 <option value="Inactive">Inactive</option>
+//               </select>
+//             </div>
+
+//             <div className="md:col-span-3">
+//               <label className="block text-sm">Description</label>
+//               <textarea
+//                 value={formData.additional.description}
+//                 onChange={(e) => handleChange(e, "additional.description")}
+//                 className="mt-1 p-2 border rounded w-full h-24"
+//               />
+//             </div>
+//           </div>
+
+//           <div className="p-4 flex justify-end gap-3">
+//             <button
+//               type="button"
+//               onClick={() => navigate("/user/list")}
+//               className="px-4 py-2 bg-gray-500 text-white rounded"
+//             >
+//               Back
+//             </button>
+
+//             <button
+//               type="submit"
+//               disabled={loading}
+//               className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-60"
+//             >
+//               {loading ? "Saving..." : "Submit"}
+//             </button>
+
+//             <button
+//               type="button"
+//               onClick={handleClear}
+//               className="px-4 py-2 bg-red-600 text-white rounded"
+//             >
+//               Clear
+//             </button>
+//           </div>
+//         </section>
+//       </form>
+//     </div>
+//   );
+// }
+
+
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  createUser,
-  getAllZoneList,
-  getLcoByRetailer,
-} from "../../service/user";
+import { createUser, getAllZoneList, getLcoByRetailer, getPackagesByRole } from "../../service/user";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
 import { toast } from "react-toastify";
 import { getStaffList } from "../../service/ticket";
-import { getAllPackageList } from "../../service/package";
+// import { getAllPackageList } from "../../service/package";
 import { assignPackageToUser } from "../../service/userPackage";
 import DatePicker from "react-datepicker";
 import { characterValidate } from "../../validations/characterValidate";
@@ -20,14 +1961,18 @@ import { checkAlternateSameAsMobile } from "../../validations/validateAlternateM
 import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
-// import { getAllSubZones } from "../../service/apiClient";
 import { getSubzonesWithZoneId } from "../../service/apiClient";
+import { getAllSubZones } from "../../service/apiClient";
 
 import "react-datepicker/dist/react-datepicker.css";
+
 
 export default function CreateUser() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  // ================== FIX 1: MISSING STATE ==================
+  const [areas, setAreas] = useState([]);
 
   // reference data
   const [roles, setRoles] = useState([]);
@@ -35,22 +1980,24 @@ export default function CreateUser() {
   const [lcos, setLcos] = useState([]);
   const [staff, setStaff] = useState([]);
   const [zoneList, setZoneList] = useState([]);
-  const [packageList, setPackageList] = useState([]); // ← PACKAGE LIST STATE
-  const [installationBy, setInstallationBy] = useState("");
-
-  // Inhe existing states ke saath add karein
-  const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
-  const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
-  const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
-  const [selectedLco, setSelectedLco] = useState("");
-  const [customPackagePrice, setCustomPackagePrice] = useState("");
-
   const [subZoneList, setSubZoneList] = useState([]);
+
+  const [selectedArea, setSelectedArea] = useState("");
   const [selectedSubZone, setSelectedSubZone] = useState("");
 
+  const [selectedCreatedFor, setSelectedCreatedFor] = useState("Admin");
+  const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
+  const [selectedLco, setSelectedLco] = useState("");
+  const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
+
+  const [roleSpecificPackages, setRoleSpecificPackages] = useState([]);
+  const [packageLoading, setPackageLoading] = useState(false);
+  const [customPackagePrice, setCustomPackagePrice] = useState("");
+
   const [formErrors, setFormErrors] = useState({});
-  const [selectedArea, setSelectedArea] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [packageSearch, setPackageSearch] = useState("");
+  const [showPackageDropdown, setShowPackageDropdown] = useState(false);
 
   const connectionTypes = ["ILL", "FTTH", "RF", "OTHER"];
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
@@ -58,45 +2005,8 @@ export default function CreateUser() {
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const CustomeripTypes = ["static", "dynamic"];
   const serviceOpted = ["intercom", "broadband", "corporate"];
-  const indianStates = [
-    "Andaman and Nicobar Islands",
-    "Andhra Pradesh",
-    "Arunachal Pradesh",
-    "Assam",
-    "Bihar",
-    "Chandigarh",
-    "Chhattisgarh",
-    "Dadra and Nagar Haveli and Daman and Diu",
-    "Delhi",
-    "Goa",
-    "Gujarat",
-    "Haryana",
-    "Himachal Pradesh",
-    "Jammu and Kashmir",
-    "Jharkhand",
-    "Karnataka",
-    "Kerala",
-    "Ladakh",
-    "Lakshadweep",
-    "Madhya Pradesh",
-    "Maharashtra",
-    "Manipur",
-    "Meghalaya",
-    "Mizoram",
-    "Nagaland",
-    "Odisha",
-    "Puducherry",
-    "Punjab",
-    "Rajasthan",
-    "Sikkim",
-    "Tamil Nadu",
-    "Telangana",
-    "Tripura",
-    "Uttar Pradesh",
-    "Uttarakhand",
-    "West Bengal",
-  ];
 
+  // ================== FORM DATA ==================
   const initialForm = {
     customer: {
       title: "Mr",
@@ -126,15 +2036,12 @@ export default function CreateUser() {
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
-      customArea: "", //new
+      customArea: "",
       nas: [],
       stbNo: "",
       vcNo: "",
       circuitId: "",
-      createdFor: {
-        id: "",
-        type: "Self",
-      },
+      createdFor: { id: "", type: "Admin" },
       packageDetails: {
         packageId: "",
         packageName: "",
@@ -144,22 +2051,8 @@ export default function CreateUser() {
       },
     },
     addresses: {
-      billing: {
-        addressLine1: "",
-        addressLine2: "",
-        state: "",
-        city: "",
-        pincode: "",
-        area: "",
-      },
-      permanent: {
-        addressLine1: "",
-        addressLine2: "",
-        state: "",
-        city: "",
-        pincode: "",
-        area: "",
-      },
+      billing: { addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
+      permanent: { addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
       installation: {
         sameAsBilling: true,
         addressLine1: "",
@@ -179,524 +2072,209 @@ export default function CreateUser() {
       rechargeThresholdLimit: 0,
     },
     documents: [],
-    additional: {
-      dob: "",
-      description: "",
-      aadharPermanentAddress: "",
-      ekYC: false,
-      status: true,
-    },
+    additional: { dob: "", description: "", aadharPermanentAddress: "", ekYC: false, status: true },
   };
 
   const [formData, setFormData] = useState(initialForm);
-  console.log("formData", formData);
 
-  // FETCH ALL DATA + PACKAGES
-  useEffect(() => {
-  const fetchAll = async () => {
-    try {
-      const [
-        rRes,
-        resellerRes,
-        lcoRes,
-        staffRes,
-        zoneRes,
-        pkgRes,
-      ] = await Promise.allSettled([
-        getRoles(),
-        getRetailer(),
-        getAllLco(),
-        getStaffList?.(),
-        getAllZoneList(),
-        getAllPackageList(),
-      ]);
-
-      if (rRes.status === "fulfilled" && rRes.value?.status)
-        setRoles(rRes.value.data || []);
-
-      if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
-        setRetailers(resellerRes.value.data || []);
-
-      if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
-        setLcos(lcoRes.value.data || []);
-
-      if (staffRes?.status === "fulfilled" && staffRes.value?.status)
-        setStaff(staffRes.value.data || []);
-
-      if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
-        setZoneList(zoneRes.value.data || []);
-
-      if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
-        setPackageList(pkgRes.value.data || []);
-
-      // Start with empty subzones
-      setSubZoneList([]);
-      setSelectedSubZone("");
-
-    } catch (err) {
-      console.error("fetch error", err);
-    }
-  };
-  fetchAll();
-}, []);
-  // useEffect(() => {
-  //   const fetchAll = async () => {
-  //     try {
-  //       const [rRes, resellerRes, lcoRes, staffRes, zoneRes, pkgRes, subZoneRes,] =
-  //         await Promise.allSettled([
-  //           getRoles(),
-  //           getRetailer(),
-  //           getAllLco(),
-  //           getStaffList?.(),
-  //           getAllZoneList(),
-  //           getAllPackageList(),
-  //         ]);
-
-  //       console.log("resellerRes", resellerRes);
-  //       if (rRes.status === "fulfilled" && rRes.value?.status)
-  //         setRoles(rRes.value.data);
-  //       if (resellerRes.status === "fulfilled" && resellerRes.value?.status)
-  //         setRetailers(resellerRes.value.data);
-  //       if (lcoRes.status === "fulfilled" && lcoRes.value?.status)
-  //         setLcos(lcoRes.value.data);
-  //       if (staffRes?.status === "fulfilled" && staffRes.value?.status)
-  //         setStaff(staffRes.value.data);
-  //       if (zoneRes.status === "fulfilled" && zoneRes.value?.status)
-  //         setZoneList(zoneRes.value.data || []);
-  //       if (pkgRes.status === "fulfilled" && pkgRes.value?.status)
-  //         setPackageList(pkgRes.value.data || []); // ← PACKAGE DATA
-  //       setSubZoneList([]);
-  //       setSelectedSubZone("");
-  //       // if (subZoneRes.status === "fulfilled" && subZoneRes.value?.status) {
-  //       //   setSubZoneList(subZoneRes.value.data || []);
-  //       // }
-  //     } catch (err) {
-  //       console.error("fetch error", err);
-  //     }
-  //   };
-  //   fetchAll();
-  // }, []);
-
-  useEffect(() => {
-  const fetchSubzones = async () => {
-    if (!selectedArea) {
-      setSubZoneList([]);
-      setSelectedSubZone("");
-      setFieldValue("customer.subZoneId", "");
-      return;
-    }
-
-    try {
-      const response = await getSubzonesWithZoneId(selectedArea);
-
-      if (response?.status && Array.isArray(response.data)) {
-        setSubZoneList(response.data);
-      } else {
-        setSubZoneList([]);
-        toast.error("No sub areas found for this zone");
-      }
-    } catch (err) {
-      console.error("Error fetching subzones:", err);
-      setSubZoneList([]);
-      toast.error("Failed to load sub areas");
-    }
-  };
-
-  fetchSubzones();
-}, [selectedArea]);
-
-  console.log("retailers", retailers);
-  console.log("staff", staff);
-  // AUTO COPY BILLING → INSTALLATION
-  useEffect(() => {
-    if (formData.addresses.installation.sameAsBilling) {
-      setFormData((prev) => ({
-        ...prev,
-        addresses: {
-          ...prev.addresses,
-          installation: {
-            sameAsBilling: true,
-            addressLine1: prev.addresses.billing.addressLine1,
-            addressLine2: prev.addresses.billing.addressLine2,
-            state: prev.addresses.billing.state,
-            city: prev.addresses.billing.city,
-            pincode: prev.addresses.billing.pincode,
-            area: prev.addresses.billing.area,
-          },
-        },
-      }));
-    }
-  }, [
-    formData.addresses.billing,
-    formData.addresses.installation.sameAsBilling,
-  ]);
-
-  const setFieldValue = (path, value) => {
-    const keys = path.split(".");
-    setFormData((prev) => {
-      const next = JSON.parse(JSON.stringify(prev));
-      let cur = next;
-      for (let i = 0; i < keys.length - 1; i++) cur = cur[keys[i]];
-      cur[keys[keys.length - 1]] = value;
-      return next;
-    });
-    // setFormErrors((prev) => {
-    //   const c = { ...prev };
-    //   delete c[path];
-    //   return c;
-    // });
-  };
-
-  // Areas dynamic add/remove
-  const addArea = () => {
-    setAreas((prev) => [...prev, ""]);
-  };
-  const updateArea = (index, value) => {
-    setAreas((prev) => prev.map((a, i) => (i === index ? value : a)));
-  };
-  const removeArea = (index) => {
-    setAreas((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleChange = (e, path) => {
-    const { value, type, checked, files } = e.target;
-
-    if (path === "customer.name") {
-      const error = characterValidate(value);
-
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: error,
-      }));
-    }
-    //  Email validation
-    if (path === "customer.email") {
-      const error = emailValidate(value);
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: error,
-      }));
-    }
-
-    // Mobile validation
-    if (path === "customer.mobile") {
-      let value = e.target.value;
-
-      // remove alphabets
-      value = value.replace(/\D/g, "");
-
-      // limit to 10 digits
-      if (value.length > 10) {
-        value = value.slice(0, 10);
-      }
-
-      setFieldValue(path, value);
-
-      // validation
-      const error = mobileValidate(value);
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: error,
-      }));
-
-      return;
-    }
-
-    // Alternative mobile number validation
-    if (path === "customer.alternateMobile") {
-      let value = e.target.value;
-
-      // ✅ Remove alphabets & special characters
-      value = value.replace(/\D/g, "");
-
-      // ✅ Limit to 10 digits
-      if (value.length > 10) {
-        value = value.slice(0, 10);
-      }
-
-      // ✅ Update field value (IMPORTANT)
-      setFieldValue(path, value);
-
-      const trimmedValue = value.trim();
-      const primaryMobile = formData.customer.mobile?.trim() || "";
-
-      // Validate only if user entered something
-      const formatError = trimmedValue ? mobileValidate(trimmedValue) : "";
-
-      // Check same as primary mobile
-      const sameError = checkAlternateSameAsMobile(primaryMobile, trimmedValue);
-
-      const finalError = sameError || formatError;
-
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: finalError,
-      }));
-
-      return;
-    }
-
-    //  Pincode
-    if (
-      path === "addresses.billing.pincode" ||
-      path === "addresses.permanent.pincode"
-    ) {
-      let value = e.target.value;
-      // value = value.replace(/\D/g, "");
-
-      if (value.length > 6) {
-        return;
-      }
-      const error = pincodeValidate(value);
-      setFormErrors((prev) => ({ ...prev, [path]: error }));
-    }
-
-    if (
-      path === "addresses.billing.city" ||
-      path === "addresses.permanent.city"
-    ) {
-      const error = cityValidate(value);
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: error,
-      }));
-    }
-
-    if (
-      path === "addresses.billing.state" ||
-      path === "addresses.permanent.state"
-    ) {
-      const error = stateValidate(value);
-      setFormErrors((prev) => ({
-        ...prev,
-        [path]: error,
-      }));
-    }
-
-    // if (path.includes("state")) {
-    //   const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, ""); // Remove anything that's not letter or space
-    //   setFieldValue(path, sanitizedValue);
-
-    //   // Optional: Clear error if exists
-    //   setFormErrors((prev) => {
-    //     const newErrors = { ...prev };
-    //     delete newErrors[path];
-    //     return newErrors;
-    //   });
-    //   return;
-    // }
-
-    const addressPaths = [
-      "addresses.billing.addressLine1",
-
-      "addresses.permanent.addressLine1",
-    ];
-
-    if (addressPaths.includes(path)) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[path];
-        return newErrors;
-      });
-    }
-
-    if (type === "checkbox") setFieldValue(path, checked);
-    else if (type === "file") {
-      if (path === "documents") {
-        const arr = Array.from(files);
-        setFormData((prev) => ({
-          ...prev,
-          documents: [...prev.documents, ...arr],
-        }));
-      } else setFieldValue(path, files[0]);
-    } else setFieldValue(path, value);
-  };
-
-  // Handle Created For change
-  const handleCreatedForChange = (type) => {
-    setSelectedCreatedFor(type);
-    setFieldValue("customer.createdFor.type", type);
-    setFieldValue("customer.createdFor.id", "");
-    setSelectedRetailerForLco("");
+  // ================== RESELLER → LCO FLOW ==================
+  const handleRetailerForLcoChange = async (retailerId) => {
+    setSelectedRetailerForLco(retailerId);
     setSelectedLco("");
     setLcosForSelectedRetailer([]);
-  };
 
-  // Handle Retailer selection for LCO
-  const handleRetailerForLcoChange = async (retailerId) => {
-    if (selectedRetailerForLco === retailerId) {
-      setSelectedRetailerForLco("");
-      setLcosForSelectedRetailer([]);
-      setSelectedLco("");
-      return;
-    }
-    setSelectedRetailerForLco(retailerId);
+    // update createdFor → reseller id
+    setFieldValue("customer.createdFor.id", retailerId);
+
+    if (!retailerId) return;
+
     try {
       const res = await getLcoByRetailer(retailerId);
-      setLcosForSelectedRetailer(res.data || []);
+      if (res?.status) {
+        setLcosForSelectedRetailer(res.data || []);
+      }
     } catch (err) {
-      console.error("Error fetching LCOs:", err);
       setLcosForSelectedRetailer([]);
     }
   };
 
-  // Handle LCO selection
   const handleLcoChange = (lcoId) => {
     setSelectedLco(lcoId);
-    setFieldValue("customer.createdFor.id", lcoId);
+
+    // update createdFor → lco id
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        createdFor: {
+          type: "Lco",
+          id: lcoId,
+        },
+      },
+    }));
   };
 
-  // PACKAGE SELECT → AUTO FILL NAME & PRICE
-  const handlePackageChange = (packageId) => {
-    const selected = packageList.find((p) => p._id === packageId);
-    if (selected) {
-      const basePrice = selected.basePrice || selected.price || "";
 
-      // Save package ID and name
-      setFieldValue("customer.packageDetails.packageId", selected._id);
-      setFieldValue(
-        "customer.packageDetails.packageName",
-        selected.packageName || selected.name || ""
-      );
+  // ================== GENERIC SET FIELD VALUE (REQUIRED FIX) ==================
+  const setFieldValue = (path, value) => {
+    setFormData((prev) => {
+      const updated = { ...prev };
+      const keys = path.split(".");
+      let current = updated;
 
-      // Set the original base price (for display and fallback)
-      setFieldValue("customer.packageDetails.packageAmount", basePrice);
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+      }
 
-      // Also set the editable custom price to base price initially
-      setCustomPackagePrice(basePrice);
-    } else {
-      // Reset everything if no package selected
-      setFieldValue("customer.packageDetails.packageId", "");
-      setFieldValue("customer.packageDetails.packageName", "");
-      setFieldValue("customer.packageDetails.packageAmount", "");
-      setCustomPackagePrice("");
-    }
-  };
-  // const handlePackageChange = (packageId) => {
-  //   const selected = packageList.find((p) => p._id === packageId);
-  //   if (selected) {
-  //     setFieldValue("customer.packageDetails.packageId", selected._id);           // ← ID save
-  //     setFieldValue("customer.packageDetails.packageName", selected.packageName || selected.name || "");
-  //     setFieldValue("customer.packageDetails.packageAmount", selected.basePrice || selected.price || "");
-  //   } else {
-  //     setFieldValue("customer.packageDetails.packageId", "");
-  //     setFieldValue("customer.packageDetails.packageName", "");
-  //     setFieldValue("customer.packageDetails.packageAmount", "");
-  //   }
-  // };
-
-  // validation: focus on required payment fields & some basics
-  const validateForm = () => {
-    const errors = {};
-    const c = formData.customer;
-    const p = formData.payment;
-    const perm = formData.addresses.permanent;
-    // Name - Required
-    const name = (c.name || "").trim();
-    if (!name) {
-      errors["customer.name"] = "Name is required";
-    }
-
-    // email
-    const email = (c.email || "").trim();
-    if (!email) errors["customer.email"] = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(email))
-      errors["customer.email"] = "Invalid email";
-
-    // mobile
-    const mobile = (c.mobile || "").trim();
-    if (!mobile) errors["customer.mobile"] = "Mobile Number is required";
-    else if (!/^\d{10,}$/.test(mobile))
-      errors["customer.mobile"] = "Enter valid mobile (10+ digits)";
-
-    // alternate mobile optional but if filled validate
-    const alt = (c.alternateMobile || "").trim();
-    if (alt && !/^\d{10,}$/.test(alt))
-      errors["customer.alternateMobile"] = "Enter valid mobile";
-
-    // aadhar basic check (12 digits)
-    const aadhar = (c.aadharNo || "").trim();
-    if (aadhar && !/^\d{12}$/.test(aadhar))
-      errors["customer.aadharNo"] = "Aadhar must be 12 digits";
-
-    // if (!c.packageDetails.packageId || !c.packageDetails.packageId.trim()) {
-    //   errors["packageDetails.packageId"] = "Package detail is required";
-    // }
-
-    // const packagePrice = c.packageDetails.packageAmount;
-    // if (!packagePrice || packagePrice <= 0) {
-    //   errors["packageDetails.packageAmount"] = "Package price is required";
-    // }
-
-    // Payment - all required
-    if (!p.paymentMode) errors["payment.paymentMode"] = "Payment mode required";
-    // Zone validation
-    // if (!selectedArea || selectedArea.trim() === "") {
-    //   errors["zone"] = "Zone is required";
-    // }
-
-    // addresses: billing must have pincode & state & city & area
-    const bill = formData.addresses.billing;
-    const billCity = (formData.addresses.billing.city || "").trim();
-    const permCity = (formData.addresses.permanent.city || "").trim();
-    const billState = (formData.addresses.billing.state || "").trim();
-    const permState = (formData.addresses.permanent.state || "").trim();
-
-    if (!bill.addressLine1)
-      errors["addresses.billing.addressLine1"] =
-        "Billing address line 1 required";
-
-    if (!bill.state)
-      errors["addresses.billing.state"] = "Billing state required";
-    if (!billCity) {
-      errors["addresses.billing.city"] = "Billing city is required";
-    } else {
-      const err = cityValidate(billCity);
-      if (err) errors["addresses.billing.city"] = err;
-    }
-    if (!billState) {
-      errors["addresses.billing.state"] = "Billing state is required";
-    } else {
-      const err = stateValidate(billState);
-      if (err) errors["addresses.billing.state"] = err;
-    }
-    if (!bill.pincode)
-      errors["addresses.billing.pincode"] = "Billing pincode required";
-    if (!perm.addressLine1)
-      errors["addresses.permanent.addressLine1"] =
-        "Permanent address line 1 required";
-    if (!permCity) {
-      errors["addresses.permanent.city"] = "Permanent city is required";
-    } else {
-      const err = cityValidate(permCity);
-      if (err) errors["addresses.permanent.city"] = err;
-    }
-    if (!permState) {
-      errors["addresses.permanent.state"] = "Permanent state is required";
-    } else {
-      const err = stateValidate(permState);
-      if (err) errors["addresses.permanent.state"] = err;
-    }
-    if (!perm.pincode)
-      errors["addresses.permanent.pincode"] = "Permanent pincode required";
-
-    return errors;
+      current[keys[keys.length - 1]] = value;
+      return updated;
+    });
   };
 
-  //handle submit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  // ================== HANDLE INPUT CHANGE ==================
+  const handleChange = (e, path) => {
+    const value =
+      e?.target?.type === "checkbox"
+        ? e.target.checked
+        : e?.target?.value;
 
-    const errors = validateForm();
-    if (Object.keys(errors).length) {
-      setFormErrors(errors);
-      console.log("Erros - ", errors);
-      toast.error("Please fix form errors");
-      setLoading(false);
+    setFieldValue(path, value);
+  };
+
+
+  // ================== FETCH STATIC DATA ==================
+  useEffect(() => {
+    (async () => {
+      try {
+        const [
+          rolesRes,
+          retailerRes,
+          lcoRes,
+          staffRes,
+          zoneRes,
+          subZoneRes,
+        ] = await Promise.allSettled([
+          getRoles(),
+          getRetailer(),
+          getAllLco(),
+          getStaffList?.(),
+          getAllZoneList(),
+          getAllSubZones(),
+        ]);
+
+        if (rolesRes.value?.status) setRoles(rolesRes.value.data || []);
+        if (retailerRes.value?.status) setRetailers(retailerRes.value.data || []);
+        if (lcoRes.value?.status) setLcos(lcoRes.value.data || []);
+        if (staffRes.value?.status) setStaff(staffRes.value.data || []);
+        if (zoneRes.value?.status) setZoneList(zoneRes.value.data || []);
+        if (subZoneRes.value?.status) setSubZoneList(subZoneRes.value.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    })();
+  }, []);
+
+  // ================== FIX 2: PACKAGE FETCH LOGIC ==================
+  const fetchPackagesForRole = async () => {
+    const type = formData.customer.createdFor.type || "Admin";
+    const targetId = formData.customer.createdFor.id || "";
+
+    // If Reseller / LCO but ID not selected yet
+    if ((type === "Reseller" || type === "Lco") && !targetId) {
+      setRoleSpecificPackages([]);
       return;
     }
 
+    setPackageLoading(true);
+    try {
+      const res = await getPackagesByRole({
+        targetRole: type,
+        targetId,
+      });
+
+      if (res?.status) {
+        // ✅ SAME RESPONSE FOR ALL ROLES
+        setRoleSpecificPackages(res.data?.packages || []);
+      } else {
+        setRoleSpecificPackages([]);
+      }
+    } catch (err) {
+      setRoleSpecificPackages([]);
+    } finally {
+      setPackageLoading(false);
+    }
+  };
+
+  // ================== FIX 3: AUTO REFRESH ==================
+  useEffect(() => {
+    fetchPackagesForRole();
+  }, [
+    formData.customer.createdFor.type,
+    formData.customer.createdFor.id,
+  ]);
+
+  // ================== CREATED FOR CHANGE (FIX) ==================
+  const handleCreatedForChange = (type) => {
+    // 1️⃣ Update UI dropdown state
+    setSelectedCreatedFor(type);
+
+    // 2️⃣ Reset dependent selections
+    setSelectedRetailerForLco("");
+    setSelectedLco("");
+
+    // 3️⃣ Clear packages & price
+    setRoleSpecificPackages([]);
+    setCustomPackagePrice("");
+
+    // 4️⃣ Update formData safely
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        createdFor: {
+          type: type, // Admin | Retailer | Lco
+          // id: "",     // reset ID, will be set after selection
+         id: type === "Admin" ? adminId : "",
+        },
+        packageDetails: {
+          packageId: "",
+          packageName: "",
+          packageAmount: "",
+          packageStart: "",
+          packageEnd: "",
+        },
+      },
+    }));
+  };
+
+
+  // ================== PACKAGE SELECT ==================
+  const handlePackageChange = (id) => {
+    const pkg = roleSpecificPackages.find((p) => p._id === id);
+    if (!pkg) return;
+
+    const price = pkg.price || pkg.basePrice || 0;
+
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        packageDetails: {
+          ...prev.customer.packageDetails,
+          packageId: pkg._id,
+          packageName: pkg.name,
+          packageAmount: price,
+        },
+      },
+    }));
+
+    setCustomPackagePrice(String(price));
+  };
+
+  // ================== SUBMIT ==================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
       const payload = new FormData();
       payload.append("customer", JSON.stringify(formData.customer));
@@ -713,125 +2291,14 @@ export default function CreateUser() {
         }
       });
 
-      // Sirf ek call → User + Package dono ban jayenge
       await createUser(payload);
-
-      toast.success("Customer created & package assigned successfully!");
+      toast.success("Customer created successfully");
       navigate("/user/list");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create customer");
-    } finally {
-      setLoading(false);
+      toast.error("Failed to create customer");
     }
   };
 
-  //   const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const errors = validateForm();
-  //   if (Object.keys(errors).length) {
-  //     setFormErrors(errors);
-  //     toast.error("Please fix form errors");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const payload = new FormData();
-  //     payload.append("customer", JSON.stringify(formData.customer));
-  //     payload.append("addresses", JSON.stringify(formData.addresses));
-  //     payload.append("payment", JSON.stringify(formData.payment));
-  //     payload.append("additional", JSON.stringify(formData.additional));
-  //     payload.append("area", selectedArea);
-
-  //     formData.documents.forEach((doc) => {
-  //       if (doc.file && doc.type) {
-  //         payload.append("documents", doc.file);
-  //         payload.append("documentTypes[]", doc.type);
-  //       }
-  //     });
-
-  //     // 1. Create User
-  //     const userRes = await createUser(payload);
-  //     const newUserId = userRes?.data?._id || userRes?.data?.user?._id;
-
-  //     if (!newUserId) {
-  //       throw new Error("User creation failed - no ID returned");
-  //     }
-
-  //     toast.success("Customer created successfully!");
-
-  //     // 2. Agar Package Select Kiya Hai → Assign Kar Do!
-  //     const pkgId = formData.customer.packageDetails.packageId;
-  //     if (pkgId) {
-  //       await assignPackageToUser(newUserId, {
-  //         packageId: pkgId,
-  //         packageName: formData.customer.packageDetails.packageName,
-  //         basePrice: Number(formData.customer.packageDetails.packageAmount),
-  //         customPrice: Number(formData.customer.packageDetails.packageAmount),
-  //         billType: "Prepaid",  // ya jo bhi default hai
-  //         status: "active"      // optional
-  //       });
-  //       console.log("Package auto-assigned on user creation!");
-  //     }
-
-  //     navigate("/user/list");
-
-  //   } catch (err) {
-  //     console.error("Create User Error:", err);
-  //     toast.error(err?.response?.data?.message || err?.message || "Failed to create customer");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const errors = validateForm();
-  //   if (Object.keys(errors).length) {
-  //     setFormErrors(errors);
-  //     toast.error("Please fix form errors");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const payload = new FormData();
-
-  //     payload.append("customer", JSON.stringify(formData.customer));
-  //     payload.append("addresses", JSON.stringify(formData.addresses));
-  //     payload.append("payment", JSON.stringify(formData.payment));
-  //     payload.append("additional", JSON.stringify(formData.additional));
-  //     payload.append("area", selectedArea);
-
-  //     // FIXED — Only append type when file exists, and use documentTypes[]
-  //     formData.documents.forEach((doc) => {
-  //       if (doc.file && doc.type) {
-  //         payload.append("documents", doc.file);
-  //         payload.append("documentTypes[]", doc.type);
-  //       }
-  //     });
-
-  //     await createUser(payload);
-  //     toast.success("User created successfully");
-  //     navigate("/user/list");
-
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error(err?.message || "Failed to create user");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  const handleClear = () => {
-    setFormData(initialForm);
-    setFormErrors({});
-    setSelectedArea("");
-    setCustomPackagePrice("");
-  };
 
   const documentTypes = [
     "Address Proof",
@@ -845,16 +2312,41 @@ export default function CreateUser() {
     "Caf Form",
     "Other",
   ];
+
+  const handleClear = () => {
+  setFormData({
+    ...initialForm,
+    customer: {
+      ...initialForm.customer,
+      createdFor: {
+        type: "Admin",
+        id: adminId,
+      },
+    },
+  });
+
+  setSelectedCreatedFor("Admin");
+  setSelectedRetailerForLco("");
+  setSelectedLco("");
+  setSelectedArea("");
+  setSelectedSubZone("");
+  setCustomPackagePrice("");
+};
+
+
+  // const handleClear = () => {
+  //   setFormData(initialForm);
+  //   setFormErrors({});
+  //   setSelectedArea("");
+  //   setCustomPackagePrice("");
+  // };
+
   const addDocumentRow = () =>
     setFormData((prev) => ({
       ...prev,
       documents: [...prev.documents, { type: "", file: null, preview: "" }], // ← add preview: ""
     }));
-  // const addDocumentRow = () =>
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     documents: [...prev.documents, { type: "", file: null }],
-  //   }));
+
   const updateDocumentType = (i, v) =>
     setFormData((prev) => {
       const d = [...prev.documents];
@@ -878,12 +2370,7 @@ export default function CreateUser() {
       return { ...prev, documents: d };
     });
   };
-  // const updateDocumentFile = (i, f) =>
-  //   setFormData((prev) => {
-  //     const d = [...prev.documents];
-  //     d[i].file = f;
-  //     return { ...prev, documents: d };
-  //   });
+
   const removeDocumentRow = (i) =>
     setFormData((prev) => {
       const d = [...prev.documents];
@@ -898,12 +2385,20 @@ export default function CreateUser() {
         documents: d.filter((_, idx) => idx !== i),
       };
     });
-  // const removeDocumentRow = (i) =>
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     documents: prev.documents.filter((_, idx) => idx !== i),
-  //   }));
 
+  // ================== FILTERED PACKAGES (SEARCH) ==================
+  const filteredPackages = roleSpecificPackages.filter((pkg) =>
+    pkg?.name?.toLowerCase().includes(packageSearch.toLowerCase())
+  );
+
+  useEffect(() => {
+    setPackageSearch("");
+  }, [
+    formData.customer.createdFor.type,
+    formData.customer.createdFor.id,
+  ]);
+
+  // ================== UI (UNCHANGED) ==================
   return (
     <div className="max-w-[1400px] mx-auto p-4 bg-white shadow rounded">
       <h1 className="text-xl font-semibold mb-4">Create Customer</h1>
@@ -1051,27 +2546,12 @@ export default function CreateUser() {
                 </div>
               </div>
             </div>
-            {/* <div>
-              <label className="block text-sm">DOB</label>
-              <input
-                type="date"
-                value={formData.additional.dob}
-                onChange={(e) => handleChange(e, "additional.dob")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div> */}
 
             <div>
               <label className="block text-sm font-medium">Mobile *</label>
               <input
                 value={formData.customer.mobile}
                 onChange={(e) => handleChange(e, "customer.mobile")}
-                // onKeyDown={(e) => {
-                //   if (!/[0-9]/.test(e.key)) {
-                //     e.preventDefault(); // Block alphabets & special characters
-                //   }
-                // }}
-
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.mobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Mobile Number"
@@ -1093,11 +2573,6 @@ export default function CreateUser() {
                 className={`mt-1 p-2 border rounded w-full ${formErrors["customer.alternateMobile"] ? "border-red-500" : ""
                   }`}
                 placeholder="Alternate Mobile"
-              // onKeyDown={(e) => {
-              //   if (!/[0-9]/.test(e.key)) {
-              //     e.preventDefault(); // Block alphabets & special characters
-              //   }
-              // }}
               />
               {formErrors["customer.alternateMobile"] && (
                 <p className="text-red-500 text-sm">
@@ -1322,21 +2797,6 @@ export default function CreateUser() {
               />
             </div>
 
-            {/* <div>
-              <label className="block text-sm font-medium">IP Type</label>
-              <select
-                value={formData.customer.ipType}
-                onChange={(e) => handleChange(e, "customer.ipType")}
-                className="mt-1 p-2 border rounded w-full"
-              >
-                {CustomeripTypes.map((it) => (
-                  <option key={it} value={it}>
-                    {it}
-                  </option>
-                ))}
-              </select>
-            </div> */}
-
             {formData.customer.ipType === "Dynamic IP Pool" && (
               <div>
                 <label className="block text-sm font-medium">
@@ -1368,15 +2828,6 @@ export default function CreateUser() {
                 placeholder="MAC ID"
               />
             </div>
-
-            {/* <div>
-              <label className="block text-sm font-medium">Service Opted</label>
-              <input
-                value={formData.customer.serviceOpted}
-                onChange={(e) => handleChange(e, "customer.serviceOpted")}
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div> */}
 
             <div>
               <label className="block text-sm font-medium">Service Opted</label>
@@ -1432,12 +2883,12 @@ export default function CreateUser() {
                   Select
                 </option>
                 <option value="Admin">Admin</option>
-                <option value="Retailer">Reseller</option>
+                <option value="Reseller">Reseller</option>
                 <option value="Lco">Lco</option>
               </select>
             </div>
             {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
-            {(selectedCreatedFor === "Retailer" ||
+            {(selectedCreatedFor === "Reseller" ||
               selectedCreatedFor === "Lco") && (
                 <div>
                   <label className="block text-sm font-medium">Reseller</label>
@@ -1536,9 +2987,7 @@ export default function CreateUser() {
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
                     }`}
                 />
-                {/* {formErrors["addresses.billing.city"] && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
-                )} */}
+
                 <input
                   value={formData.addresses.billing.state}
                   onChange={(e) => handleChange(e, "addresses.billing.state")}
@@ -1548,9 +2997,7 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
-                {/* {formErrors["addresses.billing.state"] && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
-                )} */}
+
               </div>
               <div className="flex gap-2 mt-2">
                 <input
@@ -1613,9 +3060,6 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
-                {/* {formErrors["addresses.permanent.city"] && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.city"]}</p>
-                )} */}
 
                 <input
                   value={formData.addresses.permanent.state}
@@ -1626,9 +3070,7 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
-                {/* {formErrors["addresses.permanent.state"] && (
-                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.permanent.state"]}</p>
-                )} */}
+
               </div>
               <div className="flex gap-2 mt-2">
                 <input
@@ -1727,44 +3169,33 @@ export default function CreateUser() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Area <span className="text-red-500">*</span>
                 </label>
-              <select
-  value={selectedArea}
-  onChange={(e) => {
-    const value = e.target.value;
-    setSelectedArea(value);
-
-    // Reset subzone when zone changes
-    setSelectedSubZone("");
-    setFieldValue("customer.subZoneId", "");
-
-    // Clear related errors
-    setFormErrors((prev) => ({
-      ...prev,
-      ["customer.subZoneId"]: undefined,
-      zone: undefined,
-    }));
-  }}
-  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
->
-  <option value="">-- Select Area --</option>
-  {zoneList.map((zone) => (
-    <option key={zone._id} value={zone._id}>
-      {zone.zoneName}
-    </option>
-  ))}
-</select>
-                {/* <select
+                <select
                   value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedArea(value);
+
+                    // Reset subzone when zone changes
+                    setSelectedSubZone("");
+                    setFieldValue("customer.subZoneId", "");
+
+                    // Clear related errors
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      ["customer.subZoneId"]: undefined,
+                      zone: undefined,
+                    }));
+                  }}
                   className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 >
-                  <option value="">-- Select Zone --</option>
+                  <option value="">-- Select Area --</option>
                   {zoneList.map((zone) => (
                     <option key={zone._id} value={zone._id}>
                       {zone.zoneName}
                     </option>
                   ))}
-                </select> */}
+                </select>
+
                 {formErrors["zone"] && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors["zone"]}
@@ -1775,28 +3206,27 @@ export default function CreateUser() {
               {/* Right: Custom Area Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Zone<span className="text-red-500">*</span>
+                  Zone <span className="text-red-500">*</span>
                 </label>
-              <select
-  value={selectedSubZone}
-  onChange={(e) => {
-    const value = e.target.value;
-    setSelectedSubZone(value);
-    setFieldValue("customer.subZoneId", value);
-  }}
-  disabled={!selectedArea}
-  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-  required
->
-  <option value="">
-    {!selectedArea ? "-- First Select Area --" : "-- Select zone --"}
-  </option>
-  {subZoneList.map((sz) => (
-    <option key={sz._id} value={sz._id}>
-      {sz.subZoneName || sz.name}
-    </option>
-  ))}
-</select>
+                <select
+                  value={selectedSubZone}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedSubZone(value);
+                    setFieldValue("customer.subZoneId", value);
+                  }}
+                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                // required
+                >
+                  <option value="">
+                    {subZoneList.length === 0 ? "-- Loading sub zones..." : "-- Select Zone --"}
+                  </option>
+                  {subZoneList.map((sz) => (
+                    <option key={sz._id} value={sz._id}>
+                      {sz.subZoneName || sz.name || sz.zoneName || "Unnamed"}
+                    </option>
+                  ))}
+                </select>
                 {formErrors["customer.subZoneId"] && (
                   <p className="text-red-500 text-sm mt-1">
                     {formErrors["customer.subZoneId"]}
@@ -1814,41 +3244,100 @@ export default function CreateUser() {
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* PACKAGE DROPDOWN + AUTO PRICE */}
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Select Package *
-              </label>
-              <select
+
+              <div className="relative">
+                <label className="block text-sm font-semibold mb-2">
+                  Select Package *
+                </label>
+
+                {/* SINGLE INPUT */}
+                <input
+                  type="text"
+                  placeholder="Search or select package..."
+                  value={packageSearch}
+                  onChange={(e) => {
+                    setPackageSearch(e.target.value);
+                    setShowPackageDropdown(true);
+                  }}
+                  onFocus={() => setShowPackageDropdown(true)}
+                  className="w-full p-2 border rounded"
+                  disabled={packageLoading}
+                />
+
+                {/* DROPDOWN */}
+                {showPackageDropdown && (
+                  <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow max-h-60 overflow-y-auto">
+
+                    {packageLoading && (
+                      <div className="p-3 text-sm text-gray-500">
+                        Loading packages...
+                      </div>
+                    )}
+
+                    {!packageLoading && filteredPackages.length === 0 && (
+                      <div className="p-3 text-sm text-gray-500">
+                        No packages found
+                      </div>
+                    )}
+
+                    {!packageLoading &&
+                      filteredPackages.map((pkg) => (
+                        <div
+                          key={pkg._id}
+                          onClick={() => {
+                            handlePackageChange(pkg._id);
+                            setPackageSearch(pkg.name);
+                            setShowPackageDropdown(false);
+                          }}
+                          className="px-4 py-2 cursor-pointer hover:bg-blue-100 text-sm flex justify-between"
+                        >
+                          <span>{pkg.name}</span>
+                          <span className="text-gray-600">
+                            ₹{pkg.price || pkg.basePrice || 0}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                {/* CLICK OUTSIDE CLOSE */}
+                {showPackageDropdown && (
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowPackageDropdown(false)}
+                  />
+                )}
+              </div>
+
+
+
+              {/* <select
+                value={formData.customer.packageDetails.packageId || ""}
                 onChange={(e) => handlePackageChange(e.target.value)}
+                disabled={packageLoading || filteredPackages.length === 0}
                 className="w-full p-2 border rounded"
-                defaultValue=""
               >
                 <option value="" disabled>
-                  -- Select Package --
+                  {packageLoading
+                    ? "Loading packages..."
+                    : filteredPackages.length === 0
+                      ? "No packages found"
+                      : "-- Select Package --"}
                 </option>
-                {packageList.map((pkg) => (
+
+                {filteredPackages.map((pkg) => (
                   <option key={pkg._id} value={pkg._id}>
-                    {pkg.packageName || pkg.name}{" "}
-                    {pkg.basePrice ? `₹${pkg.basePrice}` : ""}
+                    {pkg.name} ₹{pkg.price || pkg.basePrice || 0}
                   </option>
                 ))}
-              </select>
+              </select> */}
+
               {formErrors["packageDetails.packageId"] && (
                 <p className="text-red-500 text-sm mt-1">
                   {formErrors["packageDetails.packageId"]}
                 </p>
               )}
 
-              {/* <div className="mt-4">
-                <label className="block text-sm font-medium">
-                  Package Price (Auto-filled)
-                </label>
-                <input
-                  value={formData.customer.packageDetails.packageAmount}
-                  readOnly
-                  className="w-full p-2 border rounded bg-gray-100 font-bold text-green-700"
-                  placeholder="Price appears here"
-                />
-              </div> */}
               <div className="mt-4">
                 <label className="block text-sm font-medium">
                   Package Price <span className="text-red-500">*</span>
@@ -1992,33 +3481,6 @@ export default function CreateUser() {
                     Remove
                   </button>
                 </div>
-                {/* <div className="md:col-span-1">
-                  <label className="text-sm">Upload File</label>
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      updateDocumentFile(index, e.target.files[0])
-                    }
-                    className="mt-1 p-2 border rounded w-full"
-                    disabled={!doc.type}
-                  />
-                  {doc.file && (
-                    <p className="text-sm mt-1 text-gray-700">
-                      {doc.file.name}
-                    </p>
-                  )}
-                </div> */}
-
-                {/* Remove Button */}
-                {/* <div className="flex items-end justify-end">
-                  <button
-                    type="button"
-                    onClick={() => removeDocumentRow(index)}
-                    className="px-3 py-2 bg-red-600 text-white text-sm rounded"
-                  >
-                    Remove
-                  </button>
-                </div> */}
               </div>
             ))}
 
@@ -2027,7 +3489,6 @@ export default function CreateUser() {
               type="button"
               onClick={addDocumentRow}
               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
-              // disabled={formData.documents.length >= documentTypes.length} 
               disabled={
                 formData.documents.length >= documentTypes.length &&
                 !formData.documents.some(doc => doc.type === "Other")
@@ -2134,4 +3595,5 @@ export default function CreateUser() {
       </form>
     </div>
   );
+
 }
