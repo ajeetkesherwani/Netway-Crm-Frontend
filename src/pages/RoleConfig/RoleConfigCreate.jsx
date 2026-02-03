@@ -14,11 +14,11 @@ export default function RoleConfigCreate() {
   const [typeId, setTypeId] = useState("");
 
   const basePermissions = [
-    { name: "list", admin: false, manager: false, operator: false },
-    { name: "add", admin: false, manager: false, operator: false },
-    { name: "view", admin: false, manager: false, operator: false },
-    { name: "delete", admin: false, manager: false, operator: false },
-    { name: "update", admin: false, manager: false, operator: false },
+    { name: "List", admin: false, manager: false, operator: false },
+    { name: "Add", admin: false, manager: false, operator: false },
+    { name: "View", admin: false, manager: false, operator: false },
+    { name: "Delete", admin: false, manager: false, operator: false },
+    { name: "Update", admin: false, manager: false, operator: false },
   ];
 
   const categoryPermissions = {

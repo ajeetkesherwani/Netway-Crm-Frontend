@@ -501,7 +501,7 @@ export default function ApprovalTicket() {
                         <div className="absolute top-8 right-0 bg-white border rounded-lg shadow-xl w-56 z-50 action-menu">
                           <ProtectedAction
                             module="tickets"
-                            action="approvalTicketApprove"
+                            action="ApprovalTicketApprove"
                           >
                             <button
                               onClick={() => handleApprove(ticket._id)}
@@ -514,7 +514,7 @@ export default function ApprovalTicket() {
 
                           <ProtectedAction
                             module="tickets"
-                            action="approvalTicketDisapprove"
+                            action="ApprovalTicketDisapprove"
                           >
                             <button
                               onClick={() => handleDisapprove(ticket._id)}

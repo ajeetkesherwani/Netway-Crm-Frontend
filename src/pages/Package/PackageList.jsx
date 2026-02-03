@@ -164,7 +164,7 @@ export default function PackageList() {
             Excel
           </button>
 
-          <ProtectedAction module="package" action="create">
+          <ProtectedAction module="package" action="Create">
             <button
               onClick={() => navigate("/package/create")}
               className="px-2 py-1 text-white bg-blue-600 rounded hover:bg-blue-700 text-sm"
@@ -243,7 +243,7 @@ export default function PackageList() {
                               <FaEye /> View
                             </button>
 
-                            <ProtectedAction module="package" action="edit">
+                            <ProtectedAction module="package" action="Edit">
                               <button
                                 onClick={() => handleEdit(pkg._id)}
                                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -267,7 +267,7 @@ export default function PackageList() {
                               )}
                             </button>
 
-                            <ProtectedAction module="package" action="delete">
+                            <ProtectedAction module="package" action="Delete">
                               <button
                                 onClick={() => handleDelete(pkg._id)}
                                 className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -315,7 +315,7 @@ export default function PackageList() {
                     <FaEye /> View
                   </button>
 
-                  <ProtectedAction module="package" action="edit">
+                  <ProtectedAction module="package" action="Edit">
                     <button
                       onClick={() => handleEdit(pkg._id)}
                       className="text-green-600 flex items-center gap-1"
@@ -324,7 +324,7 @@ export default function PackageList() {
                     </button>
                   </ProtectedAction>
 
-                  <ProtectedAction module="package" action="delete">
+                  <ProtectedAction module="package" action="Delete">
                     <button
                       onClick={() => handleDelete(pkg._id)}
                       className="text-red-600 flex items-center gap-1"

@@ -71,7 +71,7 @@ export default function LcoWalletList() {
     <div className="">
       <div className="flex items-center justify-end h-0 mb-4">
         <div className="space-x-2 flex">
-          <ProtectedAction module="lco" action="addTransaction">
+          <ProtectedAction module="lco" action="AddTransaction">
             <button
               onClick={() => navigate(`/lco/wallet/create/${id}`, { state: { data: transferData } })}
               className="px-1 py-[1px] text-white bg-blue-600 rounded hover:bg-blue-700 relative -top-3 right-6 text-[12px]"

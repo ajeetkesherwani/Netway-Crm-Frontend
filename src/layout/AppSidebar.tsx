@@ -302,7 +302,7 @@ if (packageSubItems.length > 0) {
 // 📦 Stock Management
 const stockManagementSubItems = [];
 
-if (hasTruePermission(permissions.setting)) {
+if (hasTruePermission(permissions.Setting)) {
   if (permissions.setting?.HardwareList) {
     stockManagementSubItems.push({
       name: "Hardware List",
@@ -322,7 +322,7 @@ if (stockManagementSubItems.length > 0) {
 
     // 🧩 Settings
     const settingSubItems = [];
-    if (hasTruePermission(permissions.Setting)) {
+    if (hasTruePermission(permissions.setting)) {
       if (permissions.setting?.TicketReplyList)
         settingSubItems.push({
           name: "Ticket Reply",

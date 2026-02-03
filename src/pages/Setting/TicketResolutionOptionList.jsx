@@ -146,7 +146,7 @@ export default function TicketResolutionOptionList() {
               Download as Excel
             </button>
 
-            <ProtectedAction module="setting" action="ticketResolutionCreate">
+            <ProtectedAction module="setting" action="TicketResolutionCreate">
               <button
                 onClick={() => navigate("/setting/resolution/create")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -211,7 +211,7 @@ export default function TicketResolutionOptionList() {
                           >
                             <FaEye className="text-blue-600" /> View
                           </button>
-                          <ProtectedAction module="setting" action="ticketResolutionRemove">
+                          <ProtectedAction module="setting" action="TicketResolutionRemove">
                             <button
                               onClick={() => handleDelete(opt._id, opt.name)}
                               className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"

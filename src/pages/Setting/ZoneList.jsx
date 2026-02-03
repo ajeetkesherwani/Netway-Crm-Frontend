@@ -187,7 +187,7 @@ export default function ZoneList() {
               Download Excel
             </button>
 
-            <ProtectedAction module="setting" action="zoneCreate">
+            <ProtectedAction module="setting" action="ZoneCreate">
               <button
                 onClick={() => navigate("/setting/zone/create")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -261,7 +261,7 @@ export default function ZoneList() {
                               <FaEye className="text-blue-600" /> View
                             </button>
 
-                            <ProtectedAction module="setting" action="zoneUpdate">
+                            <ProtectedAction module="setting" action="ZoneUpdate">
                               <button
                                 onClick={() => handleEdit(zone._id, zone.zoneName)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -270,7 +270,7 @@ export default function ZoneList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="setting" action="zoneDelete">
+                            <ProtectedAction module="setting" action="ZoneDelete">
                               <button
                                 onClick={() => handleDelete(zone._id, zone.zoneName)}
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"

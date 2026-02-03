@@ -492,6 +492,9 @@ export default function RetailerList() {
                                 </button>
                               </li>
                             </ProtectedAction>
+
+
+
                             <ProtectedAction module="reseller" action="Delete">
                               <li>
                                 <button
@@ -601,7 +604,7 @@ export default function RetailerList() {
                       >
                         <FaEye /> View
                       </button>
-                      <ProtectedAction module="reseller" action="edit">
+                      <ProtectedAction module="reseller" action="Edit">
                         <button
                           onClick={() => handleEdit(retailer._id)}
                           className="w-full text-left flex items-center gap-3 text-green-600"
@@ -609,7 +612,7 @@ export default function RetailerList() {
                           <FaEdit /> Edit
                         </button>
                       </ProtectedAction>
-                      <ProtectedAction module="reseller" action="delete">
+                      <ProtectedAction module="reseller" action="Delete">
                         <button
                           onClick={() => handleDelete(retailer._id)}
                           className="w-full text-left flex items-center gap-3 text-red-600"
@@ -618,7 +621,7 @@ export default function RetailerList() {
                         </button>
                       </ProtectedAction>
 
-                      <ProtectedAction module="reseller" action="addTransaction">
+                      <ProtectedAction module="reseller" action="AddTransaction">
                         <li>
                           <button
                             onClick={() =>

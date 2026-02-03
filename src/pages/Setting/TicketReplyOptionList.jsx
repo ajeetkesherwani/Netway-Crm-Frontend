@@ -145,7 +145,7 @@ export default function TicketReplyOptionList() {
               Download as Excel
             </button>
 
-            <ProtectedAction module="setting" action="ticketReplyCreate">
+            <ProtectedAction module="setting" action="TicketReplyCreate">
               <button
                 onClick={() => navigate("/setting/ticketReplyOption/create")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -216,7 +216,7 @@ export default function TicketReplyOptionList() {
                             <FaEye className="text-blue-600" /> View
                           </button>
 
-                          <ProtectedAction module="setting" action="ticketReplyRemove">
+                          <ProtectedAction module="setting" action="TicketReplyRemove">
                             <button
                               onClick={() => handleDelete(opt._id, opt.optionText)}
                               className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
@@ -263,7 +263,7 @@ export default function TicketReplyOptionList() {
                 >
                   <FaEye /> View
                 </button>
-                <ProtectedAction module="setting" action="ticketReplyRemove">
+                <ProtectedAction module="setting" action="TicketReplyRemove">
                   <button
                     onClick={() => handleDelete(opt._id, opt.optionText)}
                     className="w-full text-left px-2 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

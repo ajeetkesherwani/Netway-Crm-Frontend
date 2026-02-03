@@ -11,7 +11,7 @@ export default function SubZoneCreate() {
   const [zoneLoading, setZoneLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    zoneId: "",
+    // zoneId: "",
     name: "",
   });
 
@@ -45,10 +45,10 @@ export default function SubZoneCreate() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.zoneId) {
-      toast.error("Please select a zone");
-      return;
-    }
+    // if (!formData.zoneId) {
+    //   toast.error("Please select a zone");
+    //   return;
+    // }
 
     if (!formData.name.trim()) {
       toast.error("SubZone name is required");
@@ -88,7 +88,7 @@ export default function SubZoneCreate() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         {/* Zone Dropdown */}
-        <div>
+        {/* <div>
           <label className="block font-medium">
             Zone <span className="text-black-900 ml-1">*</span>
           </label>
@@ -107,7 +107,7 @@ export default function SubZoneCreate() {
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* SubZone Name */}
         <div>

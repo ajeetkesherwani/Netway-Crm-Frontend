@@ -193,7 +193,7 @@ export default function Category() {
               Download Excel
             </button>
 
-            <ProtectedAction module="setting" action="ticketCategoryCreate">
+            <ProtectedAction module="setting" action="TicketCategoryCreate">
               <button
                 onClick={() => openUpdateModal(null, "")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition flex items-center gap-2 whitespace-nowrap"
@@ -286,7 +286,7 @@ export default function Category() {
                               <FaEye className="text-blue-600" /> View
                             </button>
 
-                            <ProtectedAction module="setting" action="ticketCategoryUpdate">
+                            <ProtectedAction module="setting" action="TicketCategoryUpdate">
                               <button
                                 onClick={() => openUpdateModal(id, cat.name)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -295,7 +295,7 @@ export default function Category() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="setting" action="ticketCategoryRemove">
+                            <ProtectedAction module="setting" action="TicketCategoryRemove">
                               <button
                                 onClick={() => openDeleteModal(id)}
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
@@ -351,7 +351,7 @@ export default function Category() {
                   >
                     <FaEye /> View
                   </button>
-                  <ProtectedAction module="setting" action="ticketCategoryUpdate">
+                  <ProtectedAction module="setting" action="TicketCategoryUpdate">
                     <button
                       onClick={() => openUpdateModal(id, cat.name)}
                       className="w-full text-left px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -359,7 +359,7 @@ export default function Category() {
                       <FaEdit /> Edit
                     </button>
                   </ProtectedAction>
-                  <ProtectedAction module="setting" action="ticketCategoryRemove">
+                  <ProtectedAction module="setting" action="TicketCategoryRemove">
                     <button
                       onClick={() => openDeleteModal(id)}
                       className="w-full text-left px-2 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"

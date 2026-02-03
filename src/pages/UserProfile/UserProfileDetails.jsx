@@ -134,7 +134,7 @@ const UserProfile = () => {
           <div style={{ width: "48%", minWidth: "300px" }}>
             <Field label="Customer Type" value="Individual" />
             <Field label="Mobile" value={g.phone} />
-            <Field label="Server Type" value="IPACT" />
+            {/* <Field label="Server Type" value="IPACT" /> */}
             <Field label="PPPOE Password" value={g.plainPassword || "-"} />
             <Field label="Service Opted" value={g.serviceOpted?.toUpperCase()} />
           </div>

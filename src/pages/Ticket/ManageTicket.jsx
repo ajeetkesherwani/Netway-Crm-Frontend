@@ -212,7 +212,7 @@ export default function ManageTicket() {
 
       {/* Columns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <ProtectedAction module="tickets" action="manageOpenList">
+        <ProtectedAction module="tickets" action="ManageOpenList">
           <div>
             {/* Zones above Open Ticket */}
             <div className="mb-3 flex flex-wrap gap-2">
@@ -259,7 +259,7 @@ export default function ManageTicket() {
           </div>
         </ProtectedAction>
 
-        <ProtectedAction module="tickets" action="manageAssignTicketList">
+        <ProtectedAction module="tickets" action="ManageAssignTicketList">
           <div>
             {/* Zones above Assign Ticket */}
             <div className="mb-3 flex flex-wrap gap-2">

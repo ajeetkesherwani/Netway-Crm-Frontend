@@ -269,7 +269,7 @@ export default function UserList() {
           </button>
 
           {/* Add Customer Button */}
-          <ProtectedAction module="users" action="create">
+          <ProtectedAction module="users" action="Create">
             <button
               onClick={() => navigate("/user/create")}
               className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 font-medium"
@@ -393,7 +393,7 @@ export default function UserList() {
                             </li>
 
                             {/* View */}
-                            <ProtectedAction module="customer" action="view">
+                            <ProtectedAction module="customer" action="View">
                               <li>
                                 <button
                                   onClick={() => handleView(user._id)}
@@ -405,7 +405,7 @@ export default function UserList() {
                             </ProtectedAction>
 
                             {/* Edit */}
-                            <ProtectedAction module="customer" action="edit">
+                            <ProtectedAction module="customer" action="Edit">
                               <li>
                                 <button
                                   onClick={() => handleEdit(user._id)}
@@ -447,7 +447,7 @@ export default function UserList() {
                             </li> */}
 
                             {/* Delete */}
-                            <ProtectedAction module="customer" action="delete">
+                            <ProtectedAction module="customer" action="Delete">
                               <li>
                                 <button
                                   onClick={() => handleDelete(user._id)}

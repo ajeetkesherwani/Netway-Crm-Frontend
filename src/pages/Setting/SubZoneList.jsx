@@ -189,7 +189,7 @@ export default function SubZoneList() {
               Download Excel
             </button>
 
-            <ProtectedAction module="setting" action="subZoneCreate">
+            <ProtectedAction module="setting" action="SubZoneCreate">
               <button
                 onClick={() => navigate("/setting/subzone/create")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
@@ -256,14 +256,14 @@ export default function SubZoneList() {
                             className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
+                            {/* <button
                               onClick={() => handleView(subzone._id)}
                               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                             >
                               <FaEye className="text-blue-600" /> View
-                            </button>
+                            </button> */}
 
-                            <ProtectedAction module="setting" action="subZoneUpdate">
+                            <ProtectedAction module="setting" action="SubZoneUpdate">
                               <button
                                 onClick={() => handleEdit(subzone._id, subzone.name)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
@@ -272,7 +272,7 @@ export default function SubZoneList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="setting" action="subZoneDelete">
+                            <ProtectedAction module="setting" action="SubZoneDelete">
                               <button
                                 onClick={() => handleDelete(subzone._id, subzone.name)}
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
