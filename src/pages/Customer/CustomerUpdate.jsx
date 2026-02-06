@@ -7,12 +7,12 @@ import {
   updateUser,
   getAllZoneList,
   getLcoByRetailer,
+  getPackagesByRole,
 } from "../../service/user";
 import { getRetailer } from "../../service/retailer";
-import { getAllPackageList } from "../../service/package";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
-import { getSubzonesWithZoneId } from "../../service/apiClient";
+import { getAllSubZones } from "../../service/apiClient";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
@@ -23,7 +23,6 @@ export default function CustomerUpdate() {
   // Reference Data
   const [staff, setStaff] = useState([]);
   const [zoneList, setZoneList] = useState([]);
-  const [packageList, setPackageList] = useState([]);
   const [retailers, setRetailers] = useState([]);
 
   // Zone + Custom Area
@@ -38,6 +37,11 @@ export default function CustomerUpdate() {
   const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
   const [lcosForSelectedRetailer, setLcosForSelectedRetailer] = useState([]);
   const [selectedLco, setSelectedLco] = useState("");
+
+  // Package States (NEW: like create form)
+  const [roleSpecificPackages, setRoleSpecificPackages] = useState([]);
+  const [packageLoading, setPackageLoading] = useState(false);
+  const [customPackagePrice, setCustomPackagePrice] = useState("");
 
   const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
@@ -128,22 +132,37 @@ export default function CustomerUpdate() {
     });
   };
 
+  // LOAD ALL SUBZONES
+  useEffect(() => {
+    const loadSubZones = async () => {
+      try {
+        const res = await getAllSubZones();
+        if (res?.status) {
+          setSubZoneList(res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to load subzones", err);
+        setSubZoneList([]);
+      }
+    };
+
+    loadSubZones();
+  }, []);
+
   // Load Customer + Reference Data
   useEffect(() => {
     const load = async () => {
       try {
-        const [userRes, staffRes, zoneRes, pkgRes, retailerRes] =
+        const [userRes, staffRes, zoneRes, retailerRes] =
           await Promise.all([
             getUserDetails(id),
             getStaffList(),
             getAllZoneList(),
-            getAllPackageList(),
             getRetailer(),
           ]);
 
         setStaff(staffRes?.data || []);
         setZoneList(zoneRes?.data || []);
-        setPackageList(pkgRes?.data || []);
         if (retailerRes?.status) setRetailers(retailerRes.data);
 
         const u = userRes.data.user;
@@ -245,8 +264,8 @@ export default function CustomerUpdate() {
               const images = Array.isArray(doc.documentImage)
                 ? doc.documentImage
                 : doc.documentImage
-                  ? [doc.documentImage]
-                  : [];
+                ? [doc.documentImage]
+                : [];
 
               if (images.length === 0) return;
 
@@ -261,29 +280,10 @@ export default function CustomerUpdate() {
                   preview: null,
                   file: null,
                 });
-                // docs.push({
-                //   type: type,
-                //   // For multiple "Other" images, show index in label if needed (optional)
-                //   displayLabel: type === "Other" && images.length > 1
-                //     ? `${type} (${index + 1})`
-                //     : type,
-                //   existingImage: img,
-                //   // existingUrl: img ? `/uploads/${img}` : null,
-                //   existingUrl: img ? '/' + img.replace(/\\/g, '/') : null,
-                //   file: null,
-                // });
               });
             });
             return docs;
           })(),
-          // documents: (u.document || []).map((doc) => ({
-          //   type: doc.documentType,
-          //   existingImage: doc.documentImage,
-          //   existingUrl: doc.documentImage
-          //     ? `/uploads/${doc.documentImage}`
-          //     : null,
-          //   file: null,
-          // })),
         };
 
         setFormData(loadedData);
@@ -297,6 +297,9 @@ export default function CustomerUpdate() {
           u.generalInformation?.customArea || ""
         );
 
+        // Set custom price (NEW)
+        setCustomPackagePrice(String(loadedData.customer.packageDetails.packageAmount || ""));
+
         prevBillingRef.current = loadedData.addresses.billing;
       } catch (err) {
         toast.error("Failed to load customer data");
@@ -306,32 +309,42 @@ export default function CustomerUpdate() {
     load();
   }, [id]);
 
-  // Fetch subzones when zone changes
+  // NEW: Fetch packages based on role (like create)
+  const fetchPackagesForRole = async () => {
+    const type = formData.customer.createdFor.type || "Self";
+    const targetId = formData.customer.createdFor.id || "";
+
+    if ((type === "reseller" || type === "lco") && !targetId) {
+      setRoleSpecificPackages([]);
+      return;
+    }
+
+    setPackageLoading(true);
+    try {
+      const res = await getPackagesByRole({
+        targetRole: type,
+        targetId,
+      });
+
+      if (res?.status) {
+        setRoleSpecificPackages(res.data?.packages || []);
+      } else {
+        setRoleSpecificPackages([]);
+      }
+    } catch (err) {
+      setRoleSpecificPackages([]);
+    } finally {
+      setPackageLoading(false);
+    }
+  };
+
+  // NEW: Auto refresh packages
   useEffect(() => {
-    const fetchSubzones = async () => {
-      if (!selectedArea) {
-        setSubZoneList([]);
-        setSelectedSubZone("");
-        return;
-      }
-
-      try {
-        const response = await getSubzonesWithZoneId(selectedArea);
-        if (response?.status && Array.isArray(response.data)) {
-          setSubZoneList(response.data);
-        } else {
-          setSubZoneList([]);
-          toast.error("No sub areas found for this zone");
-        }
-      } catch (err) {
-        console.error("Error fetching subzones:", err);
-        setSubZoneList([]);
-        toast.error("Failed to load sub areas");
-      }
-    };
-
-    fetchSubzones();
-  }, [selectedArea]);
+    fetchPackagesForRole();
+  }, [
+    formData.customer.createdFor.type,
+    formData.customer.createdFor.id,
+  ]);
 
   // Auto-sync billing → installation
   useEffect(() => {
@@ -368,20 +381,18 @@ export default function CustomerUpdate() {
     formData.addresses.installation.sameAsBilling,
   ]);
 
-  // Handle Package Change
+  // Handle Package Change (UPDATED: like create + custom price)
   const handlePackageChange = (pkgId) => {
-    const pkg = packageList.find((p) => p._id === pkgId);
-    if (pkg) {
-      setFieldValue("customer.packageDetails.packageId", pkgId);
-      setFieldValue(
-        "customer.packageDetails.packageName",
-        pkg.packageName || pkg.name || ""
-      );
-      setFieldValue(
-        "customer.packageDetails.packageAmount",
-        pkg.basePrice || pkg.price || ""
-      );
-    }
+    const pkg = roleSpecificPackages.find((p) => p._id === pkgId);
+    if (!pkg) return;
+
+    const price = pkg.price || pkg.basePrice || 0;
+
+    setFieldValue("customer.packageDetails.packageId", pkgId);
+    setFieldValue("customer.packageDetails.packageName", pkg.name);
+    setFieldValue("customer.packageDetails.packageAmount", price);
+
+    setCustomPackagePrice(String(price));
   };
 
   // Document Functions
@@ -390,7 +401,7 @@ export default function CustomerUpdate() {
       ...prev,
       documents: [
         ...prev.documents,
-        { type: "", file: null, existingUrl: null },
+        { type: "", file: null, existingUrl: null, preview: "" },
       ],
     }));
 
@@ -405,7 +416,7 @@ export default function CustomerUpdate() {
 
     const d = [...formData.documents];
 
-    // Create preview only for image files
+    // Create preview only for images
     const isImage = f.type.startsWith("image/");
     const preview = isImage ? URL.createObjectURL(f) : "";
 
@@ -417,17 +428,12 @@ export default function CustomerUpdate() {
 
     setFormData((prev) => ({ ...prev, documents: d }));
   };
-  // const updateDocumentFile = (i, f) => {
-  //   const d = [...formData.documents];
-  //   d[i].file = f;
-  //   setFormData((prev) => ({ ...prev, documents: d }));
-  // };
 
   const removeDocumentRow = (i) =>
     setFormData((prev) => {
       const d = [...prev.documents];
 
-      // Clean up preview URL if it exists (for new files)
+      // Clean up preview URL to prevent memory leak
       if (d[i]?.preview) {
         URL.revokeObjectURL(d[i].preview);
       }
@@ -437,20 +443,23 @@ export default function CustomerUpdate() {
         documents: d.filter((_, idx) => idx !== i),
       };
     });
-  // const removeDocumentRow = (i) =>
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     documents: prev.documents.filter((_, idx) => idx !== i),
-  //   }));
 
   // Handle Created For change - NEVER send empty string
   const handleCreatedForChange = (type) => {
+    // Update UI
     setSelectedCreatedFor(type);
-    setFieldValue("customer.createdFor.type", type);
-    setFieldValue("customer.createdFor.id", null); // ← Always null when changing
+
+    // Reset dependent
     setSelectedRetailerForLco("");
     setSelectedLco("");
-    setLcosForSelectedRetailer([]);
+
+    // Clear packages & price
+    setRoleSpecificPackages([]);
+    setCustomPackagePrice("");
+
+    // Update formData
+    setFieldValue("customer.createdFor.type", type);
+    setFieldValue("customer.createdFor.id", null); // ← Always null when changing
   };
 
   const handleRetailerForLcoChange = async (retailerId) => {
@@ -477,7 +486,6 @@ export default function CustomerUpdate() {
   };
 
   // Submit
-  // Submit Handler - Inside handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -493,6 +501,11 @@ export default function CustomerUpdate() {
         id: formData.customer.createdFor.id || null,
       },
       customArea: customArea || "",
+      // Use custom price if set
+      packageDetails: {
+        ...formData.customer.packageDetails,
+        packageAmount: customPackagePrice || formData.customer.packageDetails.packageAmount,
+      },
     };
 
     payload.append("customer", JSON.stringify(cleanCustomer));
@@ -502,14 +515,14 @@ export default function CustomerUpdate() {
     payload.append("subZone", selectedSubZone || "");
     payload.append("customArea", customArea || "");
 
-    // --- DOCUMENTS: New files + types ---
+    // --- NEW FILES ---
     const newDocuments = formData.documents.filter(doc => doc.file);
     newDocuments.forEach((doc) => {
       payload.append("documents", doc.file);
       payload.append("documentTypes[]", doc.type || "Other");
     });
 
-    // --- EXISTING DOCUMENTS: Send as JSON string ---
+    // --- EXISTING DOCUMENTS: Send as JSON string (only those not replaced/removed) ---
     const existingFilenames = formData.documents
       .filter(doc => doc.existingUrl && !doc.file)
       .map(doc => doc.existingUrl.split("/").pop());
@@ -529,51 +542,6 @@ export default function CustomerUpdate() {
       setLoading(false);
     }
   };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   if (loading) return;
-  //   setLoading(true);
-
-  //   const payload = new FormData();
-
-  //   // Clean createdFor.id and customArea before sending
-  //   const cleanCustomer = {
-  //     ...formData.customer,
-  //     createdFor: {
-  //       type: formData.customer.createdFor.type,
-  //       id: formData.customer.createdFor.id || null,
-  //     },
-  //     customArea: customArea || "",
-  //   };
-
-  //   payload.append("customer", JSON.stringify(cleanCustomer));
-  //   payload.append("addresses", JSON.stringify(formData.addresses));
-  //   payload.append("additional", JSON.stringify(formData.additional));
-  //   payload.append("area", selectedArea || "");
-  //   payload.append("customArea", customArea || "");
-
-  //   formData.documents.forEach((doc) => {
-  //     if (doc.file) {
-  //       payload.append("documents", doc.file);
-  //       payload.append("documentTypes[]", doc.type);
-  //     }
-  //     if (doc.existingUrl && !doc.file) {
-  //       const filename = doc.existingUrl.split("/").pop();
-  //       payload.append("existingDocuments[]", filename);
-  //     }
-  //   });
-
-  //   try {
-  //     await updateUser(id, payload);
-  //     toast.success("Customer updated successfully!");
-  //     navigate("/user/list");
-  //   } catch (err) {
-  //     console.error("Update error:", err);
-  //     toast.error(err.response?.data?.message || "Update failed");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   return (
     <div className="max-w-[1400px] mx-auto p-6 bg-white shadow-lg rounded-lg">
@@ -1201,7 +1169,6 @@ export default function CustomerUpdate() {
                 onChange={(e) => {
                   const value = e.target.value;
                   setSelectedArea(value);
-                  setSelectedSubZone(""); // reset subzone
                 }}
                 className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               >
@@ -1222,7 +1189,6 @@ export default function CustomerUpdate() {
               <select
                 value={selectedSubZone}
                 onChange={(e) => setSelectedSubZone(e.target.value)}
-                disabled={!selectedArea}
                 className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 required
               >
@@ -1237,39 +1203,6 @@ export default function CustomerUpdate() {
               </select>
             </div>
           </div>
-          {/* <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6">
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Zone <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedArea}
-                onChange={(e) => setSelectedArea(e.target.value)}
-                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-              >
-                <option value="">-- Select Zone --</option>
-                {zoneList.map((zone) => (
-                  <option key={zone._id} value={zone._id}>
-                    {zone.zoneName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Area
-              </label>
-              <input
-                type="text"
-                value={customArea}
-                onChange={(e) => setCustomArea(e.target.value)}
-                placeholder="e.g. Shivaji Nagar, Near Temple"
-                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-              />
-            </div>
-          </div> */}
         </section>
 
         {/* Network & Package */}
@@ -1281,38 +1214,71 @@ export default function CustomerUpdate() {
             <div>
               <label className="font-semibold">Select Package*</label>
               <select
-                value={formData.customer.packageDetails.packageId}
+                value={formData.customer.packageDetails.packageId || ""}
                 onChange={(e) => handlePackageChange(e.target.value)}
+                disabled={packageLoading || roleSpecificPackages.length === 0}
                 className="w-full p-2 border rounded mt-2"
               >
-                <option value="">-- Select Package --</option>
-                {packageList.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name} {p.basePrice && `₹${p.basePrice}`}
+                <option value="" disabled>
+                  {packageLoading
+                    ? "Loading packages..."
+                    : roleSpecificPackages.length === 0
+                      ? "No packages found"
+                      : "-- Select Package --"}
+                </option>
+
+                {roleSpecificPackages.map((pkg) => (
+                  <option key={pkg._id} value={pkg._id}>
+                    {pkg.name} ₹{pkg.price || pkg.basePrice || 0}
                   </option>
                 ))}
               </select>
-              <input
-                readOnly
-                value={formData.customer.packageDetails.packageAmount}
-                className="w-full p-2 border rounded mt-4 bg-gray-100 font-bold text-green-700"
-                placeholder="Package Amount"
-              />
-            </div>
-            <div>
-              <label>Network Type</label>
-              <select
-                value={formData.customer.networkType}
-                onChange={(e) =>
-                  setFieldValue("customer.networkType", e.target.value)
-                }
-                className="w-full p-2 border rounded mt-2"
-              >
-                <option value="">Select</option>
-                {networkTypes.map((n) => (
-                  <option key={n}>{n}</option>
-                ))}
-              </select>
+
+              {/* Custom Price Input (NEW: like create) */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium">
+                  Package Price <span className="text-red-500">*</span>
+                  {customPackagePrice &&
+                    formData.customer.packageDetails.packageAmount !==
+                    customPackagePrice && (
+                      <span className="text-xs text-orange-600 ml-2">
+                        (Customized)
+                      </span>
+                    )}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    value={customPackagePrice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCustomPackagePrice(value);
+                      // Update form data
+                      setFieldValue(
+                        "customer.packageDetails.packageAmount",
+                        value
+                      );
+                    }}
+                    className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
+                    placeholder="Enter custom price"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+                {formData.customer.packageDetails.packageAmount && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Original price: ₹
+                    {formData.customer.packageDetails.packageAmount}
+                    {customPackagePrice &&
+                      customPackagePrice !==
+                      formData.customer.packageDetails.packageAmount &&
+                      ` → Now: ₹${customPackagePrice}`}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -1350,31 +1316,12 @@ export default function CustomerUpdate() {
                     ))}
                   </select>
 
-                  {/* Add this below the select to show the label clearly */}
+                  {/* Show displayLabel if multiple */}
                   {doc.displayLabel && (
                     <p className="text-sm text-blue-600 mt-1 font-medium">
                       {doc.displayLabel}
                     </p>
                   )}
-                  {/* <label>Type</label>
-                  <select
-                    value={doc.type}
-                    onChange={(e) => updateDocumentType(i, e.target.value)}
-                    className="w-full p-2 border rounded mt-1"
-                  >
-                    <option>Select</option>
-                    {documentTypes.map((t) => (
-                      <option
-                        key={t}
-                        value={t}
-                        disabled={formData.documents.some(
-                          (d, j) => d.type === t && j !== i
-                        )}
-                      >
-                        {t}
-                      </option>
-                    ))}
-                  </select> */}
                 </div>
                 <div className="md:col-span-2">
                   <label className="text-sm font-medium">Upload New File</label>
@@ -1385,14 +1332,14 @@ export default function CustomerUpdate() {
                     className="w-full p-2 border rounded mt-1"
                   />
 
-                  {/* Show filename when a new file is selected */}
+                  {/* Show filename when new file selected */}
                   {doc.file && (
                     <p className="text-sm mt-2 text-green-700 font-medium">
                       Selected: {doc.file.name}
                     </p>
                   )}
 
-                  {/* Show PREVIEW for NEW image upload */}
+                  {/* Preview for NEW image */}
                   {doc.preview && (
                     <div className="mt-4">
                       <p className="text-xs font-medium text-green-700 mb-1">New Preview:</p>
@@ -1404,7 +1351,7 @@ export default function CustomerUpdate() {
                     </div>
                   )}
 
-                  {/* Show CURRENT existing image */}
+                  {/* Current existing image (if not replaced) */}
                   {doc.existingUrl && !doc.file && (
                     <div className="mt-4">
                       <p className="text-xs font-medium text-blue-700 mb-1">Current:</p>
@@ -1416,7 +1363,7 @@ export default function CustomerUpdate() {
                     </div>
                   )}
 
-                  {/* Show both side-by-side when replacing */}
+                  {/* Show both if replacing */}
                   {doc.existingUrl && doc.file && (
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div>
@@ -1438,55 +1385,13 @@ export default function CustomerUpdate() {
                     </div>
                   )}
 
-                  {/* Show both if user is replacing an image */}
-                  {doc.existingUrl && doc.file && (
-                    <div className="mt-4 grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 mb-2">Current:</p>
-                        <img
-                          src={`http://localhost:5004${doc.existingUrl}`}
-                          alt="Current"
-                          className="w-full h-32 object-cover border rounded-lg"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-green-700 mb-2">New:</p>
-                        <img
-                          src={doc.preview}
-                          alt="New"
-                          className="w-full h-32 object-cover border-2 border-green-500 rounded-lg"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Message for non-image files (PDF, etc.) */}
+                  {/* Message for non-image */}
                   {doc.file && !doc.preview && (
                     <p className="text-sm text-gray-500 mt-3 italic">
                       Preview not available for non-image files (e.g. PDF)
                     </p>
                   )}
                 </div>
-                {/* <div>
-                  <label>New File</label>
-                  <input
-                    type="file"
-                    onChange={(e) => updateDocumentFile(i, e.target.files[0])}
-                    className="w-full p-2 border rounded mt-1"
-                  />
-                  {doc.existingUrl && !doc.file && (
-                    <img
-                      src={`http://localhost:5004${doc.existingUrl}`}
-                      alt="doc"
-                      className="w-32 mt-3 border rounded"
-                    />
-                  )}
-                  {doc.file && (
-                    <p className="text-green-600 text-sm mt-2">
-                      New: {doc.file.name}
-                    </p>
-                  )}
-                </div> */}
                 <div className="flex items-end">
                   <button
                     type="button"
@@ -1514,7 +1419,6 @@ export default function CustomerUpdate() {
             Additional Information
           </div>
           <div className="p-6 grid md:grid-cols-3 gap-6">
-            {/* <div><label>DOB</label><input type="date" value={formData.additional.dob} onChange={e => setFieldValue("additional.dob", e.target.value)} className="w-full p-2 border rounded mt-1" /></div> */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date of Birth
@@ -1545,7 +1449,7 @@ export default function CustomerUpdate() {
                   popperPlacement="bottom-start"
                 />
 
-                {/* Calendar Icon - Ab 100% Andar aur Perfect Center */}
+                {/* Calendar Icon */}
                 <div className="absolute inset-0 flex items-center justify-end pointer-events-none pr-3">
                   <div
                     className="pointer-events-auto cursor-pointer p-2 -mr-2"
@@ -1558,19 +1462,7 @@ export default function CustomerUpdate() {
                       input?.click();
                     }}
                   >
-                    {/* <svg
-          className="w-5 h-5 text-gray-500 hover:text-blue-600 transition"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg> */}
+                    {/* SVG icon here if needed */}
                   </div>
                 </div>
               </div>

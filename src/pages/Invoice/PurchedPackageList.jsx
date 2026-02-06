@@ -23,6 +23,7 @@ export default function PurchasedPlanList() {
     fromDate: "",
     toDate: "",
     areaId: "",
+    subZoneId: "",
     lcoId: "",
     resellerId: "",
     packageId: "",
@@ -41,6 +42,7 @@ export default function PurchasedPlanList() {
         ...(filters.fromDate && { fromDate: filters.fromDate }),
         ...(filters.toDate && { toDate: filters.toDate }),
         ...(filters.areaId && { areaId: filters.areaId }),
+        ...(filters.subZoneId && { subZoneId: filters.subZoneId }),
         ...(filters.lcoId && { lcoId: filters.lcoId }),
         ...(filters.resellerId && { resellerId: filters.resellerId }),
         ...(filters.packageId && { packageId: filters.packageId }),
@@ -76,6 +78,7 @@ export default function PurchasedPlanList() {
       fromDate: "",
       toDate: "",
       areaId: "",
+      subZoneId: "",
       lcoId: "",
       resellerId: "",
       packageId: "",
@@ -119,8 +122,8 @@ export default function PurchasedPlanList() {
       "Invoice No.": invoice.invoiceNumber || "—",
       Package: invoice.packageName || "—",
       Amount: invoice.amount || 0,
-      "LCO Amount": invoice.lcoAmount || 0,
-      "Reseller Amount": invoice.resellerAmount || 0,
+      // "LCO Amount": invoice.lcoAmount || 0,
+      // "Reseller Amount": invoice.resellerAmount || 0,
       "Invoice Date": new Date(invoice.createdAt).toLocaleString(),
       Duration: `${new Date(invoice.duration?.startDate).toLocaleDateString()} - ${new Date(
         invoice.duration?.endDate
@@ -287,8 +290,8 @@ export default function PurchasedPlanList() {
               <th className="px-4 py-3 border">INVOICE NO.</th>
               <th className="px-4 py-3 border">PACKAGE</th>
               <th className="px-4 py-3 border">AMOUNT</th>
-              <th className="px-4 py-3 border">LCO AMOUNT</th>
-              <th className="px-4 py-3 border">RESELLER AMOUNT</th>
+              {/* <th className="px-4 py-3 border">LCO AMOUNT</th> */}
+              {/* <th className="px-4 py-3 border">RESELLER AMOUNT</th> */}
               <th className="px-4 py-3 border">INVOICE DATE</th>
               <th className="px-4 py-3 border">DURATION</th>
               <th className="px-4 py-3 border">ADDED BY</th>
@@ -371,10 +374,10 @@ export default function PurchasedPlanList() {
                     </td>
 
                     {/* LCO Amount - no status color */}
-                    <td className="border px-4 py-3 text-center">₹{invoice.lcoAmount || 0}</td>
+                    {/* <td className="border px-4 py-3 text-center">₹{invoice.lcoAmount || 0}</td> */}
 
                     {/* Reseller Amount - no status color */}
-                    <td className="border px-4 py-3 text-center">₹{invoice.resellerAmount || 0}</td>
+                    {/* <td className="border px-4 py-3 text-center">₹{invoice.resellerAmount || 0}</td> */}
 
                     <td className="border px-4 py-3 text-gray-700">
                       {new Date(invoice.createdAt).toLocaleDateString("en-GB")}{" "}
