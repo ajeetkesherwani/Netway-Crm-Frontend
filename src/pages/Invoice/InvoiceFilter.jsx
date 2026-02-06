@@ -6,7 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { getAllLco } from "../../service/lco";
 import { getRetailer } from "../../service/retailer";
-import { getZones } from "../../service/apiClient";
+import { getZones, getAllSubZones } from "../../service/apiClient";
 import { getAllPackageList } from "../../service/package";
 
 export const InvoiceFilters = ({
@@ -36,6 +36,12 @@ export const InvoiceFilters = ({
   const [showZone, setShowZone] = useState(false);
   const [showPackage, setShowPackage] = useState(false);
 
+  // SubZone
+  const [subZones, setSubZones] = useState([]);
+  const [subZoneText, setSubZoneText] = useState("");
+  const [showSubZone, setShowSubZone] = useState(false);
+  const subZoneRef = useRef(null);
+
   const lcoRef = useRef(null);
   const resellerRef = useRef(null);
   const zoneRef = useRef(null);
@@ -47,8 +53,9 @@ export const InvoiceFilters = ({
       getAllLco().then(res => setLcos(res?.data || [])),
       getRetailer().then(res => setResellers(res?.data || [])),
       getZones().then(res => setZones(res?.data || [])),
+      getAllSubZones().then(res => setSubZones(res?.data || [])),
       getAllPackageList().then(res => setPackages(res?.data || [])),
-    ]).catch(() => {});
+    ]).catch(() => { });
   }, []);
 
   // Close dropdowns on outside click
@@ -57,6 +64,7 @@ export const InvoiceFilters = ({
       if (lcoRef.current && !lcoRef.current.contains(e.target)) setShowLco(false);
       if (resellerRef.current && !resellerRef.current.contains(e.target)) setShowReseller(false);
       if (zoneRef.current && !zoneRef.current.contains(e.target)) setShowZone(false);
+      if (subZoneRef.current && !subZoneRef.current.contains(e.target)) setShowSubZone(false);
       if (packageRef.current && !packageRef.current.contains(e.target)) setShowPackage(false);
     };
     document.addEventListener("mousedown", handleClick);
@@ -66,6 +74,7 @@ export const InvoiceFilters = ({
   const filteredLcos = lcos.filter(l => l.lcoName?.toLowerCase().includes(lcoText.toLowerCase()));
   const filteredResellers = resellers.filter(r => r.resellerName?.toLowerCase().includes(resellerText.toLowerCase()));
   const filteredZones = zones.filter(z => z.zoneName?.toLowerCase().includes(zoneText.toLowerCase()));
+  const filteredSubZones = subZones.filter(sz => sz.name?.toLowerCase().includes(subZoneText.toLowerCase()));
   const filteredPackages = packages.filter(p => p.name?.toLowerCase().includes(packageText.toLowerCase()));
 
   const formatDateForBackend = (date) => {
@@ -160,7 +169,54 @@ export const InvoiceFilters = ({
           )}
         </div>
 
-         {/* Reseller */}
+        {/* SubZone */}
+        <div ref={subZoneRef} className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Select Zone
+          </label>
+
+          <input
+            type="text"
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Search zone"
+            value={subZoneText}
+            onFocus={() => setShowSubZone(true)}
+            onChange={(e) => {
+              setSubZoneText(e.target.value);
+              setShowSubZone(true);
+            }}
+          />
+
+          <MdArrowDropDown className="absolute right-3 top-9 text-gray-500 pointer-events-none" />
+
+          {showSubZone && (
+            <div className="absolute z-50 w-full bg-white border rounded-lg mt-1 max-h-48 overflow-y-auto shadow-lg">
+              {filteredSubZones.length === 0 ? (
+                <div className="px-4 py-2 text-gray-500">No subzones found</div>
+              ) : (
+                filteredSubZones.map(sz => (
+                  <div
+                    key={sz._id}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                    onClick={() => {
+                      setSubZoneText(sz.name);
+                      setFilters(prev => ({
+                        ...prev,
+                        subZoneId: sz._id,
+                      }));
+                      setShowSubZone(false);
+                    }}
+                  >
+                    {sz.name}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+
+        {/* Reseller */}
         <div ref={resellerRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">Select Reseller</label>
           <input
@@ -271,10 +327,10 @@ export const InvoiceFilters = ({
             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
           >
             <option value="">All Status</option>
-            <option value="active">Paid</option>
-            <option value="expired">Extra Paid</option>
-            <option value="pending">Partial</option>
-            <option value="cancelled">UnPaid</option>
+            <option value="Paid">Paid</option>
+            <option value="ExtraPaid">Extra Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="UnPaid">UnPaid</option>
           </select>
         </div>
 
@@ -299,6 +355,7 @@ export const InvoiceFilters = ({
             setFromDate(null);
             setToDate(null);
             setZoneText("");
+            setSubZoneText("");
             setLcoText("");
             setResellerText("");
             setPackageText("");
