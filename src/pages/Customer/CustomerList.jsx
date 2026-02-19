@@ -138,7 +138,7 @@ export default function UserList() {
   const handleUpdateStatus = async (id, status) => {
     try {
       await updateUserStatus(id, status);
-      toast.success("User status updated successfully ✅");
+      toast.success("User status updated successfully");
       await loadUsers();
       setOpenStatusModalId(null);
     } catch (err) {
