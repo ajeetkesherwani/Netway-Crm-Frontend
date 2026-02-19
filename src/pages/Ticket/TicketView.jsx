@@ -636,7 +636,7 @@ export default function TicketDetails() {
 
       {/* Fix Modal */}
       {showFixModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-400 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[90%] max-w-md">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">
               Fix This Ticket

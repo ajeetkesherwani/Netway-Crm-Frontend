@@ -277,6 +277,7 @@ export default function CustomerUpdate() {
                     : type,
                   existingImage: img,
                   existingUrl: img ? '/' + img.replace(/\\/g, '/') : null, 
+                  
                   preview: null,
                   file: null,
                 });
@@ -311,8 +312,16 @@ export default function CustomerUpdate() {
 
   // NEW: Fetch packages based on role (like create)
   const fetchPackagesForRole = async () => {
-    const type = formData.customer.createdFor.type || "Self";
+    const type = formData.customer.createdFor.type || "Admin"; // Default to Admin like Create
     const targetId = formData.customer.createdFor.id || "";
+
+    // Ensure valid roles are sent
+    const validRoles = ["Admin", "reseller", "lco", "Self"];
+    if (!validRoles.includes(type)) {
+      console.error("Invalid role type:", type);
+      setRoleSpecificPackages([]);
+      return;
+    }
 
     if ((type === "reseller" || type === "lco") && !targetId) {
       setRoleSpecificPackages([]);
@@ -332,6 +341,7 @@ export default function CustomerUpdate() {
         setRoleSpecificPackages([]);
       }
     } catch (err) {
+      console.error("Error fetching packages:", err);
       setRoleSpecificPackages([]);
     } finally {
       setPackageLoading(false);
@@ -396,12 +406,13 @@ export default function CustomerUpdate() {
   };
 
   // Document Functions
+  // Add a new document row
   const addDocumentRow = () =>
     setFormData((prev) => ({
       ...prev,
       documents: [
         ...prev.documents,
-        { type: "", file: null, existingUrl: null, preview: "" },
+        { type: "", file: null, existingImage: null, existingUrl: null, preview: "" },
       ],
     }));
 
@@ -413,31 +424,28 @@ export default function CustomerUpdate() {
 
   const updateDocumentFile = (i, f) => {
     if (!f) return;
-
     const d = [...formData.documents];
-
     // Create preview only for images
     const isImage = f.type.startsWith("image/");
     const preview = isImage ? URL.createObjectURL(f) : "";
-
     d[i] = {
       ...d[i],
       file: f,
       preview: preview,
+      existingImage: null, // Remove existing image if new file is uploaded
+      existingUrl: null,
     };
-
     setFormData((prev) => ({ ...prev, documents: d }));
   };
 
   const removeDocumentRow = (i) =>
     setFormData((prev) => {
       const d = [...prev.documents];
-
       // Clean up preview URL to prevent memory leak
       if (d[i]?.preview) {
         URL.revokeObjectURL(d[i].preview);
       }
-
+      // Remove both new and existing documents
       return {
         ...prev,
         documents: d.filter((_, idx) => idx !== i),
@@ -501,6 +509,7 @@ export default function CustomerUpdate() {
         id: formData.customer.createdFor.id || null,
       },
       customArea: customArea || "",
+
       // Use custom price if set
       packageDetails: {
         ...formData.customer.packageDetails,
@@ -516,20 +525,20 @@ export default function CustomerUpdate() {
     payload.append("customArea", customArea || "");
 
     // --- NEW FILES ---
+    // Prepare new documents for upload
     const newDocuments = formData.documents.filter(doc => doc.file);
     newDocuments.forEach((doc) => {
       payload.append("documents", doc.file);
       payload.append("documentTypes[]", doc.type || "Other");
     });
 
-    // --- EXISTING DOCUMENTS: Send as JSON string (only those not replaced/removed) ---
-    const existingFilenames = formData.documents
-      .filter(doc => doc.existingUrl && !doc.file)
-      .map(doc => doc.existingUrl.split("/").pop());
+    // Prepare existing documents to keep
 
-    if (existingFilenames.length > 0) {
-      payload.append("existingDocuments", JSON.stringify(existingFilenames));
-    }
+    const keptFilenames = formData.documents
+      .filter(doc => doc.existingImage && !doc.file)
+      .map(doc => doc.existingImage.split("/").pop())
+      .filter(Boolean);
+    payload.append("existingDocuments", JSON.stringify(keptFilenames));
 
     try {
       await updateUser(id, payload);
@@ -1155,8 +1164,6 @@ export default function CustomerUpdate() {
             </div>
           </div>
 
-
-          {/* ZONE + CUSTOM AREA - Same as Create Form */}
           {/* ZONE + SUBZONE */}
           <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6">
             {/* Left: Zone Dropdown */}
@@ -1537,3 +1544,4 @@ export default function CustomerUpdate() {
     </div>
   );
 }
+

@@ -289,7 +289,7 @@ export default function CreateUser() {
         ...prev.customer,
         createdFor: {
           type: type, // Admin | Retailer | Lco
-           id: "",     // reset ID, will be set after selection
+          id: "",     // reset ID, will be set after selection
         },
         packageDetails: {
           packageId: "",
@@ -368,24 +368,24 @@ export default function CreateUser() {
   ];
 
   const handleClear = () => {
-  setFormData({
-    ...initialForm,
-    customer: {
-      ...initialForm.customer,
-      createdFor: {
-        type: "Admin",
-        id: adminId,
+    setFormData({
+      ...initialForm,
+      customer: {
+        ...initialForm.customer,
+        createdFor: {
+          type: "Admin",
+          id: adminId,
+        },
       },
-    },
-  });
+    });
 
-  setSelectedCreatedFor("Admin");
-  setSelectedRetailerForLco("");
-  setSelectedLco("");
-  setSelectedArea("");
-  setSelectedSubZone("");
-  setCustomPackagePrice("");
-};
+    setSelectedCreatedFor("Admin");
+    setSelectedRetailerForLco("");
+    setSelectedLco("");
+    setSelectedArea("");
+    setSelectedSubZone("");
+    setCustomPackagePrice("");
+  };
 
 
   // const handleClear = () => {
@@ -532,6 +532,24 @@ export default function CreateUser() {
                 </p>
               )}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium">Password</label>
+              <input
+                type="password"
+                value={formData.customer.password}
+                onChange={(e) => handleChange(e, "customer.password")}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.password"] ? "border-red-500" : ""
+                  }`}
+                placeholder="Password"
+              />
+              {formErrors["customer.password"] && (
+                <p className="text-red-500 text-sm">
+                  {formErrors["customer.password"]}
+                </p>
+              )}
+            </div>
+
 
             {/* dob */}
             <div>
@@ -936,6 +954,7 @@ export default function CreateUser() {
                 <option value="" disabled selected>
                   Select
                 </option>
+                 {/* <option value="">select role</option> */}
                 <option value="Admin">Admin</option>
                 <option value="Reseller">Reseller</option>
                 <option value="Lco">Lco</option>
