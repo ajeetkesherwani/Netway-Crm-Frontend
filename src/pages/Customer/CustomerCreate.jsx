@@ -952,9 +952,8 @@ export default function CreateUser() {
                 onChange={(e) => handleCreatedForChange(e.target.value)}
               >
                 <option value="" disabled selected>
-                  Select
+                  Select Created For
                 </option>
-                 {/* <option value="">select role</option> */}
                 <option value="Admin">Admin</option>
                 <option value="Reseller">Reseller</option>
                 <option value="Lco">Lco</option>

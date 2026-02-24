@@ -8,6 +8,16 @@ import {
   HorizontaLDots,
   ListIcon,
   FileIcon,
+  UserIcon,
+  DollarLineIcon,
+  TaskIcon,
+  UserCircleIcon,
+  GroupIcon,
+  CheckLineIcon,
+  BoxIconLine,
+  LockIcon,
+  PieChartIcon,
+  PaperPlaneIcon,
 } from "../icons";
 
 type NavItem = {
@@ -77,7 +87,7 @@ if (permissions.rolepermission?.Listing) {
 if (staffSubItems.length > 0) {
   generatedNavItems.push({
     name: "Staff",
-    icon: <ListIcon />,
+    icon: <GroupIcon />,
     subItems: staffSubItems,
   });
 }
@@ -108,7 +118,7 @@ if (staffSubItems.length > 0) {
       });
       generatedNavItems.push({
         name: "Reseller/Lco",
-        icon: <ListIcon />,
+        icon: <UserCircleIcon />,
         subItems: resellerSubItems,
       });
 
@@ -149,7 +159,7 @@ if (permissions.package?.IptvListing) {
 if (packageSubItems.length > 0) {
   generatedNavItems.push({
     name: "Package",
-    icon: <ListIcon />,
+    icon: <BoxIconLine />,
     subItems: packageSubItems,
   });
 }
@@ -170,7 +180,7 @@ if (packageSubItems.length > 0) {
     if (customerSubItems.length > 0)
       generatedNavItems.push({
         name: "Customer",
-        icon: <ListIcon />,
+        icon: <UserIcon />,
         subItems: customerSubItems,
       });
 
@@ -217,7 +227,7 @@ if (packageSubItems.length > 0) {
     if (ticketsSubItems.length > 0)
       generatedNavItems.push({
         name: "Tickets",
-        icon: <ListIcon />,
+        icon: <TaskIcon />,
         subItems: ticketsSubItems,
       });
 
@@ -244,7 +254,7 @@ if (packageSubItems.length > 0) {
     if (invoiceSubItems.length > 0)
       generatedNavItems.push({
         name: "Invoice",
-        icon: <ListIcon />,
+        icon: <CheckLineIcon />,
         subItems: invoiceSubItems,
       });
 
@@ -270,7 +280,7 @@ if (packageSubItems.length > 0) {
     if (paymentSubItems.length > 0)
       generatedNavItems.push({
         name: "Payment",
-        icon: <ListIcon />,
+        icon: <DollarLineIcon />,
         subItems: paymentSubItems,
       });
 
@@ -357,7 +367,7 @@ if (stockManagementSubItems.length > 0) {
     if (settingSubItems.length > 0)
       generatedNavItems.push({
         name: "Setting",
-        icon: <FileIcon />,
+        icon: <LockIcon />,
         subItems: settingSubItems,
       });
 
@@ -368,7 +378,7 @@ if (stockManagementSubItems.length > 0) {
       ...(permissions.userCms?.Listing
         ? [
             {
-              icon: <FileIcon />,
+              icon: <PieChartIcon />,
               name: "CMS",
               subItems: [{ name: "User CMS", path: "/signin" }],
             },
@@ -378,7 +388,7 @@ if (stockManagementSubItems.length > 0) {
         ? 
         [
             {
-              icon: <FileIcon />,
+              icon: <PaperPlaneIcon />,
               name: "Connection Request",
               subItems: [
                 { name: "Connection Request", path: "/connection-request" },
