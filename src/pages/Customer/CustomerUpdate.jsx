@@ -12,7 +12,7 @@ import {
 import { getRetailer } from "../../service/retailer";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
-import { getAllSubZones } from "../../service/apiClient";
+import { getSubzonesWithZoneId } from "../../service/apiClient";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
@@ -31,6 +31,7 @@ export default function CustomerUpdate() {
 
   const [subZoneList, setSubZoneList] = useState([]);
   const [selectedSubZone, setSelectedSubZone] = useState("");
+  const [subZoneLoading, setSubZoneLoading] = useState(false);
 
   // Created For States
   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
@@ -58,6 +59,7 @@ export default function CustomerUpdate() {
     "Caf Form",
     "Other",
   ];
+  const serviceOpted = ["intercom", "broadband", "corporate"];
 
   const prevBillingRef = useRef();
 
@@ -71,7 +73,7 @@ export default function CustomerUpdate() {
       email: "",
       mobile: "",
       alternateMobile: "",
-      accountId: "",
+      ipactId: "",
       connectionType: "ILL",
       selsExecutive: "",
       installationBy: [],
@@ -132,22 +134,31 @@ export default function CustomerUpdate() {
     });
   };
 
-  // LOAD ALL SUBZONES
+  // LOAD SUBZONES BASED ON ZONE
   useEffect(() => {
     const loadSubZones = async () => {
+      if (!selectedArea) {
+        setSubZoneList([]);
+        return;
+      }
+      setSubZoneLoading(true);
       try {
-        const res = await getAllSubZones();
-        if (res?.status) {
+        const res = await getSubzonesWithZoneId(selectedArea);
+        if (res.status) {
           setSubZoneList(res.data || []);
+        } else {
+          setSubZoneList([]);
         }
       } catch (err) {
         console.error("Failed to load subzones", err);
         setSubZoneList([]);
+      } finally {
+        setSubZoneLoading(false);
       }
     };
 
     loadSubZones();
-  }, []);
+  }, [selectedArea]);
 
   // Load Customer + Reference Data
   useEffect(() => {
@@ -164,7 +175,7 @@ export default function CustomerUpdate() {
         setStaff(staffRes?.data || []);
         setZoneList(zoneRes?.data || []);
         if (retailerRes?.status) setRetailers(retailerRes.data);
-
+        console.log("userRes", userRes);
         const u = userRes.data.user;
 
         const getId = (obj) =>
@@ -197,7 +208,7 @@ export default function CustomerUpdate() {
             email: u.generalInformation?.email || "",
             mobile: u.generalInformation?.phone || "",
             alternateMobile: u.generalInformation?.alternatePhone || "",
-            accountId: u.generalInformation?.ipactId || "",
+            ipactId: u.generalInformation?.ipactId || "",
             connectionType: u.generalInformation?.connectionType || "ILL",
             selsExecutive: getId(u.generalInformation?.selsExecutive),
             installationBy: getIds(u.generalInformation?.installationBy),
@@ -264,8 +275,8 @@ export default function CustomerUpdate() {
               const images = Array.isArray(doc.documentImage)
                 ? doc.documentImage
                 : doc.documentImage
-                ? [doc.documentImage]
-                : [];
+                  ? [doc.documentImage]
+                  : [];
 
               if (images.length === 0) return;
 
@@ -276,8 +287,8 @@ export default function CustomerUpdate() {
                     ? `${type} (${index + 1})`
                     : type,
                   existingImage: img,
-                  existingUrl: img ? '/' + img.replace(/\\/g, '/') : null, 
-                  
+                  existingUrl: img ? '/' + img.replace(/\\/g, '/') : null,
+
                   preview: null,
                   file: null,
                 });
@@ -630,11 +641,11 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>Account ID</label>
+              <label>IPACCT ID/H8</label>
               <input
-                value={formData.customer.accountId}
+                value={formData.customer.ipactId}
                 onChange={(e) =>
-                  setFieldValue("customer.accountId", e.target.value)
+                  setFieldValue("customer.ipactId", e.target.value)
                 }
                 className="mt-1 p-2 border rounded w-full"
               />
@@ -854,7 +865,7 @@ export default function CustomerUpdate() {
                 className="mt-1 p-2 border rounded w-full"
               />
             </div>
-            <div>
+            {/* <div>
               <label>Service Opted</label>
               <input
                 value={formData.customer.serviceOpted}
@@ -863,6 +874,21 @@ export default function CustomerUpdate() {
                 }
                 className="mt-1 p-2 border rounded w-full"
               />
+            </div> */}
+            <div>
+              <label className="block text-sm font-medium">Service Opted</label>
+              <select
+                value={formData.customer.serviceOpted || ""}
+                onChange={(e) => handleChange(e, "customer.serviceOpted")}
+                className="mt-1 p-2 border rounded w-full"
+              >
+                <option value="">-- Select Service --</option>
+                {serviceOpted.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label>STB No.</label>
@@ -1165,7 +1191,7 @@ export default function CustomerUpdate() {
           </div>
 
           {/* ZONE + SUBZONE */}
-          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6">
+          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-6 p-4">
             {/* Left: Zone Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1176,6 +1202,7 @@ export default function CustomerUpdate() {
                 onChange={(e) => {
                   const value = e.target.value;
                   setSelectedArea(value);
+                  setSelectedSubZone(""); // Reset subzone when zone changes
                 }}
                 className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               >
@@ -1196,15 +1223,16 @@ export default function CustomerUpdate() {
               <select
                 value={selectedSubZone}
                 onChange={(e) => setSelectedSubZone(e.target.value)}
-                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${(!selectedArea || subZoneLoading) ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
                 required
+                disabled={!selectedArea || subZoneLoading}
               >
                 <option value="">
-                  {!selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
+                  {subZoneLoading ? "Loading..." : !selectedArea ? "-- First Select Zone --" : "-- Select Sub Area --"}
                 </option>
                 {subZoneList.map((sz) => (
                   <option key={sz._id} value={sz._id}>
-                    {sz.subZoneName || sz.name}
+                    {sz.name || sz.subZoneName}
                   </option>
                 ))}
               </select>

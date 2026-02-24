@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ProtectedAction from "../../components/ProtectedAction";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
-import { getAllSubZones, updateSubzone, deleteSubzone } from "../../service/apiClient";
+import { getAllSubZones, updateSubzone, deleteSubzone, getZones } from "../../service/apiClient";
 
 export default function SubZoneList() {
   const [subZones, setSubZones] = useState([]);
@@ -22,6 +22,8 @@ export default function SubZoneList() {
   const [updateSubZoneData, setUpdateSubZoneData] = useState(null);
   const [updateName, setUpdateName] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [zones, setZones] = useState([]);
+  const [updateZoneId, setUpdateZoneId] = useState("");
 
   const fetchSubZones = async () => {
     setLoading(true);
@@ -40,8 +42,18 @@ export default function SubZoneList() {
     }
   };
 
+  const fetchZones = async () => {
+    try {
+      const res = await getZones();
+      setZones(res?.data || res || []);
+    } catch (err) {
+      console.error("Failed to load zones", err);
+    }
+  };
+
   useEffect(() => {
     fetchSubZones();
+    fetchZones();
   }, []);
 
   useEffect(() => {
@@ -66,9 +78,10 @@ export default function SubZoneList() {
     setOpenMenuId(null);
   };
 
-  const handleEdit = (id, currentName) => {
-    setUpdateSubZoneData({ id, currentName });
-    setUpdateName(currentName || "");
+  const handleEdit = (subzone) => {
+    setUpdateSubZoneData(subzone);
+    setUpdateName(subzone.name || "");
+    setUpdateZoneId(subzone.zoneId?._id || subzone.zoneId || "");
     setUpdateOpen(true);
     setOpenMenuId(null);
   };
@@ -86,9 +99,16 @@ export default function SubZoneList() {
       toast.error("SubZone name is required");
       return;
     }
+    if (!updateZoneId) {
+      toast.error("Zone selection is required");
+      return;
+    }
     setUpdateLoading(true);
     try {
-      const res = await updateSubzone(updateSubZoneData.id, { name });
+      const res = await updateSubzone(updateSubZoneData._id, {
+        name,
+        zoneId: updateZoneId
+      });
       if (res?.status || res?.success) {
         toast.success("SubZone updated successfully");
         await fetchSubZones();
@@ -158,7 +178,6 @@ export default function SubZoneList() {
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold text-gray-800 leading-tight">
             SubZone List
-            List
           </h1>
         </div>
 
@@ -225,6 +244,7 @@ export default function SubZoneList() {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">S.No</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700">Zone Name</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">SubZone Name</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Created At</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-700">Actions</th>
@@ -236,6 +256,7 @@ export default function SubZoneList() {
                   return (
                     <tr key={subzone._id} className="hover:bg-gray-50 transition">
                       <td className="px-4 py-2 text-gray-600">{index + 1}</td>
+                      <td className="px-4 py-2 font-medium text-gray-900">{subzone.zoneId?.zoneName}</td>
                       <td className="px-4 py-2 font-medium text-gray-900">{subzone.name}</td>
                       <td className="px-4 py-2 text-gray-600">
                         {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -265,7 +286,7 @@ export default function SubZoneList() {
 
                             <ProtectedAction module="setting" action="SubZoneUpdate">
                               <button
-                                onClick={() => handleEdit(subzone._id, subzone.name)}
+                                onClick={() => handleEdit(subzone)}
                                 className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                               >
                                 <FaEdit className="text-green-600" /> Edit
@@ -320,9 +341,25 @@ export default function SubZoneList() {
 
       {/* Update Modal */}
       {updateOpen && updateSubZoneData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-10 px-4 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
             <h3 className="text-xl font-semibold mb-4">Update SubZone</h3>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
+            <select
+              value={updateZoneId}
+              onChange={(e) => setUpdateZoneId(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+            >
+              <option value="">Select Zone</option>
+              {zones.map((zone) => (
+                <option key={zone._id} value={zone._id}>
+                  {zone.zoneName}
+                </option>
+              ))}
+            </select>
+
+            <label className="block text-sm font-medium text-gray-700 mb-1">SubZone Name</label>
             <input
               type="text"
               value={updateName}

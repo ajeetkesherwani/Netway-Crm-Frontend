@@ -167,7 +167,7 @@ export default function LcoDetails() {
     <Row label="Title" value={lco.title} />
     <Row label="LCO Name" value={lco.lcoName} />
     <Row label="Mobile No." value={lco.mobileNo} />
-    <Row label="Telephone" value={lco.telephone} />
+    {/* <Row label="Telephone" value={lco.telephone} /> */}
     <Row label="E-Mail" value={lco.email} />
     <Row label="Address" value={lco.address} />
     <Row label="Area" value={lco.area} />

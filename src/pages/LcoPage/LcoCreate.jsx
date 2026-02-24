@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createLco } from "../../service/lco";
 import { getRoles } from "../../service/role";
 import { getRetailer } from "../../service/retailer";
+import { getAllZoneList } from "../../service/user";
 import { toast } from "react-toastify";
 
 export default function CreateLco() {
@@ -13,6 +14,7 @@ export default function CreateLco() {
   const [employeeErrors, setEmployeeErrors] = useState({});
   const [roles, setRoles] = useState([]);
   const [retailers, setRetailers] = useState([]);
+  const [zoneList, setZoneList] = useState([]);
 
   const initialFormData = {
     title: "Mr.",
@@ -84,9 +86,10 @@ export default function CreateLco() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [roleRes, retailerRes] = await Promise.all([
+        const [roleRes, retailerRes, zoneRes] = await Promise.all([
           getRoles(),
           getRetailer(),
+          getAllZoneList(),
         ]);
 
         if (roleRes.status && roleRes.data) {
@@ -99,6 +102,10 @@ export default function CreateLco() {
 
         if (retailerRes.status && retailerRes.data) {
           setRetailers(retailerRes.data);
+        }
+
+        if (zoneRes.status && zoneRes.data) {
+          setZoneList(zoneRes.data);
         }
       } catch (err) {
         console.error("Failed to load data:", err);
@@ -246,7 +253,7 @@ export default function CreateLco() {
       const submitData = new FormData();
 
       for (const key in formData) {
-        if (key === "documents") continue; 
+        if (key === "documents") continue;
 
         if (Array.isArray(formData[key])) {
           submitData.append(key, JSON.stringify(formData[key]));
@@ -354,7 +361,17 @@ export default function CreateLco() {
 
             <div><label className="block font-medium">Country</label><input type="text" name="country" value={formData.country} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">Pincode</label><input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">Area</label><input type="text" name="area" value={formData.area} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div>
+              <label className="block font-medium">Area</label>
+              <select name="area" value={formData.area} onChange={handleChange} className="border p-2 w-full rounded">
+                <option value="">-- Select Area --</option>
+                {zoneList.map((zone) => (
+                  <option key={zone._id} value={zone._id}>
+                    {zone.zoneName}
+                  </option>
+                ))}
+              </select>
+            </div>
             {/* <div><label className="block font-medium">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
 
             <div>
@@ -504,7 +521,7 @@ export default function CreateLco() {
                   {doc && (
                     <div className="mt-3">
                       <p className="text-sm text-gray-700">
-                        Selected: <strong>{doc.name}</strong>
+                        Selected: <strong style={{ wordWrap: "break-word" }}>{doc.name}</strong>
                       </p>
 
                       {doc.preview ? (

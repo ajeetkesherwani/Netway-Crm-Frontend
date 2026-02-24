@@ -108,12 +108,12 @@ export async function getAllSubZones() {
 }
 
 export const createSubzone = async (data) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const res = await fetch(`${BASE_URL}/subzone`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-         Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   });
@@ -124,10 +124,10 @@ export const createSubzone = async (data) => {
 };
 
 export const getSubzonesByZoneId = async (zoneId) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const res = await fetch(`${BASE_URL}/subzone/${zoneId}`, {
     headers: {
-       Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -137,7 +137,7 @@ export const getSubzonesByZoneId = async (zoneId) => {
 };
 
 export const updateSubzone = async (subzoneId, data) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const res = await fetch(`${BASE_URL}/subzone/${subzoneId}`, {
     method: "PATCH",
     headers: {
@@ -153,11 +153,11 @@ export const updateSubzone = async (subzoneId, data) => {
 };
 
 export const deleteSubzone = async (subzoneId) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
   const res = await fetch(`${BASE_URL}/subzone/${subzoneId}`, {
     method: "DELETE",
     headers: {
-        Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 

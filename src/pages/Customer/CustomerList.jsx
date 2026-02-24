@@ -16,6 +16,7 @@ import {
   getAllUserList,
   updateUserStatus,
   resetUserPassword,
+  getAllZoneList,
 } from "../../service/user";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -181,17 +182,34 @@ export default function UserList() {
     navigate(`/user/profile/${userId}/recharge-package`);
     setOpenMenuId(null);
   };
+  
+  const [zones, setZones] = useState([]);
+  const [isZoneDisabled, setIsZoneDisabled] = useState(true);
 
-  // const handleLoginAsCustomer = () => {
-  //   toast.info("Login as customer - coming soon");
-  // };
+  const handleAreaChange = async (selectedAreaId) => {
+    setSearchParams((prev) => ({ ...prev, area: selectedAreaId }));
+    setIsZoneDisabled(true); // Disable zone dropdown while fetching zones
+
+    try {
+      const zoneData = await getAllZoneList(selectedAreaId);
+      setZones(zoneData || []);
+      setIsZoneDisabled(false); // Enable zone dropdown after fetching zones
+    } catch (error) {
+      console.error("Failed to fetch zones:", error);
+      toast.error("Failed to load zones");
+    }
+  };
 
   if (loading) return <p className="p-4">Loading users...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
     <div className="p-6">
-      <CustomerFilters filters={filters} setSearchParams={setSearchParams} />
+      <CustomerFilters
+        filters={filters}
+        setSearchParams={setSearchParams}
+        onAreaChange={handleAreaChange} // Pass the handler to CustomerFilters
+      />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-xl font-semibold">Customer List</h1>
@@ -223,8 +241,6 @@ export default function UserList() {
                   user.addressDetails?.installationAddress?.pincode ||
                   "-",
                 Status: user.status?.charAt(0).toUpperCase() + user.status?.slice(1),
-                // "Package Name": user.packageDetails?.packageName || "-",
-                // "Package Amount": user.packageDetails?.packageAmount || "-",
                 "Connection Type": user.generalInformation?.connectionType || "-",
                 "Service Opted": user.generalInformation?.serviceOpted || "-",
                 "Created Date": user.createdAt
@@ -279,20 +295,6 @@ export default function UserList() {
           </ProtectedAction>
         </div>
       </div>
-
-      {/* <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold">Customer List</h1>
-
-        <ProtectedAction module="users" action="create">
-          <button
-            onClick={() => navigate("/user/create")}
-            className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-          >
-            Add Customer
-          </button>
-        </ProtectedAction>
-      </div> */}
-
       {users.length === 0 ? (
         <p className="text-gray-500">No users found.</p>
       ) : (

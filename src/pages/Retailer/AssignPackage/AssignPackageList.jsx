@@ -20,7 +20,7 @@ export default function AssignPackageList() {
       try {
         const res = await getAssignedPackageList(id);
         console.log(res, " this is the response of the res");
-        setPackages(res.data?.packages);
+        setPackages(res.data);
       } catch (err) {
         console.error("Error fetching assigned packages:", err);
         setError("Failed to load assigned packages");
@@ -111,7 +111,7 @@ export default function AssignPackageList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {packages.map((pkg, index) => (
+                {packages.packages.map((pkg, index) => (
                   <tr key={pkg.packageId} className="hover:bg-gray-50 relative">
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
                     <td className="px-[2px] py-[2px]">{pkg.name}</td>
@@ -144,7 +144,7 @@ export default function AssignPackageList() {
           </div>
           {/* Mobile Card View */}
           <div className="space-y-4 md:hidden">
-            {packages.map((pkg, index) => (
+            {packages.packages.map((pkg, index) => (
               <div
                 key={pkg.packageId}
                 className="p-4 border rounded-lg shadow-sm bg-white"
