@@ -1047,13 +1047,15 @@ const UserRechargePackage = () => {
     <>
       <div className="min-h-screen bg-gray-100 p-6">
         <div className="max-w-8xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8">User Recharge Management</h2>
+          <div className="flex justify-between items-center gap-4 mb-6 flex-wrap">
+            <h4 className="text-3xl font-bold text-gray-800">
+              User Recharge Management
+            </h4>
 
-          <div className="flex justify-end gap-6 mb-8">
             <ProtectedAction module="customer" action="PurchasedNewPackage">
               <button
                 onClick={openPurchaseModal}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 px-10 rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1"
+                className="bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap"
               >
                 Purchase New Plan
               </button>

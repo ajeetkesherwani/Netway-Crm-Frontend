@@ -71,38 +71,26 @@ const AppSidebar: React.FC = () => {
     ];
 
     // 👥 Staff
-const staffSubItems = [];
+    const staffSubItems = [];
 
-// Add Staff List if permission exists
-if (permissions.staff?.Listing) {
-  staffSubItems.push({ name: "Staff List", path: "/staff/list" });
-}
+    // Add Staff List if permission exists
+    if (permissions.staff?.Listing) {
+      staffSubItems.push({ name: "Staff List", path: "/staff/list" });
+    }
 
-// Add Role List under Staff if permission exists
-if (permissions.rolepermission?.Listing) {
-  staffSubItems.push({ name: "Role List", path: "/role/list" });
-}
+    // Add Role List under Staff if permission exists
+    if (permissions.rolepermission?.Listing) {
+      staffSubItems.push({ name: "Role List", path: "/role/list" });
+    }
 
-// Only push Staff menu if there are sub-items
-if (staffSubItems.length > 0) {
-  generatedNavItems.push({
-    name: "Staff",
-    icon: <GroupIcon />,
-    subItems: staffSubItems,
-  });
-}
-
-
-    // // 👥 Staff
-    // const staffSubItems = [];
-    // if (permissions.staff?.listing)
-    //   staffSubItems.push({ name: "Staff List", path: "/staff/list" });
-    // if (staffSubItems.length > 0)
-    //   generatedNavItems.push({
-    //     name: "Staff",
-    //     icon: <ListIcon />,
-    //     subItems: staffSubItems,
-    //   });
+    // Only push Staff menu if there are sub-items
+    if (staffSubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Staff",
+        icon: <GroupIcon />,
+        subItems: staffSubItems,
+      });
+    }
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
