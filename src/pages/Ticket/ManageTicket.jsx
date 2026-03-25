@@ -327,6 +327,11 @@ const TicketColumn = ({
   const getZoneName = (ticket) =>
     ticket.userId?.addressDetails?.area?.zoneName || null;
 
+  const getSubzoneName = (ticket) =>
+    ticket.userId?.addressDetails?.subZone?.name || null;
+  const assignToName = (ticket) =>
+    ticket.assignToId?.staffName || null;
+
   const filteredTickets = useMemo(() => {
     return tickets.filter((t) => {
       const zoneMatch = !selectedZone || getZoneName(t) === selectedZone;
@@ -381,7 +386,16 @@ const TicketColumn = ({
                   <strong>Call Source:</strong> {ticket.callSource}
                 </p>
                 <p>
-                  <strong>Zone Name:</strong> {getZoneName(ticket) || "N/A"}
+                  <strong>Area:</strong> {getZoneName(ticket) || "N/A"}
+                </p>
+                <p>
+                  <strong>Zone:</strong> {getSubzoneName(ticket) || "N/A"}
+                </p>
+                <p>
+                  <strong>AssignTo:</strong> {assignToName(ticket) || "N/A"}
+                </p>
+                <p>
+                  <strong>Category:</strong> {ticket.category.name || "N/A"}
                 </p>
                 <p>
                   <strong>Severity:</strong> {ticket.severity}

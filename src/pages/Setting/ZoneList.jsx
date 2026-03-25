@@ -155,7 +155,7 @@ export default function ZoneList() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold text-gray-800 leading-tight">
-            Zone List
+            Area List
             List
           </h1>
         </div>
@@ -192,7 +192,7 @@ export default function ZoneList() {
                 onClick={() => navigate("/setting/zone/create")}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap"
               >
-                Add Zone
+                Add Area
               </button>
             </ProtectedAction>
           </div>
@@ -221,7 +221,7 @@ export default function ZoneList() {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">S.No</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">Zone Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700">Area Name</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Created By</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Created At</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-700">Actions</th>
@@ -254,12 +254,12 @@ export default function ZoneList() {
                             className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
+                            {/* <button
                               onClick={() => handleView(zone._id)}
                               className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-3"
                             >
                               <FaEye className="text-blue-600" /> View
-                            </button>
+                            </button> */}
 
                             <ProtectedAction module="setting" action="ZoneUpdate">
                               <button
@@ -318,9 +318,9 @@ export default function ZoneList() {
 
       {/* Update Modal */}
       {updateOpen && updateZoneData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-opacity-10 px-4">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
-            <h3 className="text-xl font-semibold mb-4">Update Zone</h3>
+            <h3 className="text-xl font-semibold mb-4">Update Area</h3>
             <input
               type="text"
               value={updateName}

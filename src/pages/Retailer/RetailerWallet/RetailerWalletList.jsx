@@ -112,6 +112,8 @@ export default function RetailerWalletList() {
                     <th className="px-[2px] py-[2px] text-left">Transaction ID</th>
                     <th className="px-[2px] py-[2px] text-left">Reseller</th>
                     <th className="px-[2px] py-[2px] text-left">Amount</th>
+                    <th className="px-[2px] py-[2px] text-left">Opening Balance</th>
+                    <th className="px-[2px] py-[2px] text-left">Closing Balance</th>
                     <th className="px-[2px] py-[2px] text-left">Mode</th>
                     <th className="px-[2px] py-[2px] text-left">Remark</th>
                     <th className="px-[2px] py-[2px] text-left">Payment Date</th>
@@ -126,6 +128,8 @@ export default function RetailerWalletList() {
                       <td className="px-[2px] py-[2px]">{transaction._id}</td>
                       <td className="px-[2px] py-[2px]">{transaction.reseller?.resellerName || "N/A"}</td>
                       <td className="px-[2px] py-[2px]">{transaction.amount}</td>
+                      <td className="px-[2px] py-[2px]">{transaction.openingBalance}</td>
+                      <td className="px-[2px] py-[2px]">{transaction.closingBalance}</td>
                       <td className={`px-[2px] py-[2px] ${transaction.mode === "Reverse" ? "text-red-700" : "text-green-700"}`}>{transaction.mode}</td>
                       <td className="px-[2px] py-[2px]">{transaction.remark}</td>
                       <td className="px-[2px] py-[2px]">{new Date(transaction.paymentDate).toLocaleString()}</td>

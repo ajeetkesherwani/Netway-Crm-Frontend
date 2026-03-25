@@ -174,7 +174,7 @@ const [downloadedFile, setDownloadedFile] = useState(null);
     <Row label="Pincode" value={retailer.pincode} />
     <Row label="GST No." value={retailer.gstNo} />
     {/* <Row label="Birth Date" value={retailer.dob} /> */}
-    <Row label="Balance" value={retailer.balance} />
+    <Row label="Balance" value={retailer.walletBalance ? retailer.walletBalance.toFixed(2) : retailer.balance} />
     {/* <Row label="House No." value={retailer.houseNo} /> */}
     {/* <Row label="SubArea" value={retailer.subArea} /> */}
     {/* <Row label="Fax" value={retailer.fax} /> */}
