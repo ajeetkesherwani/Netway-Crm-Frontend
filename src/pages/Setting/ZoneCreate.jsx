@@ -41,10 +41,10 @@ export default function ZoneCreate() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold mb-6">Create Zone</h2>
+      <h2 className="text-2xl font-bold mb-6">Create Area</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block font-medium">Zone Name
+          <label className="block font-medium">Area Name
             <span className="text-black-900 ml-1">*</span>
           </label>
           <input
@@ -59,7 +59,7 @@ export default function ZoneCreate() {
         <div className="col-span-2 flex justify-end gap-3 mt-4">
           <button
             type="button"
-            onClick={() => navigate("/setting/zone/list")}
+            onClick={() => navigate("/setting/zonelist")}
             className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
           >
             Back

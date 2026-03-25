@@ -189,10 +189,18 @@ export default function CreateUser() {
 
   // ================== HANDLE INPUT CHANGE ==================
   const handleChange = (e, path) => {
-    const value =
+    let value =
       e?.target?.type === "checkbox"
         ? e.target.checked
         : e?.target?.value;
+
+    // Validation for mobile and alternateMobile: only numbers, max 10 digits
+    if (path === "customer.mobile" || path === "customer.alternateMobile") {
+      value = value.replace(/[^0-9]/g, "");
+      if (value.length > 10) {
+        value = value.slice(0, 10);
+      }
+    }
 
     setFieldValue(path, value);
   };
@@ -637,7 +645,7 @@ export default function CreateUser() {
 
             <div>
               <label className="block text-sm font-medium">
-                Alternate Mobile
+                Alternate Number
               </label>
               <input
                 value={formData.customer.alternateMobile}

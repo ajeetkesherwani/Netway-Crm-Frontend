@@ -338,7 +338,7 @@ if (stockManagementSubItems.length > 0) {
         });
       if (permissions.setting?.ZoneList)
         settingSubItems.push({
-          name: "Zone List",
+          name: "Area List",
           path: "/setting/zonelist",
         });
       // if (permissions.setting?.hardwareList)

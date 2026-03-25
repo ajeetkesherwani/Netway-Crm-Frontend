@@ -188,6 +188,8 @@ export default function PackageList() {
                 <tr>
                   <th className="px-[2px] py-[2px] text-left">S.No</th>
                   <th className="px-[2px] py-[2px] text-left">Package Name</th>
+                  <th className="px-[2px] py-[2px] text-left">Base Price</th>
+                  <th className="px-[2px] py-[2px] text-left">No. of User</th>
                   <th className="px-[2px] py-[2px] text-left">Validity</th>
                   <th className="px-[2px] py-[2px] text-left">Category</th>
                   <th className="px-[2px] py-[2px] text-left">Status</th>
@@ -203,6 +205,12 @@ export default function PackageList() {
                       onClick={() => handleView(pkg._id)}
                     >
                       {pkg.name}
+                    </td>
+                    <td className="px-[2px] py-[2px]">
+                      {pkg.basePrice?.toFixed(2) || "0.00"}
+                    </td>
+                    <td className="px-[2px] py-[2px]">
+                      {pkg.totalUser || "—"}
                     </td>
                     <td className="px-[2px] py-[2px]">
                       {pkg.validity?.number} {pkg.validity?.unit}

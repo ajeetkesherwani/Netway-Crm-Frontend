@@ -720,6 +720,7 @@ export default function TicketCreate() {
             value={formData.price}
             onChange={handleChange}
             className="border p-2 w-full rounded"
+            disabled={!formData.isChargeable}
           />
         </div>
 
