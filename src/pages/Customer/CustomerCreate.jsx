@@ -195,7 +195,7 @@ export default function CreateUser() {
         : e?.target?.value;
 
     // Validation for mobile and alternateMobile: only numbers, max 10 digits
-    if (path === "customer.mobile" || path === "customer.alternateMobile") {
+    if (path === "customer.mobile") {
       value = value.replace(/[^0-9]/g, "");
       if (value.length > 10) {
         value = value.slice(0, 10);

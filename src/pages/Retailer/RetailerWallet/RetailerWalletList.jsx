@@ -110,7 +110,7 @@ export default function RetailerWalletList() {
                   <tr>
                     <th className="px-[2px] py-[2px] text-left">S.No</th>
                     <th className="px-[2px] py-[2px] text-left">Transaction ID</th>
-                    <th className="px-[2px] py-[2px] text-left">Reseller</th>
+                    {/* <th className="px-[2px] py-[2px] text-left">Reseller</th> */}
                     <th className="px-[2px] py-[2px] text-left">Amount</th>
                     <th className="px-[2px] py-[2px] text-left">Opening Balance</th>
                     <th className="px-[2px] py-[2px] text-left">Closing Balance</th>
@@ -126,7 +126,7 @@ export default function RetailerWalletList() {
                     <tr key={transaction._id} className="hover:bg-gray-50">
                       <td className="px-[2px] py-[2px]">{(page - 1) * limit + index + 1}</td>
                       <td className="px-[2px] py-[2px]">{transaction._id}</td>
-                      <td className="px-[2px] py-[2px]">{transaction.reseller?.resellerName || "N/A"}</td>
+                      {/* <td className="px-[2px] py-[2px]">{transaction.reseller?.resellerName || "N/A"}</td> */}
                       <td className="px-[2px] py-[2px]">{transaction.amount}</td>
                       <td className="px-[2px] py-[2px]">{transaction.openingBalance}</td>
                       <td className="px-[2px] py-[2px]">{transaction.closingBalance}</td>

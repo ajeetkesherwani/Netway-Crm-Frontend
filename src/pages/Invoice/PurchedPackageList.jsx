@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaCheck, FaTrashAlt, FaEye, FaEllipsisV, FaSearch, FaDownload, FaUndo } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { getInvoices, fetchInvoicePdfBlob, downloadInvoicePdf, deleteInvoice } from "../../service/purchasedPlan";
@@ -9,6 +10,7 @@ import { InvoiceFilters } from "../Invoice/InvoiceFilter";
 const ITEMS_PER_PAGE = 15;
 
 export default function PurchasedPlanList() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -214,6 +216,10 @@ export default function PurchasedPlanList() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleUserClick = (id) => {
+    navigate(`/user/profile/${id}`);
+  };
+
   return (
     <div className="p-6 flex flex-col min-h-screen w-8xl">
       {/* Header with search, download + status legend */}
@@ -329,21 +335,38 @@ export default function PurchasedPlanList() {
                       </div>
                     </td>
 
+
                     <td className="border px-4 py-3">
+                      <div
+                        onClick={() => handleUserClick(invoice.userId?._id)}
+                        className="font-medium text-blue-700 cursor-pointer hover:underline"
+                      >
+                        {userInfo.username || "—"}
+                      </div>
+
+                      <div
+                        onClick={() => handleUserClick(invoice.userId?._id)}
+                        className="text-xs text-gray-600 cursor-pointer hover:underline"
+                      >
+                        {userInfo.name || "N/A"}
+                      </div>
+                    </td>
+
+                    {/* <td className="border px-4 py-3">
                       <div className="font-medium text-blue-700">
                         {userInfo.username || "—"}
                       </div>
                       <div className="text-xs text-gray-600">
                         {userInfo.name || "N/A"}
                       </div>
-                    </td>
+                    </td> */}
 
                     <td className="border px-4 py-3">
                       <span
                         onClick={() => handleViewInvoice(invoice._id)}
                         className={`underline ${openingInvoiceId === invoice._id
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-blue-600 cursor-pointer hover:text-blue-800"
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-blue-600 cursor-pointer hover:text-blue-800"
                           }`}
                       >
                         {openingInvoiceId === invoice._id ? "Opening invoice..." : invoice.invoiceNumber}
