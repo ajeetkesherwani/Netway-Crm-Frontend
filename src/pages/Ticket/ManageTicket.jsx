@@ -403,6 +403,9 @@ const TicketColumn = ({
                 <p className="col-span-2">
                   <strong>Address:</strong> {ticket.address}
                 </p>
+
+
+
               </div>
             </div>
           ))

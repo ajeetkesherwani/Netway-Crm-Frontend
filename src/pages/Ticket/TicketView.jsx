@@ -455,6 +455,11 @@ export default function TicketDetails() {
                   {ticketDetails.callDescription ?? "N/A"}
                 </p>
 
+                <p>
+                  <strong>CreatedBy</strong>:{" "}
+                  {ticketDetails.createdByName || "N/A"}
+                </p>
+
                 {/* Files preview */}
                 <div className="flex gap-3 mt-2">
                   {["fileI", "fileII", "fileIII"].map(
