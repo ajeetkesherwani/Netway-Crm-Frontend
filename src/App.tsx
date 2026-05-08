@@ -153,6 +153,8 @@ import SubZoneList from "./pages/Setting/SubZoneList";
 import SubZoneCreate from "./pages/Setting/SubZoneCreate";
 import AddPayment from "./pages/Payment/AddPayment";
 import ReceiptDetails from "./pages/UserProfile/ReceiptDetails";
+import ServerList from "./pages/Server/ServerList";
+import PoolList from "./pages/Pool/PoolList";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -244,7 +246,7 @@ export default function App() {
               <Route path="activity-log" element={<UserLogs />} />
               <Route path="assigned-stock" element={<AssignedStock />} />
             </Route>
-         <Route path="payment/receipt/:userId/:receiptId" element={<ReceiptDetails />} />
+            <Route path="payment/receipt/:userId/:receiptId" element={<ReceiptDetails />} />
 
             {/* ------------------------------------------------------------Staff Routes------------------------------------------------------------ */}
             <Route path="staff/list" element={<StaffList />} />
@@ -373,10 +375,10 @@ export default function App() {
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
             <Route path="/setting/zone/update" element={<ZoneUpdate />} />
 
-           {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
-                 <Route path="/setting/subZone/list" element={<SubZoneList/>}/>
-                 <Route path="/setting/subzone/create" element={<SubZoneCreate/>}/>
- 
+            {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
+            <Route path="/setting/subZone/list" element={<SubZoneList />} />
+            <Route path="/setting/subzone/create" element={<SubZoneCreate />} />
+
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/hardware/list" element={<HardwareList />} />
             <Route
@@ -439,7 +441,7 @@ export default function App() {
             <Route path="/received/payment" element={<CompletePaymentList />} />
             <Route path="/pending/payment" element={<PendingPaymentList />} />
             <Route path="/add/payment" element={<AddPayment />} />
-         
+
 
             {/*--------------------------puched plan list-------------------------------------------------------------------*/}
 
@@ -528,6 +530,13 @@ export default function App() {
               element={<RecentPurchasedOrRenewReport />}
             />
             <Route path="/report/payment-report" element={<PaymentReport />} />
+
+
+            {/* ------------------------------------------------server------------------------------------------------- */}
+            <Route path="setting/serverList" element={<ServerList />} />
+
+            <Route path="setting/poolList" element={<PoolList/>}/>
+
             {/*-------------------------------------------------------------------------Ticket Report list ------------------------------------------------------------------------- */}
             <Route
               path="/report/open-ticket-report"
@@ -571,7 +580,7 @@ export default function App() {
           pauseOnHover
           style={{ marginTop: "70px" }}
         />
-      </Router>
+      </Router >
     </>
   );
 }

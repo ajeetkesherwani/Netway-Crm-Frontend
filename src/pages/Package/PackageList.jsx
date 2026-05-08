@@ -10,8 +10,8 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
-import { getAllPackageList, updatePackage } from "../../service/package";
-import toast from "react-hot-toast";
+import { getAllPackageList, updatePackage, syncPackageIds  } from "../../service/package";
+import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 
 export default function PackageList() {
@@ -105,6 +105,46 @@ export default function PackageList() {
     if (e.key === "Enter") handleSearch();
   };
 
+  // const handleSyncIds = async () => {
+  //   try {
+  //     const res = await syncPackageIds();
+
+  //     toast.success(res.message);
+
+  //     const updated = await getAllPackageList();
+  //     setPackages(updated.data);
+
+  //   } catch (err) {
+  //     toast.error(err.message);
+  //   }
+  // };
+
+  const handleSyncIds = async () => {
+  try {
+    const res = await syncPackageIds();
+
+    // 🔥 Always show success message
+    toast.success("Package IDs updated successfully");
+
+    // 🔥 Reload latest data
+    const updated = await getAllPackageList();
+
+    const normalized = (updated.data || []).map((pkg) => ({
+      ...pkg,
+      status:
+        pkg.status === "active" || pkg.status === true
+          ? "active"
+          : "inActive",
+    }));
+
+    setPackages(normalized);
+
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message || "Failed to update package IDs");
+  }
+};
+
   const exportToExcel = () => {
     if (packages.length === 0) {
       toast.error("No package data to export");
@@ -140,6 +180,14 @@ export default function PackageList() {
         <h1 className="text-xl font-semibold">Package List</h1>
 
         <div className="flex items-center gap-3">
+
+          <button
+            onClick={handleSyncIds}
+            className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+          >
+            Upd. Package IDs
+          </button>
+
           <div className="flex items-center">
             <input
               type="text"
@@ -188,6 +236,7 @@ export default function PackageList() {
                 <tr>
                   <th className="px-[2px] py-[2px] text-left">S.No</th>
                   <th className="px-[2px] py-[2px] text-left">Package Name</th>
+                  <th className="px-[2px] py-[2px] text-left">PackageId</th>
                   <th className="px-[2px] py-[2px] text-left">Base Price</th>
                   <th className="px-[2px] py-[2px] text-left">No. of User</th>
                   <th className="px-[2px] py-[2px] text-left">Validity</th>
@@ -206,6 +255,11 @@ export default function PackageList() {
                     >
                       {pkg.name}
                     </td>
+
+                    <td className="px-[2px] py-[2px]">
+                      {pkg.IppactId || "0"}
+                    </td>
+
                     <td className="px-[2px] py-[2px]">
                       {pkg.basePrice?.toFixed(2) || "0.00"}
                     </td>
@@ -219,8 +273,8 @@ export default function PackageList() {
                     <td className="px-[2px] py-[2px]">
                       <span
                         className={`px-2 py-0.5 rounded text-xs ${pkg.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                           }`}
                       >
                         {pkg.status}
@@ -307,8 +361,8 @@ export default function PackageList() {
                   Status:{" "}
                   <span
                     className={`px-2 py-0.5 rounded text-xs ${pkg.status === "active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                       }`}
                   >
                     {pkg.status}
