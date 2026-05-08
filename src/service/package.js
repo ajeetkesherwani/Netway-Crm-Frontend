@@ -157,3 +157,19 @@ export const getOttPackageListFromThirdParty = async () => {
     throw error;
   }
 };
+
+export const syncPackageIds = async () => {
+  const res = await fetch(`${BASE_URL}/ipacct/updateipPackages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) throw new Error(data.message);
+
+  return data;
+};

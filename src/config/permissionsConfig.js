@@ -238,6 +238,8 @@ export const permissionsConfig = [
             "SubZoneUpdate",
             "SubZoneDelete",
             "SubZoneCreate",
+            "ServerList",
+            "PoolList"
         ],
     },
     // {
@@ -254,5 +256,15 @@ export const permissionsConfig = [
         category: "userCms",
         label: "User CMS",
         permissions: ["Listing",],
+    },
+      {
+        category: "server",
+        label: "Server",
+        permissions: ["Listing", "Create", "Edit", "Delete", "View"],
+    },
+      {
+        category: "pool",
+        label: "Pool",
+        permissions: ["Listing", "Create", "Edit", "Delete", "View"],
     },
 ];

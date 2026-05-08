@@ -99,58 +99,58 @@ const AppSidebar: React.FC = () => {
     if (permissions.lco?.Listing)
       resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
     if (resellerSubItems.length > 0)
-         if (permissions.pricebook?.Listing)
-      resellerSubItems.push({
-        name: "Price Book List",
-        path: "/pricebook/list",
-      });
-      generatedNavItems.push({
-        name: "Reseller/Lco",
-        icon: <UserCircleIcon />,
-        subItems: resellerSubItems,
-      });
+      if (permissions.pricebook?.Listing)
+        resellerSubItems.push({
+          name: "Price Book List",
+          path: "/pricebook/list",
+        });
+    generatedNavItems.push({
+      name: "Reseller/Lco",
+      icon: <UserCircleIcon />,
+      subItems: resellerSubItems,
+    });
 
-      //    if (permissions.pricebook?.listing)
-      // priceBookSubItems.push({
-      //   name: "Price Book List",
-      //   path: "/pricebook/list",
-      // });
+    //    if (permissions.pricebook?.listing)
+    // priceBookSubItems.push({
+    //   name: "Price Book List",
+    //   path: "/pricebook/list",
+    // });
 
     // 📦 Package
     const packageSubItems = [];
 
-// Existing Package List
-if (permissions.package?.Listing) {
-  packageSubItems.push({ 
-    name: "Package List", 
-    path: "/package/list" 
-  });
-}
+    // Existing Package List
+    if (permissions.package?.Listing) {
+      packageSubItems.push({
+        name: "Package List",
+        path: "/package/list"
+      });
+    }
 
-// NEW — OTT Package List
-if (permissions.package?.OttListing) {
-  packageSubItems.push({ 
-    name: "OTT Package", 
-    path: "/package/ott-list" 
-  });
-}
+    // NEW — OTT Package List
+    if (permissions.package?.OttListing) {
+      packageSubItems.push({
+        name: "OTT Package",
+        path: "/package/ott-list"
+      });
+    }
 
-// NEW — IPTV Package List
-if (permissions.package?.IptvListing) {
-  packageSubItems.push({ 
-    name: "IPTV Package ", 
-    path: "/package/iptv-list" 
-  });
-}
+    // NEW — IPTV Package List
+    if (permissions.package?.IptvListing) {
+      packageSubItems.push({
+        name: "IPTV Package ",
+        path: "/package/iptv-list"
+      });
+    }
 
-// Push to menu only if items exist
-if (packageSubItems.length > 0) {
-  generatedNavItems.push({
-    name: "Package",
-    icon: <BoxIconLine />,
-    subItems: packageSubItems,
-  });
-}
+    // Push to menu only if items exist
+    if (packageSubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Package",
+        icon: <BoxIconLine />,
+        subItems: packageSubItems,
+      });
+    }
     // const packageSubItems = [];
     // if (permissions.package?.listing)
     //   packageSubItems.push({ name: "Package List", path: "/package/list" });
@@ -249,7 +249,7 @@ if (packageSubItems.length > 0) {
     // 💳 Payment
     const paymentSubItems = [];
     if (hasTruePermission(permissions.payment)) {
-       if (permissions.payment?.Add)
+      if (permissions.payment?.Add)
         paymentSubItems.push({
           name: "Add Payment",
           path: "/add/payment",
@@ -297,25 +297,25 @@ if (packageSubItems.length > 0) {
         subItems: configSubItems,
       });
 
-// 📦 Stock Management
-const stockManagementSubItems = [];
+    // 📦 Stock Management
+    const stockManagementSubItems = [];
 
-if (hasTruePermission(permissions.Setting)) {
-  if (permissions.setting?.HardwareList) {
-    stockManagementSubItems.push({
-      name: "Hardware List",
-      path: "/setting/hardware/list",
-    });
-  }
-}
+    if (hasTruePermission(permissions.Setting)) {
+      if (permissions.setting?.HardwareList) {
+        stockManagementSubItems.push({
+          name: "Hardware List",
+          path: "/setting/hardware/list",
+        });
+      }
+    }
 
-if (stockManagementSubItems.length > 0) {
-  generatedNavItems.push({
-    name: "Stock Management",
-    icon: <FileIcon />, // any icon
-    subItems: stockManagementSubItems,
-  });
-}
+    if (stockManagementSubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Stock Management",
+        icon: <FileIcon />, // any icon
+        subItems: stockManagementSubItems,
+      });
+    }
 
 
     // 🧩 Settings
@@ -341,16 +341,28 @@ if (stockManagementSubItems.length > 0) {
           name: "Area List",
           path: "/setting/zonelist",
         });
+          if (permissions.setting?.SubZoneList)
+        settingSubItems.push({
+          name: "SubZone List",
+          path: "/setting/subZone/list",
+        });
+      if (permissions.setting?.ServerList)
+        settingSubItems.push({
+          name: "Server",
+          path: "/setting/serverList",
+        });
+      if (permissions.setting?.PoolList)
+        settingSubItems.push({
+          name: "Pool",
+          path: "/setting/poolList"
+        });
+          
       // if (permissions.setting?.hardwareList)
       //   settingSubItems.push({
       //     name: "Hardware List",
       //     path: "/setting/hardware/list",
       //   });
-            if (permissions.setting?.SubZoneList)
-        settingSubItems.push({
-          name: "SubZone List",
-          path: "/setting/subZone/list",
-        });
+  
     }
     if (settingSubItems.length > 0)
       generatedNavItems.push({
@@ -365,26 +377,26 @@ if (stockManagementSubItems.length > 0) {
     setOthersItems([
       ...(permissions.userCms?.Listing
         ? [
-            {
-              icon: <PieChartIcon />,
-              name: "CMS",
-              subItems: [{ name: "User CMS", path: "/signin" }],
-            },
-          ]
+          {
+            icon: <PieChartIcon />,
+            name: "CMS",
+            subItems: [{ name: "User CMS", path: "/signin" }],
+          },
+        ]
         : []),
       ...(permissions
-        ? 
+        ?
         [
-            {
-              icon: <PaperPlaneIcon />,
-              name: "Connection Request",
-              subItems: [
-                { name: "Connection Request", path: "/connection-request" },
-              ],
-            },
-          ]
+          {
+            icon: <PaperPlaneIcon />,
+            name: "Connection Request",
+            subItems: [
+              { name: "Connection Request", path: "/connection-request" },
+            ],
+          },
+        ]
         : []
-      ),  
+      ),
     ]);
 
     // ]);
