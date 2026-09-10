@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { getUserFullDetails } from "../../service/user";
-import { FaDownload } from "react-icons/fa";
+import { FaDownload, FaEdit, FaFileAlt, FaExternalLinkAlt } from "react-icons/fa";
 
-const BASE_FILE_URL = "http://localhost:5004/public/"; // Adjust if needed
+const BASE_FILE_URL = import.meta.env.VITE_IMAGE_URL
+  ? `${import.meta.env.VITE_IMAGE_URL}/public/`
+  : "http://localhost:5004/public/";
+
+const hasValue = (v) => {
+  if (v === undefined || v === null) return false;
+  const s = String(v).trim();
+  return (
+    s !== "" &&
+    s !== "—" &&
+    s !== "-" &&
+    s !== "/-" &&
+    s !== "N/A" &&
+    s !== "undefined" &&
+    s !== "null"
+  );
+};
 
 const UserProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloadingFile, setDownloadingFile] = useState(null);
@@ -37,7 +54,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: "60px", textAlign: "center", fontSize: "20px", background: "#f9f9f9", minHeight: "100vh" }}>
+      <div className="p-16 text-center text-gray-600 text-lg bg-gray-50 min-h-screen">
         Loading User Profile...
       </div>
     );
@@ -45,7 +62,7 @@ const UserProfile = () => {
 
   if (!data?.userDetails) {
     return (
-      <div style={{ padding: "60px", textAlign: "center", color: "red", fontSize: "20px", background: "#f9f9f9", minHeight: "100vh" }}>
+      <div className="p-16 text-center text-red-600 text-lg bg-gray-50 min-h-screen">
         User Not Found!
       </div>
     );
@@ -55,10 +72,35 @@ const UserProfile = () => {
   const g = u.generalInformation || {};
   const a = u.addressDetails || {};
   const add = u.additionalInformation || {};
+  const net = u.networkInformation || {};
   const area = a.area || {};
+  const subZone = a.subZone || {};
   const docs = u.document || [];
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString("en-GB") : "");
+  const formatDate = (d) => {
+    if (!d) return "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return String(d);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()}`;
+  };
+
+  const formatDateTime = (d) => {
+    if (!d) return "";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return String(d);
+    const pad = (n) => String(n).padStart(2, "0");
+    const day = pad(date.getDate());
+    const month = pad(date.getMonth() + 1);
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = pad(date.getMinutes());
+    const seconds = pad(date.getSeconds());
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${day}-${month}-${year} ${pad(hours)}:${minutes}:${seconds} ${ampm}`;
+  };
 
   // Blob-based file download
   const downloadFile = async (url, filename) => {
@@ -90,272 +132,462 @@ const UserProfile = () => {
     }
   };
 
+  const getInstallerDisplay = () => {
+    if (g.installationByName?.trim()) return g.installationByName.trim();
+    if (Array.isArray(g.installationBy) && g.installationBy.length > 0) {
+      const names = g.installationBy
+        .map((inst) => (typeof inst === "object" ? inst.name || inst.staffName : inst))
+        .filter(Boolean);
+      if (names.length > 0) return names.join(", ");
+    }
+    return "";
+  };
+
+  const getSalesExecutiveDisplay = () => {
+    if (!g.selsExecutive) return "";
+    if (typeof g.selsExecutive === "object") {
+      return g.selsExecutive.name || g.selsExecutive.staffName || "";
+    }
+    return String(g.selsExecutive);
+  };
+
+  const getAreaDisplay = () => {
+    if (area?.zoneName) return area.zoneName;
+    if (area?.name) return area.name;
+    if (typeof a.area === "string") return a.area;
+    return "";
+  };
+
+  const getSubZoneDisplay = () => {
+    if (subZone?.subZoneName) return subZone.subZoneName;
+    if (subZone?.name) return subZone.name;
+    if (typeof a.subZone === "string") return a.subZone;
+    if (a.subArea) return a.subArea;
+    return "";
+  };
+
+  const getProrataDisplay = () => {
+    if (u.prorataBilling === undefined || u.prorataBilling === null || u.prorataBilling === "") {
+      return "";
+    }
+    return u.prorataBilling ? "Yes" : "No";
+  };
+
+  // Address texts
+  const billingAddressText = [
+    a.billingAddress?.addressine1 || a.billingAddress?.addressLine1,
+    a.billingAddress?.addressine2 || a.billingAddress?.addressLine2,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const installAddressText = [
+    a.installationAddress?.addressine1 || a.installationAddress?.addressLine1,
+    a.installationAddress?.addressine2 || a.installationAddress?.addressLine2,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const permAddressText = [
+    a.permanentAddress?.addressine1 || a.permanentAddress?.addressLine1,
+    a.permanentAddress?.addressine2 || a.permanentAddress?.addressLine2,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  // Visibility checks for section cards (don't show card if no data)
+  const hasBillingData =
+    hasValue(a.billingAddress?.state) ||
+    hasValue(a.billingAddress?.city) ||
+    hasValue(a.billingAddress?.pincode) ||
+    hasValue(a.billingAddress?.landmark) ||
+    hasValue(billingAddressText);
+
+  const hasInstallData =
+    hasValue(a.installationAddress?.state) ||
+    hasValue(a.installationAddress?.city) ||
+    hasValue(a.installationAddress?.pincode) ||
+    hasValue(a.installationAddress?.landmark) ||
+    hasValue(installAddressText);
+
+  const hasPermData =
+    hasValue(a.permanentAddress?.state) ||
+    hasValue(a.permanentAddress?.city) ||
+    hasValue(a.permanentAddress?.pincode) ||
+    hasValue(a.permanentAddress?.landmark) ||
+    hasValue(permAddressText);
+
+  const zoneValue = area?.zoneName || a.zone || a.customArea || "";
+  const hasAddressAddressData =
+    hasValue(getAreaDisplay()) ||
+    hasValue(a.box) ||
+    hasValue(getSubZoneDisplay()) ||
+    hasValue(a.street) ||
+    hasValue(net.olt || a.olt) ||
+    hasValue(net.splitter || a.splitter) ||
+    hasValue(net.port || a.port) ||
+    hasValue(a.building) ||
+    hasValue(zoneValue);
+
+  const hasAddlData =
+    hasValue(add.ekyc) ||
+    hasValue(add.notification) ||
+    hasValue(add.addPlan) ||
+    hasValue(u.createdAt);
+
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", background: "#f9f9f9", minHeight: "100vh" }}>
-
-      {/* CUSTOMER DETAILS */}
-      <div style={{ marginBottom: "40px" }}>
-        <div style={{ background: "#f3f3f3", padding: "12px 20px", borderRadius: "8px", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800", letterSpacing: "0.5px" }}>
-            CUSTOMER DETAILS
-          </h2>
+    <div className="w-full px-0 py-2">
+      {/* Top Main Container Card */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 sm:p-7 mb-6 w-full">
+        {/* Header Bar */}
+        <div className="flex justify-between items-center pb-4 mb-6 border-b border-gray-200">
+          <h1 className="text-base sm:text-lg font-bold text-[#143e6a] tracking-wide uppercase">
+            Customer Details
+          </h1>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "30px" }}>
-          {/* LEFT COLUMN */}
-          <div style={{ width: "48%", minWidth: "300px" }}>
-            <Field label="IP Address" value={g.ipAdress} />
-            <Field label="Alternate Mobile" value={g.alternatePhone} />
-            <Field label="Email" value={g.email} />
-            <Field label="Date Of Birth" value={add.dob ? formatDate(add.dob) : ""} />
-            <Field label="Connection Type" value={g.connectionType} />
-            <Field label="IPACCT Id" value={g.ipactId} />
-            <Field label="InstallationByName" value={g.installationByName || "-"} />
-            {g.installationBy?.length > 0 ? (
-              g.installationBy.map((inst, i) => (
-                <div key={inst._id || i} style={{ marginBottom: "12px" }}>
-                  <Field label={`Installer Name (${i + 1})`} value={inst.name || inst.staffName} />
-                  <Field label="Email" value={inst.email} />
-                  <Field label="Phone" value={inst.phoneNo || inst.phone} />
-                  <Field label="Area" value={inst.area} />
+        {/* 2-Column Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* LEFT COLUMN: Customer Attributes (Only fields with data are shown) */}
+          <div className="space-y-0.5">
+            <DetailRow label="IP Address" value={g.ipAdress || g.ipAddress} />
+            <DetailRow label="S/o" value={g.fatherName || g.so} />
+            <DetailRow label="Alternate Mobile" value={g.alternatePhone} />
+            <DetailRow label="Email" value={g.email} />
+            <DetailRow label="Date Of Birth" value={add.dob ? formatDate(add.dob) : ""} />
+            <DetailRow label="GST No." value={g.gstNo} />
+            <DetailRow label="Purchase Order No" value={g.purchaseOrderNo} />
+            <DetailRow label="Connection Type" value={g.connectionType?.toUpperCase()} />
+            <DetailRow label="IPACCT TECH ID" value={g.ipactId} />
+            <DetailRow label="Installation By" value={getInstallerDisplay()} />
+            <DetailRow label="Serial No" value={g.serialNo} />
+            <DetailRow label="Jaze User Id" value={g.UserId || g.userId || g.username} />
+            <DetailRow label="SBT No" value={g.stbNo} />
+            <DetailRow label="Mac Id" value={g.macId} />
+            <DetailRow label="Prorata billing" value={getProrataDisplay()} />
+            <DetailRow label="A End" value={g.aEnd} />
+            <DetailRow label="Circuit ID" value={g.circuitId} />
+            <DetailRow label="Customer Type" value={u.customerType} />
+            <DetailRow label="Mobile" value={g.phone} />
+            <DetailRow label="Telephone" value={g.telephone} />
+            <DetailRow label="Gender" value={g.gender} />
+            <DetailRow label="Due Days" value={u.dueDays} />
+            <DetailRow label="Pancard" value={g.pancard} />
+            <DetailRow label="Registration Date/Time" value={formatDateTime(u.createdAt)} />
+            <DetailRow label="Sales Executive" value={getSalesExecutiveDisplay()} />
+            <DetailRow label="Server Type" value={g.serverType} />
+            <DetailRow label="PPPOE Password" value={g.plainPassword} />
+            <DetailRow label="Service Opted" value={g.serviceOpted?.toUpperCase()} />
+            <DetailRow label="Remark" value={add.description} />
+          </div>
+
+          {/* RIGHT COLUMN: Address Cards (Only cards and fields with data are shown) */}
+          <div className="space-y-6">
+            {/* BILLING ADDRESS */}
+            {hasBillingData && (
+              <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
+                <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
+                    Billing Address
+                  </h3>
                 </div>
-              ))
-            ) : (
-              <Field label="Installation By" value="-" />
+                <div className="p-4 space-y-2.5 text-[13px]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="State" value={a.billingAddress?.state} width="w-20" />
+                    <AddressField label="City" value={a.billingAddress?.city} width="w-20" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Pincode" value={a.billingAddress?.pincode} width="w-20" />
+                    <AddressField label="Landmark" value={a.billingAddress?.landmark} width="w-20" />
+                  </div>
+
+                  {hasValue(billingAddressText) && (
+                    <div className="pt-1">
+                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
+                      <span className="text-gray-600 leading-relaxed break-words">{billingAddressText}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-            <Field label="Serial No" value={g.serialNo} />
-            <Field label="SBT No" value={g.stbNo} />
-            <Field label="Mac Id" value={g.macId} />
-            <Field label="Circuit ID" value={g.circuitId} />
-            <Field label="Remark" value={add.description} />
-          </div>
 
-          {/* RIGHT COLUMN */}
-          <div style={{ width: "48%", minWidth: "300px" }}>
-            <Field label="Customer Type" value="Individual" />
-            <Field label="Mobile" value={g.phone} />
-            {/* <Field label="Server Type" value="IPACT" /> */}
-            <Field label="PPPOE Password" value={g.plainPassword || "-"} />
-            <Field label="Service Opted" value={g.serviceOpted?.toUpperCase()} />
+            {/* INSTALLATION ADDRESS */}
+            {hasInstallData && (
+              <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
+                <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
+                    Installation Address
+                  </h3>
+                </div>
+                <div className="p-4 space-y-2.5 text-[13px]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="State" value={a.installationAddress?.state} width="w-20" />
+                    <AddressField label="City" value={a.installationAddress?.city} width="w-20" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Pincode" value={a.installationAddress?.pincode} width="w-20" />
+                    <AddressField label="Landmark" value={a.installationAddress?.landmark} width="w-20" />
+                  </div>
+
+                  {hasValue(installAddressText) && (
+                    <div className="pt-1">
+                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
+                      <span className="text-gray-600 leading-relaxed break-words">{installAddressText}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* PERMANENT ADDRESS */}
+            {hasPermData && (
+              <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
+                <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
+                    Permanent Address
+                  </h3>
+                </div>
+                <div className="p-4 space-y-2.5 text-[13px]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="State" value={a.permanentAddress?.state} width="w-20" />
+                    <AddressField label="City" value={a.permanentAddress?.city} width="w-20" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Pincode" value={a.permanentAddress?.pincode} width="w-20" />
+                    <AddressField label="Landmark" value={a.permanentAddress?.landmark} width="w-20" />
+                  </div>
+
+                  {hasValue(permAddressText) && (
+                    <div className="pt-1">
+                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
+                      <span className="text-gray-600 leading-relaxed break-words">{permAddressText}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ADDRESS ADDRESS (Area / Location / Zone) */}
+            {hasAddressAddressData && (
+              <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
+                <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
+                    Address Address
+                  </h3>
+                </div>
+                <div className="p-4 space-y-2.5 text-[13px]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Area" value={getAreaDisplay()} width="w-24" />
+                    <AddressField label="Box" value={a.box} width="w-20" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Zone" value={getSubZoneDisplay()} width="w-24" />
+                    <AddressField label="Street" value={a.street} width="w-20" />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <AddressField label="OLT" value={net.olt || a.olt} width="w-12" />
+                    <AddressField label="Splitter" value={net.splitter || a.splitter} width="w-16" />
+                    <AddressField label="Port" value={net.port || a.port} width="w-12" />
+                  </div>
+
+                  {/* <div className="grid grid-cols-2 gap-4">
+                    <AddressField label="Building" value={a.building} width="w-24" />
+                    <AddressField label="Zone" value={zoneValue} width="w-20" />
+                  </div> */}
+                </div>
+              </div>
+            )}
+
+            {/* ADDITIONAL INFORMATION */}
+            {hasAddlData && (
+              <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
+                <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
+                  <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
+                    Additional Information
+                  </h3>
+                </div>
+                <div className="p-4 space-y-2.5 text-[13px]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField
+                      label="E-KYC"
+                      value={add.ekyc ? (add.ekyc === "yes" ? "Completed" : "Pending") : ""}
+                      width="w-36"
+                    />
+                    <AddressField
+                      label="Notification"
+                      value={add.notification !== undefined ? (add.notification ? "Enabled" : "Disabled") : ""}
+                      width="w-36"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <AddressField
+                      label="Add Plan Allowed"
+                      value={add.addPlan !== undefined ? (add.addPlan ? "Yes" : "No") : ""}
+                      width="w-36"
+                    />
+                    <AddressField
+                      label="Account Created"
+                      value={u.createdAt ? formatDateTime(u.createdAt) : ""}
+                      width="w-36"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ADDRESS DETAILS */}
-      <div style={{ marginBottom: "40px" }}>
-        <div style={{ background: "#f3f3f3", padding: "12px 20px", borderRadius: "8px", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800" }}>ADDRESS DETAILS</h2>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "30px" }}>
-          <div style={{ flex: 1, minWidth: "350px" }}>
-            <strong style={{ color: "#1976d2", fontSize: "17px", display: "block", marginBottom: "12px" }}>
-              Billing Address
-            </strong>
-            <Field label="Address Line 1" value={a.billingAddress?.addressine1} />
-            <Field label="Address Line 2" value={a.billingAddress?.addressine2} />
-            <Field label="City" value={a.billingAddress?.city} />
-            <Field label="State" value={a.billingAddress?.state} />
-            <Field label="Pincode" value={a.billingAddress?.pincode} />
+      {/* DOCUMENTS SECTION */}
+      {docs.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-6 w-full">
+          <div className="bg-[#f0f4f9] px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-xs sm:text-sm font-bold text-[#143e6a] uppercase tracking-wider">
+              Documents ({docs.length})
+            </h2>
           </div>
 
-          <div style={{ flex: 1, minWidth: "350px" }}>
-            <strong style={{ color: "#1976d2", fontSize: "17px", display: "block", marginBottom: "12px" }}>
-              Installation Address
-            </strong>
-            <Field label="Address Line 1" value={a.installationAddress?.addressine1} />
-            <Field label="Address Line 2" value={a.installationAddress?.addressine2} />
-            <Field label="City" value={a.installationAddress?.city} />
-            <Field label="State" value={a.installationAddress?.state} />
-            <Field label="Pincode" value={a.installationAddress?.pincode} />
+          <div className="p-5 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {docs
+                .map((doc, docIndex) => {
+                  const images = Array.isArray(doc.documentImage)
+                    ? doc.documentImage
+                    : doc.documentImage
+                    ? [doc.documentImage]
+                    : [];
+
+                  return images.length > 0
+                    ? images.map((imgPath, imgIndex) => {
+                        const cleanPath = imgPath.replace(/\\/g, "/").replace(/^public\//, "");
+                        const url = BASE_FILE_URL + cleanPath;
+                        const fileName = cleanPath.split("/").pop() || `document-${imgIndex + 1}`;
+                        const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(fileName);
+                        const displayType =
+                          images.length > 1
+                            ? `${doc.documentType} (${imgIndex + 1})`
+                            : doc.documentType;
+
+                        return (
+                          <DocItem
+                            key={`${docIndex}-${imgIndex}`}
+                            docType={displayType}
+                            url={url}
+                            fileName={fileName}
+                            isImage={isImage}
+                            downloadFile={downloadFile}
+                            downloading={downloadingFile}
+                            downloaded={downloadedFile}
+                          />
+                        );
+                      })
+                    : null;
+                })
+                .filter(Boolean)}
+            </div>
           </div>
-
-          <div style={{ flex: 1, minWidth: "350px" }}>
-            <strong style={{ color: "#1976d2", fontSize: "17px", display: "block", marginBottom: "12px" }}>
-              Permanent Address
-            </strong>
-            <Field label="Address Line 1" value={a.permanentAddress?.addressine1} />
-            <Field label="Address Line 2" value={a.permanentAddress?.addressine2} />
-            <Field label="City" value={a.permanentAddress?.city} />
-            <Field label="State" value={a.permanentAddress?.state} />
-            <Field label="Pincode" value={a.permanentAddress?.pincode} />
-          </div>
         </div>
-      </div>
-
-      {/* AREA */}
-      <div style={{ marginBottom: "40px" }}>
-        <div style={{ background: "#f3f3f3", padding: "12px 20px", borderRadius: "8px", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800" }}>AREA</h2>
-        </div>
-        <div style={{ background: "#fff", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-          <Field label="Zone Name" value={area.zoneName || "Not Assigned"} />
-          <Field label="Created By" value={area.createdBy || "-"} />
-        </div>
-      </div>
-
-      {/* DOCUMENTS - OLD STYLE UI + MULTIPLE IMAGES SUPPORT */}
-      <div style={{ marginBottom: "40px" }}>
-        <div style={{
-          background: "#f3f3f3",
-          padding: "12px 20px",
-          borderRadius: "8px",
-          marginBottom: "20px"
-        }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800" }}>DOCUMENTS</h2>
-        </div>
-
-        {docs.length === 0 ? (
-          <p style={{
-            color: "#777",
-            fontStyle: "italic",
-            textAlign: "center",
-            padding: "40px 0",
-            background: "#fff",
-            borderRadius: "8px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-          }}>
-            No documents uploaded
-          </p>
-        ) : (
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            flexWrap: "wrap",
-            gap: "30px"
-          }}>
-            {docs.map((doc, docIndex) => {
-              // Normalize documentImage → always array
-              const images = Array.isArray(doc.documentImage)
-                ? doc.documentImage
-                : doc.documentImage
-                ? [doc.documentImage]
-                : [];
-
-              return images.length > 0 ? images.map((imgPath, imgIndex) => {
-                const cleanPath = imgPath.replace(/\\/g, "/").replace(/^public\//, "");
-                const url = BASE_FILE_URL + cleanPath;
-                const fileName = cleanPath.split("/").pop() || `document-${imgIndex + 1}`;
-                const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(fileName);
-                const displayType = images.length > 1 
-                  ? `${doc.documentType} (${imgIndex + 1})`
-                  : doc.documentType;
-
-                return (
-                  <DocItem
-                    key={`${docIndex}-${imgIndex}`}
-                    docType={displayType}
-                    url={url}
-                    fileName={fileName}
-                    isImage={isImage}
-                    downloadFile={downloadFile}
-                    downloading={downloadingFile}
-                    downloaded={downloadedFile}
-                  />
-                );
-              }) : null;
-            }).filter(Boolean)}
-          </div>
-        )}
-      </div>
-
-      {/* ADDITIONAL INFORMATION */}
-      <div style={{ marginBottom: "40px" }}>
-        <div style={{ background: "#f3f3f3", padding: "12px 20px", borderRadius: "8px", marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "800" }}>ADDITIONAL INFORMATION</h2>
-        </div>
-        <div style={{ background: "#fff", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-          <Field label="E-KYC" value={add.ekyc === "yes" ? "Completed" : "Pending"} />
-          <Field label="Notification" value={add.notification ? "Enabled" : "Disabled"} />
-          <Field label="Add Plan Allowed" value={add.addPlan ? "Yes" : "No"} />
-          <Field label="Wallet Balance" value={`₹${u.walletBalance || 0}`} />
-          <Field label="Creadit balance" value={`₹${u.creditBalance || 0}`}/>
-          <Field label="Account Status" value={u.status} />
-          <Field label="Account Created" value={new Date(u.createdAt).toLocaleString("en-GB")} />
-        </div>
-      </div>
+      )}
     </div>
   );
 };
 
-// Reusable Field Component
-const Field = ({ label, value }) => (
-  <p style={{ margin: "10px 0", fontSize: "15px" }}>
-    <strong style={{ fontWeight: 500, minWidth: "200px", display: "inline-block", color: "#333" }}>
-      {label}
-    </strong> :{" "}
-    <span style={{ fontWeight: 400, color: "#555" }}>
-      {value || "-"}
-    </span>
-  </p>
-);
+// Reusable Detail Row Component (Left Column - only rendered if value exists)
+const DetailRow = ({ label, value }) => {
+  if (!hasValue(value)) return null;
 
-// Document Item with Preview & Download (Old Style)
-const DocItem = ({ docType, url, fileName, isImage, downloadFile, downloading, downloaded }) => {
   return (
-    <div style={{
-      marginBottom: 16,
-      flex: "1 1 45%",
-      minWidth: "300px",
-      display: "flex",
-      alignItems: "center",
-      background: "#fff",
-      padding: "12px",
-      borderRadius: "8px",
-      boxShadow: "0 1px 4px rgba(0,0,0,0.1)"
-    }}>
-      <strong style={{ minWidth: 150, display: "inline-block", color: "#333" }}>
-        {docType}
-      </strong>
+    <div className="flex items-start py-1.5 text-[13px] border-b border-gray-100 last:border-b-0">
+      <span className="font-semibold text-gray-800 w-44 sm:w-52 shrink-0">{label}</span>
+      <span className="text-gray-600 flex-1 break-words font-normal">
+        {String(value).trim()}
+      </span>
+    </div>
+  );
+};
 
-      {isImage ? (
-        <img
-          src={url}
-          alt={docType}
-          style={{
-            width: 80,
-            height: 80,
-            objectFit: "cover",
-            marginLeft: 10,
-            cursor: "pointer",
-            border: "1px solid #ccc",
-            borderRadius: 4,
-          }}
+// Reusable Address Field Component (Right Column - only rendered if value exists)
+const AddressField = ({ label, value, width = "w-20" }) => {
+  if (!hasValue(value)) return null;
+
+  return (
+    <div className="flex items-start gap-2">
+      <span className={`font-semibold text-gray-800 ${width} shrink-0`}>{label}</span>
+      <span className="text-gray-600 flex-1 break-words">{String(value).trim()}</span>
+    </div>
+  );
+};
+
+// Document Item with Preview & Download
+const DocItem = ({
+  docType,
+  url,
+  fileName,
+  isImage,
+  downloadFile,
+  downloading,
+  downloaded,
+}) => {
+  return (
+    <div className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100/70 transition">
+      <div className="flex items-center gap-3 min-w-0">
+        {isImage ? (
+          <img
+            src={url}
+            alt={docType}
+            className="w-14 h-14 object-cover rounded border border-gray-300 cursor-pointer flex-shrink-0 hover:opacity-90"
+            onClick={() => window.open(url, "_blank")}
+            onError={(e) => {
+              e.target.style.display = "none";
+              e.target.onerror = null;
+              if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          className={`w-14 h-14 bg-gray-200 text-gray-500 rounded border border-gray-300 flex items-center justify-center flex-shrink-0 ${
+            isImage ? "hidden" : "flex"
+          }`}
+        >
+          <FaFileAlt className="text-xl text-gray-400" />
+        </div>
+
+        <div className="min-w-0">
+          <strong className="block text-sm font-semibold text-gray-800 truncate">
+            {docType}
+          </strong>
+          <span className="text-xs text-gray-500 truncate block mt-0.5">{fileName}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+        <button
           onClick={() => window.open(url, "_blank")}
-          onError={(e) => {
-            e.target.style.display = "none";
-            e.target.onerror = null;
-            if (e.target.nextSibling) e.target.nextSibling.style.display = "inline";
-          }}
-        />
-      ) : (
-        <span style={{ marginLeft: 10, color: "#777" }}>Preview not available</span>
-      )}
+          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded transition"
+          title="Open in new tab"
+        >
+          <FaExternalLinkAlt className="text-xs" />
+        </button>
 
-      <button
-        onClick={() => downloadFile(url, fileName)}
-        disabled={downloading === fileName}
-        style={{
-          marginLeft: 12,
-          background: "none",
-          border: "none",
-          cursor: downloading === fileName ? "not-allowed" : "pointer",
-          color: "#1976d2",
-          display: "flex",
-          alignItems: "center",
-        }}
-        title="Download"
-      >
-        <FaDownload size={18} />
-        {downloading === fileName && <span style={{ marginLeft: 5, fontSize: 12 }}>Downloading...</span>}
-        {downloaded === fileName && <span style={{ marginLeft: 5, fontSize: 12, color: "green" }}>Downloaded!</span>}
-      </button>
+        <button
+          onClick={() => downloadFile(url, fileName)}
+          disabled={downloading === fileName}
+          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded transition disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
+          title="Download Document"
+        >
+          <FaDownload className="text-sm" />
+          {downloading === fileName && <span className="text-xs">Saving...</span>}
+          {downloaded === fileName && <span className="text-xs text-green-600 font-semibold">Done!</span>}
+        </button>
+      </div>
     </div>
   );
 };
 
 export default UserProfile;
-
-
-
-

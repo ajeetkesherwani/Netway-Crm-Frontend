@@ -137,6 +137,8 @@ export default function UserDetails() {
           <Row label="Title" value={g.title || g.Title} />
           <Row label="Name" value={g.name} />
           <Row label="Billing Name" value={g.billingName} />
+          <Row label="User ID" value={g.UserId || g.userId} />
+          <Row label="Gender" value={g.gender} />
           <Row label="Username" value={g.username} />
           <Row label="Email" value={g.email} />
           <Row label="Phone" value={g.phone} />
@@ -145,10 +147,10 @@ export default function UserDetails() {
           <Row label="IPACT ID" value={g.ipactId} />
           <Row label="Connection Type" value={g.connectionType} />
           <Row label="Service Opted" value={g.serviceOpted} />
-          <Row label="Serial No" value={g.serialNo} />
-          <Row label="MAC ID" value={g.macId} />
-          <Row label="STB No" value={g.stbNo} />
-          <Row label="VC No" value={g.vcNo} />
+          <Row label="ONT/ONU MAC ID" value={g.serialNo} />
+          <Row label="Wi-Fi Router MAC ID" value={g.macId} />
+          <Row label="Android Box No." value={g.stbNo} />
+          <Row label="RF MAC ID" value={g.vcNo} />
           <Row label="Circuit ID" value={g.circuitId} />
           <Row label="CAF No" value={g.cafNo} />
           <Row label="GST" value={g.gst} />
@@ -250,6 +252,46 @@ export default function UserDetails() {
 
       {/* Documents */}
       <div className="border rounded-lg overflow-hidden shadow mb-4">
+        
+        {/* Package Information */}
+        <h4 className="text-lg font-semibold p-2 bg-gray-200">Package Information</h4>
+        <div className="p-4">
+          {(() => {
+            const pkgs = Array.isArray(user?.packageInfomation)
+              ? user.packageInfomation
+              : user?.packageInfomation?.packageId
+              ? [user.packageInfomation]
+              : [];
+            if (pkgs.length === 0) {
+              return <p className="text-sm text-gray-500">No packages assigned.</p>;
+            }
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pkgs.map((pkg, idx) => {
+                  const pName = pkg.packageId?.name || pkg.packageName || "N/A";
+                  const pPrice = pkg.price || pkg.packageId?.price || pkg.packageId?.basePrice || "0";
+                  return (
+                    <div key={pkg._id || idx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
+                      <span className="text-xs font-semibold text-blue-700 uppercase">
+                        Package #{idx + 1}
+                      </span>
+                      <h5 className="font-bold text-gray-800 text-base mt-1">{pName}</h5>
+                      <p className="text-sm text-green-700 font-semibold mt-2">
+                        Price: ₹{pPrice}
+                      </p>
+                      {pkg.packageId?.validity && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Validity: {pkg.packageId.validity.number} {pkg.packageId.validity.unit}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+
         <h4 className="text-lg font-semibold p-2 bg-gray-200">Documents</h4>
 
         {docs.length === 0 ? (

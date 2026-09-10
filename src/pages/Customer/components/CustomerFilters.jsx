@@ -209,7 +209,7 @@ export default function CustomerFilters({ filters, setSearchParams }) {
           onChange={(e) => updateParam("serviceOpted", e.target.value)}
           className="border p-1 rounded"
         >
-          <option value="">All Services</option>
+          <option value="">Select Service Opted</option>
           <option value="intercom">Intercom</option>
           <option value="broadband">Broadband</option>
           <option value="corporate">Corporate</option>
