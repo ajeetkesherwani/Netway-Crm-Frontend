@@ -19,6 +19,8 @@ export default function CustomerUpdate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [installerSearch, setInstallerSearch] = useState("");
+  const [isDefaultInstaller, setIsDefaultInstaller] = useState(false);
 
   // Reference Data
   const [staff, setStaff] = useState([]);
@@ -43,8 +45,17 @@ export default function CustomerUpdate() {
   const [roleSpecificPackages, setRoleSpecificPackages] = useState([]);
   const [packageLoading, setPackageLoading] = useState(false);
   const [customPackagePrice, setCustomPackagePrice] = useState("");
+  const [packageSearch, setPackageSearch] = useState("");
+  const [showPackageDropdown, setShowPackageDropdown] = useState(false);
 
   const connectionTypes = ["IIL", "FTTH", "RF", "OTHER"];
+  const filteredStaff = staff.filter((s) => {
+    const name = s.staffName || s.name || "";
+    return name.toLowerCase().includes(installerSearch.toLowerCase());
+  });
+  const filteredPackages = roleSpecificPackages.filter((pkg) =>
+    (pkg.name || "").toLowerCase().includes(packageSearch.toLowerCase())
+  );
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
   const documentTypes = [
@@ -69,10 +80,12 @@ export default function CustomerUpdate() {
       name: "",
       billingName: "",
       username: "",
+      UserId: "",
       password: "",
       email: "",
       mobile: "",
       alternateMobile: "",
+      gender: "Male",
       ipactId: "",
       connectionType: "ILL",
       selsExecutive: "",
@@ -91,6 +104,7 @@ export default function CustomerUpdate() {
       createdFor: { id: null, type: "Self" }, // ← null by default
       customArea: "",
       packageDetails: { packageId: "", packageName: "", packageAmount: "" },
+      packages: [],
     },
     addresses: {
       billing: {
@@ -205,6 +219,9 @@ export default function CustomerUpdate() {
             name: u.generalInformation?.name || "",
             billingName: u.generalInformation?.billingName || "",
             username: u.generalInformation?.username || "",
+            UserId: u.generalInformation?.UserId || u.generalInformation?.userId || "",
+            password: u.generalInformation?.plainPassword || u.generalInformation?.password || "",
+            gender: u.generalInformation?.gender || "Male",
             email: u.generalInformation?.email || "",
             mobile: u.generalInformation?.phone || "",
             alternateMobile: u.generalInformation?.alternatePhone || "",
@@ -227,10 +244,28 @@ export default function CustomerUpdate() {
               type: createdForType,
               id: getId(u.createdFor?.id),
             },
+            packages: (() => {
+              if (Array.isArray(u.packageInfomation) && u.packageInfomation.length > 0) {
+                return u.packageInfomation.map((p) => ({
+                  packageId: getId(p.packageId?._id || p.packageId),
+                  packageName: p.packageId?.name || p.packageName || "",
+                  packageAmount: p.price || p.packageAmount || "0",
+                  originalPrice: p.packageId?.price || p.packageId?.basePrice || p.price || "0",
+                }));
+              } else if (u.packageInfomation?.packageId) {
+                return [{
+                  packageId: getId(u.packageInfomation.packageId?._id || u.packageInfomation.packageId),
+                  packageName: u.packageInfomation.packageId?.name || u.packageInfomation.packageName || "",
+                  packageAmount: u.packageInfomation.price || "0",
+                  originalPrice: u.packageInfomation.packageId?.price || u.packageInfomation.price || "0",
+                }];
+              }
+              return [];
+            })(),
             packageDetails: {
-              packageId: getId(u.packageInfomation?.packageId),
-              packageName: u.packageInfomation?.name || "",
-              packageAmount: u.packageInfomation?.price || "",
+              packageId: getId(u.packageInfomation?.packageId || (Array.isArray(u.packageInfomation) && u.packageInfomation[0]?.packageId)),
+              packageName: u.packageInfomation?.name || (Array.isArray(u.packageInfomation) && u.packageInfomation[0]?.packageName) || "",
+              packageAmount: u.packageInfomation?.price || (Array.isArray(u.packageInfomation) && u.packageInfomation[0]?.price) || "",
             },
             customArea: u.generalInformation?.customArea || "",
           },
@@ -299,6 +334,9 @@ export default function CustomerUpdate() {
         };
 
         setFormData(loadedData);
+        if (u.generalInformation?.installationByName) {
+          setIsDefaultInstaller(true);
+        }
 
         // Pre-fill Zone & Custom Area
         setSelectedArea(getId(u.addressDetails?.area) || "");
@@ -403,18 +441,86 @@ export default function CustomerUpdate() {
   ]);
 
   // Handle Package Change (UPDATED: like create + custom price)
-  const handlePackageChange = (pkgId) => {
+  // Handle Multi-Package Selection
+  const handleAddPackage = (pkgId, overridePrice) => {
     const pkg = roleSpecificPackages.find((p) => p._id === pkgId);
     if (!pkg) return;
 
-    const price = pkg.price || pkg.basePrice || 0;
+    const current = formData.customer.packages || [];
+    if (current.some((p) => p.packageId === pkg._id)) {
+      toast.info("Package already selected");
+      setShowPackageDropdown(false);
+      return;
+    }
 
-    setFieldValue("customer.packageDetails.packageId", pkgId);
-    setFieldValue("customer.packageDetails.packageName", pkg.name);
-    setFieldValue("customer.packageDetails.packageAmount", price);
+    const price =
+      overridePrice !== undefined && overridePrice !== ""
+        ? overridePrice
+        : (pkg.price || pkg.basePrice || 0);
 
-    setCustomPackagePrice(String(price));
+    const newPkg = {
+      packageId: pkg._id,
+      packageName: pkg.name,
+      packageAmount: String(price),
+      originalPrice: pkg.price || pkg.basePrice || 0,
+      validity: pkg.validity,
+    };
+
+    const updated = [...current, newPkg];
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        packages: updated,
+        packageDetails: updated[0] || {
+          packageId: "",
+          packageName: "",
+          packageAmount: "",
+        },
+      },
+    }));
+    setShowPackageDropdown(false);
+    setPackageSearch("");
   };
+
+  const handleUpdatePackagePrice = (packageId, newPrice) => {
+    setFormData((prev) => {
+      const updated = (prev.customer.packages || []).map((p) =>
+        p.packageId === packageId ? { ...p, packageAmount: newPrice } : p
+      );
+      return {
+        ...prev,
+        customer: {
+          ...prev.customer,
+          packages: updated,
+          packageDetails: updated[0] || prev.customer.packageDetails,
+        },
+      };
+    });
+  };
+
+  const handleRemovePackage = (packageId) => {
+    const current = formData.customer.packages || [];
+    if (current.length <= 1) {
+      toast.warning("At least one package is mandatory");
+      return;
+    }
+    const updated = current.filter((p) => p.packageId !== packageId);
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        packages: updated,
+        packageDetails: updated[0] || {
+          packageId: "",
+          packageName: "",
+          packageAmount: "",
+        },
+      },
+    }));
+  };
+
+  const handlePackageChange = handleAddPackage;
 
   // Document Functions
   // Add a new document row
@@ -431,6 +537,22 @@ export default function CustomerUpdate() {
     const d = [...formData.documents];
     d[i].type = v;
     setFormData((prev) => ({ ...prev, documents: d }));
+  };
+
+  
+  const getDocumentUrl = (docPath) => {
+    if (!docPath) return "";
+    if (docPath.startsWith("http://") || docPath.startsWith("https://") || docPath.startsWith("blob:")) {
+      return docPath;
+    }
+    const clean = docPath.replace(/\\/g, "/").replace(/^public\//, "").replace(/^\//, "");
+    const base =
+      import.meta.env.VITE_IMAGE_URL ||
+      (import.meta.env.VITE_BASE_URL
+        ? import.meta.env.VITE_BASE_URL.replace(/\/api\/admin\/?$/, "")
+        : "") ||
+      "http://localhost:3000";
+    return `${base.replace(/\/$/, "")}/${clean}`;
   };
 
   const updateDocumentFile = (i, f) => {
@@ -508,6 +630,104 @@ export default function CustomerUpdate() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+
+    // 1. Name
+    if (!formData.customer.name?.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    // 2. User ID
+    if (!formData.customer.UserId?.trim()) {
+      toast.error("User ID is required");
+      return;
+    }
+
+    // 3. Email
+    if (!formData.customer.email?.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+
+    // 4. Mobile No
+    if (!formData.customer.mobile?.trim()) {
+      toast.error("Mobile Number is required");
+      return;
+    } else if (formData.customer.mobile.trim().length !== 10) {
+      toast.error("Mobile Number must be 10 digits");
+      return;
+    }
+
+    // 5. Password (commented out - optional on update)
+    // if (!formData.customer.password?.trim()) {
+    //   toast.error("Password is required");
+    //   return;
+    // }
+
+    // 6. Date of Birth
+    if (!formData.additional.dob?.trim()) {
+      toast.error("Date of Birth is required");
+      return;
+    }
+
+    // 7. Connection Type
+    if (!formData.customer.connectionType?.trim()) {
+      toast.error("Connection Type is required");
+      return;
+    }
+
+    // 8. Installation By
+    const hasInstaller =
+      (Array.isArray(formData.customer.installationBy) && formData.customer.installationBy.length > 0) ||
+      Boolean(formData.customer.installationByName?.trim()) ||
+      Boolean(isDefaultInstaller);
+    if (!hasInstaller) {
+      toast.error("Installation By is required");
+      return;
+    }
+
+    // 9. Service Opted
+    if (!formData.customer.serviceOpted?.trim()) {
+      toast.error("Service Opted is required");
+      return;
+    }
+
+    // 10, 11, 12, 13. Address Line 1, City, State, Pincode
+    if (!formData.addresses.billing.addressLine1?.trim()) {
+      toast.error("Address Line 1 is required");
+      return;
+    }
+    if (!formData.addresses.billing.city?.trim()) {
+      toast.error("City is required");
+      return;
+    }
+    if (!formData.addresses.billing.state?.trim()) {
+      toast.error("State is required");
+      return;
+    }
+    if (!formData.addresses.billing.pincode?.trim()) {
+      toast.error("Pincode is required");
+      return;
+    }
+
+    // 14. Area
+    if (!selectedArea) {
+      toast.error("Area is required");
+      return;
+    }
+
+    // 15. Zone
+    if (!selectedSubZone) {
+      toast.error("Zone is required");
+      return;
+    }
+
+    // 16. Select Package
+    if (!formData.customer.packages || formData.customer.packages.length === 0) {
+      toast.error("At least one package is mandatory");
+      return;
+    }
+
     setLoading(true);
 
     const payload = new FormData();
@@ -522,11 +742,14 @@ export default function CustomerUpdate() {
       customArea: customArea || "",
 
       // Use custom price if set
-      packageDetails: {
-        ...formData.customer.packageDetails,
-        packageAmount: customPackagePrice || formData.customer.packageDetails.packageAmount,
-      },
+      packages: formData.customer.packages || [],
+      packageDetails: (formData.customer.packages && formData.customer.packages[0]) || formData.customer.packageDetails,
     };
+
+    // If password is empty, delete it so backend retains existing password
+    if (!cleanCustomer.password || !cleanCustomer.password.trim()) {
+      delete cleanCustomer.password;
+    }
 
     payload.append("customer", JSON.stringify(cleanCustomer));
     payload.append("addresses", JSON.stringify(formData.addresses));
@@ -589,7 +812,7 @@ export default function CustomerUpdate() {
               </select>
             </div>
             <div>
-              <label>Name *</label>
+              <label>Name <span className="text-red-500">*</span></label>
               <input
                 value={formData.customer.name}
                 onChange={(e) => setFieldValue("customer.name", e.target.value)}
@@ -608,7 +831,7 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>Email *</label>
+              <label>Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 value={formData.customer.email}
@@ -620,7 +843,46 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>Mobile *</label>
+              <label>User ID <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.customer.UserId}
+                onChange={(e) =>
+                  setFieldValue("customer.UserId", e.target.value)
+                }
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="User ID"
+              />
+            </div>
+            {/* <div>
+              <label>Password <span className="text-red-500">*</span></label>
+              <input
+                type="password"
+                value={formData.customer.password}
+                onChange={(e) =>
+                  setFieldValue("customer.password", e.target.value)
+                }
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="Password"
+              />
+            </div> */}
+            <div>
+              <label>Gender</label>
+              <select
+                value={formData.customer.gender || "Male"}
+                onChange={(e) =>
+                  setFieldValue("customer.gender", e.target.value)
+                }
+                className="mt-1 p-2 border rounded w-full"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Mobile No <span className="text-red-500">*</span></label>
               <input
                 value={formData.customer.mobile}
                 onChange={(e) =>
@@ -651,7 +913,7 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>Connection Type</label>
+              <label>Connection Type <span className="text-red-500">*</span></label>
               <select
                 value={formData.customer.connectionType}
                 onChange={(e) =>
@@ -685,21 +947,38 @@ export default function CustomerUpdate() {
             {/* Installation By */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Installation By *
+                Installation By <span className="text-red-500">*</span>
               </label>
+              {/* CLEAN & MINIMAL MULTI-SELECT DROPDOWN */}
               <div className="relative">
                 <div
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 flex justify-between items-center min-h-[42px]"
+                  className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
                 >
                   <div className="flex flex-wrap gap-2">
-                    {formData.customer.installationBy.length > 0 ? (
+                    {(isDefaultInstaller || formData.customer.installationByName) && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">
+                        Default {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDefaultInstaller(false);
+                            setFieldValue("customer.installationByName", "");
+                          }}
+                          className="ml-1 hover:text-blue-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {formData.customer.installationBy.length > 0 &&
                       formData.customer.installationBy.map((id) => {
                         const p = staff.find((s) => s._id === id);
                         return p ? (
                           <span
                             key={id}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs rounded-md"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md"
                           >
                             {p.staffName || p.name}{" "}
                             <button
@@ -713,21 +992,23 @@ export default function CustomerUpdate() {
                                   )
                                 );
                               }}
-                              className="ml-1 hover:text-red-600"
+                              className="ml-1 hover:text-blue-900"
                             >
                               ×
                             </button>
                           </span>
                         ) : null;
-                      })
-                    ) : (
-                      <span className="text-gray-500 text-sm">
-                        Select installer(s)
-                      </span>
-                    )}
+                      })}
+                    {!isDefaultInstaller &&
+                      !formData.customer.installationByName &&
+                      (!formData.customer.installationBy || formData.customer.installationBy.length === 0) && (
+                        <span className="text-gray-500 text-sm">
+                          Select installer(s)
+                        </span>
+                      )}
                   </div>
                   <svg
-                    className={`w-5 h-5 transition ${showDropdown ? "rotate-180" : ""
+                    className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
                       }`}
                     fill="none"
                     stroke="currentColor"
@@ -743,43 +1024,118 @@ export default function CustomerUpdate() {
                 </div>
                 {showDropdown && (
                   <>
-                    <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {staff.map((s) => {
-                        const checked =
-                          formData.customer.installationBy.includes(s._id);
-                        return (
-                          <label
-                            key={s._id}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer"
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {/* Search box inside dropdown */}
+                      <div className="p-2 border-b bg-gray-50 sticky top-0 z-10">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search staff by name..."
+                            value={installerSearch}
+                            onChange={(e) => setInstallerSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          />
+                          <svg
+                            className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => {
-                                const updated = checked
-                                  ? formData.customer.installationBy.filter(
-                                    (x) => x !== s._id
-                                  )
-                                  : [
-                                    ...formData.customer.installationBy,
-                                    s._id,
-                                  ];
-                                setFieldValue(
-                                  "customer.installationBy",
-                                  updated
-                                );
-                                if (updated.length > 0)
-                                  setFieldValue(
-                                    "customer.installationByName",
-                                    ""
-                                  );
-                              }}
-                              className="w-4 h-4 text-blue-600 rounded"
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                             />
-                            <span>{s.staffName || s.name}</span>
-                          </label>
-                        );
-                      })}
+                          </svg>
+                          {installerSearch && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInstallerSearch("");
+                              }}
+                              className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Default option */}
+                      {(!installerSearch || "default".includes(installerSearch.toLowerCase())) && (
+                        <label
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition border-b border-gray-100 bg-gray-50/50"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isDefaultInstaller || Boolean(formData.customer.installationByName)}
+                            onChange={() => {
+                              const nextState = !(isDefaultInstaller || Boolean(formData.customer.installationByName));
+                              setIsDefaultInstaller(nextState);
+                              if (nextState) {
+                                setFieldValue("customer.installationBy", []);
+                              } else {
+                                setFieldValue("customer.installationByName", "");
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <span className="font-semibold text-sm text-gray-800">
+                            Default
+                          </span>
+                        </label>
+                      )}
+
+                      {/* Staff options */}
+                      {filteredStaff.length > 0 ? (
+                        filteredStaff.map((s) => {
+                          const checked =
+                            formData.customer.installationBy.includes(s._id);
+                          return (
+                            <label
+                              key={s._id}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition"
+                              onMouseDown={(e) => e.preventDefault()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  const updated = checked
+                                    ? formData.customer.installationBy.filter(
+                                      (x) => x !== s._id
+                                    )
+                                    : [
+                                      ...formData.customer.installationBy,
+                                      s._id,
+                                    ];
+                                  setFieldValue(
+                                    "customer.installationBy",
+                                    updated
+                                  );
+                                  if (updated.length > 0) {
+                                    setIsDefaultInstaller(false);
+                                    setFieldValue(
+                                      "customer.installationByName",
+                                      ""
+                                    );
+                                  }
+                                }}
+                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                              />
+                              <span className="font-medium text-sm">{s.staffName || s.name}</span>
+                            </label>
+                          );
+                        })
+                      ) : (
+                        <div className="px-4 py-3 text-sm text-gray-500">
+                          {installerSearch ? "No staff found" : "No staff available"}
+                        </div>
+                      )}
                     </div>
                     <div
                       className="fixed inset-0 z-40"
@@ -788,25 +1144,37 @@ export default function CustomerUpdate() {
                   </>
                 )}
               </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Or Manual Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.customer.installationByName}
-                  onChange={(e) => {
-                    setFieldValue(
-                      "customer.installationByName",
-                      e.target.value
-                    );
-                    if (e.target.value.trim())
-                      setFieldValue("customer.installationBy", []);
-                  }}
-                  placeholder="e.g. Ramu Kaka"
-                  className="w-full p-3 border rounded-lg"
-                />
-              </div>
+
+              {/* Manual Input - Shown when Default is selected or installationByName has value */}
+              {(isDefaultInstaller || Boolean(formData.customer.installationByName)) && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Or Enter Manual Installer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.customer.installationByName || ""}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setFieldValue(
+                        "customer.installationByName",
+                        name
+                      );
+                      if (name.trim())
+                        setFieldValue("customer.installationBy", []);
+                    }}
+                    placeholder="e.g. Ramu Kaka, Local Technician"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Show Manual Name */}
+              {formData.customer.installationByName && (
+                <p className="mt-2 text-sm font-medium text-green-700">
+                  Manual Installer: {formData.customer.installationByName}
+                </p>
+              )}
             </div>
 
             <div>
@@ -846,7 +1214,7 @@ export default function CustomerUpdate() {
               </div>
             )}
             <div>
-              <label>Serial No</label>
+              <label>ONT/ONU MAC ID</label>
               <input
                 value={formData.customer.serialNo}
                 onChange={(e) =>
@@ -856,7 +1224,7 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>MAC ID</label>
+              <label>Wi-Fi Router MAC ID</label>
               <input
                 value={formData.customer.macId}
                 onChange={(e) =>
@@ -876,7 +1244,7 @@ export default function CustomerUpdate() {
               />
             </div> */}
             <div>
-              <label className="block text-sm font-medium">Service Opted</label>
+              <label className="block text-sm font-medium">Service Opted <span className="text-red-500">*</span></label>
               <select
                 value={formData.customer.serviceOpted || ""}
                 onChange={(e) => handleChange(e, "customer.serviceOpted")}
@@ -891,7 +1259,7 @@ export default function CustomerUpdate() {
               </select>
             </div>
             <div>
-              <label>STB No.</label>
+              <label>Android Box No.</label>
               <input
                 value={formData.customer.stbNo}
                 onChange={(e) =>
@@ -901,7 +1269,7 @@ export default function CustomerUpdate() {
               />
             </div>
             <div>
-              <label>VC No.</label>
+              <label>RF MAC ID</label>
               <input
                 value={formData.customer.vcNo}
                 onChange={(e) => setFieldValue("customer.vcNo", e.target.value)}
@@ -1240,80 +1608,195 @@ export default function CustomerUpdate() {
           </div>
         </section>
 
-        {/* Network & Package */}
+        {/* Package Details */}
         <section className="border rounded-lg">
           <div className="bg-blue-800 text-white px-6 py-3 text-lg font-semibold">
-            Network & Package
+            Package Details
           </div>
-          <div className="p-6 grid md:grid-cols-2 gap-8">
-            <div>
-              <label className="font-semibold">Select Package*</label>
-              <select
-                value={formData.customer.packageDetails.packageId || ""}
-                onChange={(e) => handlePackageChange(e.target.value)}
-                disabled={packageLoading || roleSpecificPackages.length === 0}
-                className="w-full p-2 border rounded mt-2"
-              >
-                <option value="" disabled>
-                  {packageLoading
-                    ? "Loading packages..."
-                    : roleSpecificPackages.length === 0
-                      ? "No packages found"
-                      : "-- Select Package --"}
-                </option>
+          <div className="p-6 space-y-6">
+            {/* Select & Add Package */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-2xl">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Select & Add Package <span className="text-red-500">* (At least 1 required)</span>
+              </label>
 
-                {roleSpecificPackages.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.name} ₹{pkg.price || pkg.basePrice || 0}
-                  </option>
-                ))}
-              </select>
-
-              {/* Custom Price Input (NEW: like create) */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium">
-                  Package Price <span className="text-red-500">*</span>
-                  {customPackagePrice &&
-                    formData.customer.packageDetails.packageAmount !==
-                    customPackagePrice && (
-                      <span className="text-xs text-orange-600 ml-2">
-                        (Customized)
-                      </span>
-                    )}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    value={customPackagePrice}
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                {/* Select Package Dropdown */}
+                <div className="flex-1">
+                  <select
+                    value={packageSearch}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      setCustomPackagePrice(value);
-                      // Update form data
-                      setFieldValue(
-                        "customer.packageDetails.packageAmount",
-                        value
-                      );
+                      const selectedId = e.target.value;
+                      setPackageSearch(selectedId);
+                      const found = roleSpecificPackages.find((p) => p._id === selectedId);
+                      if (found) {
+                        setCustomPackagePrice(String(found.price || found.basePrice || 0));
+                      } else {
+                        setCustomPackagePrice("");
+                      }
                     }}
-                    className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
-                    placeholder="Enter custom price"
-                    min="0"
-                    step="1"
-                  />
+                    disabled={packageLoading}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-medium text-gray-800"
+                  >
+                    <option value="">
+                      {packageLoading
+                        ? "-- Loading packages... --"
+                        : roleSpecificPackages.length === 0
+                        ? "-- No packages available --"
+                        : "-- Select a Package to Add --"}
+                    </option>
+                    {roleSpecificPackages.map((pkg) => {
+                      const isAdded = (formData.customer.packages || []).some(
+                        (p) => p.packageId === pkg._id
+                      );
+                      return (
+                        <option key={pkg._id} value={pkg._id} disabled={isAdded}>
+                          {pkg.name} — ₹{pkg.price || pkg.basePrice || 0} {isAdded ? "(Already Added)" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
-                {formData.customer.packageDetails.packageAmount && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Original price: ₹
-                    {formData.customer.packageDetails.packageAmount}
-                    {customPackagePrice &&
-                      customPackagePrice !==
-                      formData.customer.packageDetails.packageAmount &&
-                      ` → Now: ₹${customPackagePrice}`}
-                  </p>
-                )}
+
+                {/* Price input before adding */}
+                <div className="w-full sm:w-36">
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm font-semibold">
+                      ₹
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Price"
+                      value={customPackagePrice}
+                      onChange={(e) => setCustomPackagePrice(e.target.value)}
+                      disabled={!packageSearch}
+                      className="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-green-700 focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Add Button */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!packageSearch) {
+                        toast.warning("Please select a package first");
+                        return;
+                      }
+                      handleAddPackage(packageSearch, customPackagePrice);
+                      setPackageSearch("");
+                      setCustomPackagePrice("");
+                    }}
+                    disabled={!packageSearch || packageLoading}
+                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${
+                      !packageSearch || packageLoading
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add
+                  </button>
+                </div>
               </div>
+            </div>
+
+            {/* Selected Packages List */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <span>Selected Packages ({formData.customer.packages?.length || 0})</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  Minimum 1 Mandatory
+                </span>
+              </h4>
+
+              {(!formData.customer.packages || formData.customer.packages.length === 0) ? (
+                <div className="p-4 border-2 border-dashed border-red-300 rounded-lg bg-red-50/50 text-red-600 text-sm">
+                  No packages selected yet. Please select at least one package above.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {formData.customer.packages.map((pkg, idx) => (
+                    <div
+                      key={pkg.packageId || idx}
+                      className="p-4 border rounded-lg bg-gray-50 flex flex-wrap md:flex-nowrap items-center justify-between gap-4 shadow-sm"
+                    >
+                      <div className="min-w-[200px]">
+                        <span className="text-xs font-semibold uppercase text-blue-700">
+                          Package #{idx + 1}
+                        </span>
+                        <h5 className="font-bold text-gray-800 text-base">
+                          {pkg.packageName}
+                        </h5>
+                        <p className="text-xs text-gray-500">
+                          Base Price: ₹{pkg.originalPrice ?? pkg.packageAmount}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                          Custom Price (₹):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pkg.packageAmount}
+                          onChange={(e) =>
+                            handleUpdatePackagePrice(pkg.packageId, e.target.value)
+                          }
+                          className="w-32 p-2 border rounded-md font-semibold text-green-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Price"
+                        />
+                      </div>
+
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePackage(pkg.packageId)}
+                          disabled={formData.customer.packages.length <= 1}
+                          title={
+                            formData.customer.packages.length <= 1
+                              ? "At least one package is mandatory"
+                              : "Remove package"
+                          }
+                          className={'px-3 py-1.5 text-xs font-medium rounded transition ' + (
+                            formData.customer.packages.length <= 1
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
+                          )}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Summary */}
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center text-sm font-semibold text-blue-900">
+                    <span>Total Packages: {formData.customer.packages.length}</span>
+                    <span>
+                      Total Amount: ₹
+                      {formData.customer.packages.reduce(
+                        (sum, p) => sum + Number(p.packageAmount || 0),
+                        0
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1336,7 +1819,7 @@ export default function CustomerUpdate() {
                     onChange={(e) => updateDocumentType(i, e.target.value)}
                     className="w-full p-2 border rounded mt-1"
                   >
-                    <option>Select</option>
+                    <option value="">Select</option>
                     {documentTypes.map((t) => (
                       <option
                         key={t}
@@ -1391,7 +1874,7 @@ export default function CustomerUpdate() {
                     <div className="mt-4">
                       <p className="text-xs font-medium text-blue-700 mb-1">Current:</p>
                       <img
-                        src={`http://localhost:5004${doc.existingUrl}`}
+                        src={getDocumentUrl(doc.existingUrl)}
                         alt="Current document"
                         className="w-24 h-24 object-cover border-2 border-blue-400 rounded-lg shadow"
                       />
@@ -1404,7 +1887,7 @@ export default function CustomerUpdate() {
                       <div>
                         <p className="text-xs font-medium text-gray-600 mb-1">Current:</p>
                         <img
-                          src={`http://localhost:5004${doc.existingUrl}`}
+                          src={getDocumentUrl(doc.existingUrl)}
                           alt="Current"
                           className="w-full h-20 object-cover border rounded-lg"
                         />
@@ -1456,7 +1939,7 @@ export default function CustomerUpdate() {
           <div className="p-6 grid md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth
+                Date of Birth <span className="text-red-500">*</span>
               </label>
 
               <div className="relative">

@@ -51,10 +51,16 @@ export default function CreateUser() {
 
   const [formErrors, setFormErrors] = useState({});
   const [showDropdown, setShowDropdown] = useState(false);
+  const [installerSearch, setInstallerSearch] = useState("");
+  const [isDefaultInstaller, setIsDefaultInstaller] = useState(false);
   const [packageSearch, setPackageSearch] = useState("");
   const [showPackageDropdown, setShowPackageDropdown] = useState(false);
 
   const connectionTypes = ["ILL", "FTTH", "RF", "OTHER"];
+  const filteredStaff = staff.filter((s) => {
+    const name = s.staffName || s.name || "";
+    return name.toLowerCase().includes(installerSearch.toLowerCase());
+  });
   const paymentModes = ["Cash", "Online", "NEFT", "Cheque"];
   const networkTypes = ["PPPOE", "PPOE", "IP-Pass throw", "MAC_TAL", "ILL"];
   const ipTypes = ["Static IP", "Dynamic IP Pool"];
@@ -69,6 +75,7 @@ export default function CreateUser() {
       billingName: "",
       differentBillingName: false,
       username: "",
+      UserId: "",
       password: "",
       email: "",
       mobile: "",
@@ -87,7 +94,7 @@ export default function CreateUser() {
       serialNo: "",
       macId: "",
       serviceOpted: "",
-      connectionType: "ILL",
+      connectionType: "",
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
@@ -104,6 +111,7 @@ export default function CreateUser() {
         packageStart: "",
         packageEnd: "",
       },
+      packages: [],
     },
     addresses: {
       billing: { addressLine1: "", addressLine2: "", state: "", city: "", pincode: "", area: "" },
@@ -312,31 +320,188 @@ export default function CreateUser() {
 
 
   // ================== PACKAGE SELECT ==================
-  const handlePackageChange = (id) => {
+  // ================== MULTI-PACKAGE HANDLERS ==================
+  const handleAddPackage = (id, overridePrice) => {
     const pkg = roleSpecificPackages.find((p) => p._id === id);
     if (!pkg) return;
 
-    const price = pkg.price || pkg.basePrice || 0;
+    const current = formData.customer.packages || [];
+    if (current.some((p) => p.packageId === pkg._id)) {
+      toast.info("Package already selected");
+      setShowPackageDropdown(false);
+      return;
+    }
 
+    const price =
+      overridePrice !== undefined && overridePrice !== ""
+        ? overridePrice
+        : (pkg.price || pkg.basePrice || 0);
+
+    const newPkg = {
+      packageId: pkg._id,
+      packageName: pkg.name,
+      packageAmount: String(price),
+      originalPrice: pkg.price || pkg.basePrice || 0,
+      validity: pkg.validity,
+    };
+
+    const updated = [...current, newPkg];
     setFormData((prev) => ({
       ...prev,
       customer: {
         ...prev.customer,
-        packageDetails: {
-          ...prev.customer.packageDetails,
-          packageId: pkg._id,
-          packageName: pkg.name,
-          packageAmount: price,
+        packages: updated,
+        packageDetails: updated[0] || {
+          packageId: "",
+          packageName: "",
+          packageAmount: "",
         },
       },
     }));
 
-    setCustomPackagePrice(String(price));
+    setFormErrors((prev) => ({
+      ...prev,
+      packages: undefined,
+    }));
+    setShowPackageDropdown(false);
+    setPackageSearch("");
   };
+
+  const handleUpdatePackagePrice = (packageId, newPrice) => {
+    setFormData((prev) => {
+      const updated = (prev.customer.packages || []).map((p) =>
+        p.packageId === packageId ? { ...p, packageAmount: newPrice } : p
+      );
+      return {
+        ...prev,
+        customer: {
+          ...prev.customer,
+          packages: updated,
+          packageDetails: updated[0] || prev.customer.packageDetails,
+        },
+      };
+    });
+  };
+
+  const handleRemovePackage = (packageId) => {
+    const current = formData.customer.packages || [];
+    if (current.length <= 1) {
+      toast.warning("At least one package is mandatory");
+      return;
+    }
+    const updated = current.filter((p) => p.packageId !== packageId);
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        packages: updated,
+        packageDetails: updated[0] || {
+          packageId: "",
+          packageName: "",
+          packageAmount: "",
+        },
+      },
+    }));
+  };
+
+  const handlePackageChange = handleAddPackage;
 
   // ================== SUBMIT ==================
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const errors = {};
+
+    // 1. Name
+    if (!formData.customer.name?.trim()) {
+      errors["customer.name"] = "Name is required";
+    }
+
+    // 2. User ID
+    if (!formData.customer.UserId?.trim()) {
+      errors["customer.UserId"] = "User ID is required";
+    }
+
+    // 3. Email
+    if (!formData.customer.email?.trim()) {
+      errors["customer.email"] = "Email is required";
+    }
+
+    // 4. Mobile No
+    if (!formData.customer.mobile?.trim()) {
+      errors["customer.mobile"] = "Mobile Number is required";
+    } else if (formData.customer.mobile.trim().length !== 10) {
+      errors["customer.mobile"] = "Mobile Number must be 10 digits";
+    }
+
+    // 5. Password
+    if (!formData.customer.password?.trim()) {
+      errors["customer.password"] = "Password is required";
+    }
+
+    // 6. Date of Birth
+    if (!formData.additional.dob?.trim()) {
+      errors["additional.dob"] = "Date of Birth is required";
+    }
+
+    // 7. Connection Type
+    if (!formData.customer.connectionType?.trim()) {
+      errors["customer.connectionType"] = "Connection Type is required";
+    }
+
+    // 8. Installation By
+    const hasInstaller =
+      (Array.isArray(formData.customer.installationBy) && formData.customer.installationBy.length > 0) ||
+      Boolean(formData.customer.installationByName?.trim()) ||
+      Boolean(isDefaultInstaller);
+    if (!hasInstaller) {
+      errors.installationBy = "Installation By is required";
+      errors["customer.installationBy"] = "Installation By is required";
+    }
+
+    // 9. Service Opted
+    if (!formData.customer.serviceOpted?.trim()) {
+      errors["customer.serviceOpted"] = "Service Opted is required";
+    }
+
+    // 10, 11, 12, 13. Address Line 1, City, State, Pincode
+    if (!formData.addresses.billing.addressLine1?.trim()) {
+      errors["addresses.billing.addressLine1"] = "Address Line 1 is required";
+    }
+    if (!formData.addresses.billing.city?.trim()) {
+      errors["addresses.billing.city"] = "City is required";
+    }
+    if (!formData.addresses.billing.state?.trim()) {
+      errors["addresses.billing.state"] = "State is required";
+    }
+    if (!formData.addresses.billing.pincode?.trim()) {
+      errors["addresses.billing.pincode"] = "Pincode is required";
+    }
+
+    // 14. Area
+    if (!selectedArea) {
+      errors["area"] = "Area is required";
+      errors["zone"] = "Area is required";
+    }
+
+    // 15. Zone
+    if (!selectedSubZone) {
+      errors["subZone"] = "Zone is required";
+      errors["customer.subZoneId"] = "Zone is required";
+    }
+
+    // 16. Select Package
+    if (!formData.customer.packages || formData.customer.packages.length === 0) {
+      errors["packages"] = "At least one package is mandatory";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return;
+    }
+    setFormErrors({});
     try {
       const payload = new FormData();
       payload.append("customer", JSON.stringify(formData.customer));
@@ -387,6 +552,9 @@ export default function CreateUser() {
       },
     });
 
+    setFormErrors({});
+    setInstallerSearch("");
+    setIsDefaultInstaller(false);
     setSelectedCreatedFor("Admin");
     setSelectedRetailerForLco("");
     setSelectedLco("");
@@ -488,7 +656,7 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Name *</label>
+              <label className="block text-sm font-medium">Name <span className="text-red-500">*</span></label>
               <input
                 value={formData.customer.name}
                 onChange={(e) => handleChange(e, "customer.name")}
@@ -525,7 +693,7 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Email *</label>
+              <label className="block text-sm font-medium">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 value={formData.customer.email}
@@ -542,7 +710,24 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Password</label>
+              <label className="block text-sm font-medium">User ID <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={formData.customer.UserId}
+                onChange={(e) => handleChange(e, "customer.UserId")}
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.UserId"] ? "border-red-500" : ""
+                  }`}
+                placeholder="User ID"
+              />
+              {formErrors["customer.UserId"] && (
+                <p className="text-red-500 text-sm">
+                  {formErrors["customer.UserId"]}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">Password <span className="text-red-500">*</span></label>
               <input
                 type="password"
                 value={formData.customer.password}
@@ -559,10 +744,23 @@ export default function CreateUser() {
             </div>
 
 
+            <div>
+              <label className="block text-sm font-medium">Gender</label>
+              <select
+                value={formData.customer.gender || "Male"}
+                onChange={(e) => handleChange(e, "customer.gender")}
+                className="mt-1 p-2 border rounded w-full"
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
             {/* dob */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth
+                Date of Birth <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <DatePicker
@@ -592,6 +790,9 @@ export default function CreateUser() {
                   // Ensures calendar opens on icon click
                   showPopperArrow={false}
                 />
+                {formErrors["additional.dob"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["additional.dob"]}</p>
+                )}
 
                 {/* Calendar Icon Inside Input - Clickable */}
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -628,7 +829,7 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Mobile *</label>
+              <label className="block text-sm font-medium">Mobile No <span className="text-red-500">*</span></label>
               <input
                 value={formData.customer.mobile}
                 onChange={(e) => handleChange(e, "customer.mobile")}
@@ -676,19 +877,35 @@ export default function CreateUser() {
 
             <div>
               <label className="block text-sm font-medium">
-                Connection Type
+                Connection Type <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.customer.connectionType}
-                onChange={(e) => handleChange(e, "customer.connectionType")}
-                className="mt-1 p-2 border rounded w-full"
+                onChange={(e) => {
+                  handleChange(e, "customer.connectionType");
+                  if (e.target.value) {
+                    setFormErrors((prev) => ({
+                      ...prev,
+                      "customer.connectionType": undefined,
+                    }));
+                  }
+                }}
+                required
+                className={`mt-1 p-2 border rounded w-full ${formErrors["customer.connectionType"] ? "border-red-500" : ""
+                  }`}
               >
+                <option value="">Select Connection Type</option>
                 {connectionTypes.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
                 ))}
               </select>
+              {formErrors["customer.connectionType"] && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors["customer.connectionType"]}
+                </p>
+              )}
             </div>
 
             <div>
@@ -721,7 +938,23 @@ export default function CreateUser() {
                   className="w-full p-3 border rounded-lg cursor-pointer bg-white hover:border-blue-500 transition flex justify-between items-center min-h-[42px]"
                 >
                   <div className="flex flex-wrap gap-2">
-                    {formData.customer.installationBy?.length > 0 ? (
+                    {(isDefaultInstaller || formData.customer.installationByName) && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">
+                        Default {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsDefaultInstaller(false);
+                            setFieldValue("customer.installationByName", "");
+                          }}
+                          className="ml-1 hover:text-blue-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {formData.customer.installationBy?.length > 0 &&
                       formData.customer.installationBy.map((id) => {
                         const person = staff.find((s) => s._id === id);
                         return person ? (
@@ -749,12 +982,14 @@ export default function CreateUser() {
                             </button>
                           </span>
                         ) : null;
-                      })
-                    ) : (
-                      <span className="text-gray-500 text-sm">
-                        Select installer(s)
-                      </span>
-                    )}
+                      })}
+                    {!isDefaultInstaller &&
+                      !formData.customer.installationByName &&
+                      (!formData.customer.installationBy || formData.customer.installationBy.length === 0) && (
+                        <span className="text-gray-500 text-sm">
+                          Select installer(s)
+                        </span>
+                      )}
                   </div>
                   <svg
                     className={`w-5 h-5 text-gray-500 transition-transform ${showDropdown ? "rotate-180" : ""
@@ -776,8 +1011,74 @@ export default function CreateUser() {
                 {showDropdown && (
                   <>
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {staff.length > 0 ? (
-                        staff.map((s) => {
+                      {/* Search box inside dropdown */}
+                      <div className="p-2 border-b bg-gray-50 sticky top-0 z-10">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Search staff by name..."
+                            value={installerSearch}
+                            onChange={(e) => setInstallerSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          />
+                          <svg
+                            className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                          </svg>
+                          {installerSearch && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInstallerSearch("");
+                              }}
+                              className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Default option */}
+                      {(!installerSearch || "default".includes(installerSearch.toLowerCase())) && (
+                        <label
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition border-b border-gray-100 bg-gray-50/50"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isDefaultInstaller || Boolean(formData.customer.installationByName)}
+                            onChange={() => {
+                              const nextState = !(isDefaultInstaller || Boolean(formData.customer.installationByName));
+                              setIsDefaultInstaller(nextState);
+                              if (nextState) {
+                                setFieldValue("customer.installationBy", []);
+                              } else {
+                                setFieldValue("customer.installationByName", "");
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          />
+                          <span className="font-semibold text-sm text-gray-800">
+                            Default
+                          </span>
+                        </label>
+                      )}
+
+                      {/* Staff options */}
+                      {filteredStaff.length > 0 ? (
+                        filteredStaff.map((s) => {
                           const isChecked =
                             formData.customer.installationBy?.includes(s._id);
                           return (
@@ -799,6 +1100,7 @@ export default function CreateUser() {
                                     );
                                   } else {
                                     updated.push(s._id);
+                                    setIsDefaultInstaller(false);
                                     setFieldValue(
                                       "customer.installationByName",
                                       ""
@@ -819,7 +1121,7 @@ export default function CreateUser() {
                         })
                       ) : (
                         <div className="px-4 py-3 text-sm text-gray-500">
-                          No staff available
+                          {installerSearch ? "No staff found" : "No staff available"}
                         </div>
                       )}
                     </div>
@@ -833,25 +1135,27 @@ export default function CreateUser() {
                 )}
               </div>
 
-              {/* Manual Input (Without OR Divider) */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Or Enter Manual Installer Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.customer.installationByName || ""}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    setFieldValue("customer.installationByName", name);
-                    if (name.trim()) {
-                      setFieldValue("customer.installationBy", []);
-                    }
-                  }}
-                  placeholder="e.g. Ramu Kaka, Local Technician"
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-              </div>
+              {/* Manual Input - Shown when Default is selected or installationByName has value */}
+              {(isDefaultInstaller || Boolean(formData.customer.installationByName)) && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Or Enter Manual Installer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.customer.installationByName || ""}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setFieldValue("customer.installationByName", name);
+                      if (name.trim()) {
+                        setFieldValue("customer.installationBy", []);
+                      }
+                    }}
+                    placeholder="e.g. Ramu Kaka, Local Technician"
+                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+              )}
 
               {/* Show Manual Name */}
               {formData.customer.installationByName && (
@@ -891,7 +1195,7 @@ export default function CreateUser() {
             )}
 
             <div>
-              <label className="block text-sm font-medium">Serial No</label>
+              <label className="block text-sm font-medium">ONT/ONU MAC ID</label>
               <input
                 value={formData.customer.serialNo}
                 onChange={(e) => handleChange(e, "customer.serialNo")}
@@ -900,17 +1204,17 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">MAC ID</label>
+              <label className="block text-sm font-medium"> Wi-Fi Router MAC ID</label>
               <input
                 value={formData.customer.macId}
                 onChange={(e) => handleChange(e, "customer.macId")}
                 className="mt-1 p-2 border rounded w-full"
-                placeholder="MAC ID"
+                placeholder="Wi-Fi Router MAC ID"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium">Service Opted</label>
+              <label className="block text-sm font-medium">Service Opted <span className="text-red-500">*</span></label>
               <select
                 value={formData.customer.serviceOpted || ""}
                 onChange={(e) => handleChange(e, "customer.serviceOpted")}
@@ -923,10 +1227,13 @@ export default function CreateUser() {
                   </option>
                 ))}
               </select>
+              {formErrors["customer.serviceOpted"] && (
+                <p className="text-red-500 text-sm mt-1">{formErrors["customer.serviceOpted"]}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium">STB No.</label>
+              <label className="block text-sm font-medium">Android Box No.</label>
               <input
                 value={formData.customer.stbNo}
                 onChange={(e) => handleChange(e, "customer.stbNo")}
@@ -935,7 +1242,7 @@ export default function CreateUser() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium">VC No.</label>
+              <label className="block text-sm font-medium">RF MAC ID</label>
               <input
                 value={formData.customer.vcNo}
                 onChange={(e) => handleChange(e, "customer.vcNo")}
@@ -1067,6 +1374,9 @@ export default function CreateUser() {
                   className={`p-2 border rounded w-1/2 ${formErrors["addresses.billing.city"] ? "border-red-500" : ""
                     }`}
                 />
+                {formErrors["addresses.billing.city"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.city"]}</p>
+                )}
 
                 <input
                   value={formData.addresses.billing.state}
@@ -1077,6 +1387,9 @@ export default function CreateUser() {
                     : ""
                     }`}
                 />
+                {formErrors["addresses.billing.state"] && (
+                  <p className="text-red-500 text-sm mt-1">{formErrors["addresses.billing.state"]}</p>
+                )}
 
               </div>
               <div className="flex gap-2 mt-2">
@@ -1276,9 +1589,9 @@ export default function CreateUser() {
                   ))}
                 </select>
 
-                {formErrors["zone"] && (
+                {(formErrors["zone"] || formErrors["area"]) && (
                   <p className="text-red-500 text-sm mt-1">
-                    {formErrors["zone"]}
+                    {formErrors["area"] || formErrors["zone"]}
                   </p>
                 )}
               </div>
@@ -1307,9 +1620,9 @@ export default function CreateUser() {
                     </option>
                   ))}
                 </select>
-                {formErrors["customer.subZoneId"] && (
+                {(formErrors["customer.subZoneId"] || formErrors["subZone"]) && (
                   <p className="text-red-500 text-sm mt-1">
-                    {formErrors["customer.subZoneId"]}
+                    {formErrors["subZone"] || formErrors["customer.subZoneId"]}
                   </p>
                 )}
               </div>
@@ -1321,152 +1634,195 @@ export default function CreateUser() {
           <div className="bg-blue-800 text-white px-4 py-2 font-semibold">
             Package Details
           </div>
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* PACKAGE DROPDOWN + AUTO PRICE */}
-            <div>
+          <div className="p-5 space-y-6">
+            {/* Select & Add Package */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-w-2xl">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Select & Add Package <span className="text-red-500">* (At least 1 required)</span>
+              </label>
 
-              <div className="relative">
-                <label className="block text-sm font-semibold mb-2">
-                  Select Package *
-                </label>
-
-                {/* SINGLE INPUT */}
-                <input
-                  type="text"
-                  placeholder="Search or select package..."
-                  value={packageSearch}
-                  onChange={(e) => {
-                    setPackageSearch(e.target.value);
-                    setShowPackageDropdown(true);
-                  }}
-                  onFocus={() => setShowPackageDropdown(true)}
-                  className="w-full p-2 border rounded"
-                  disabled={packageLoading}
-                />
-
-                {/* DROPDOWN */}
-                {showPackageDropdown && (
-                  <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow max-h-60 overflow-y-auto">
-
-                    {packageLoading && (
-                      <div className="p-3 text-sm text-gray-500">
-                        Loading packages...
-                      </div>
-                    )}
-
-                    {!packageLoading && filteredPackages.length === 0 && (
-                      <div className="p-3 text-sm text-gray-500">
-                        No packages found
-                      </div>
-                    )}
-
-                    {!packageLoading &&
-                      filteredPackages.map((pkg) => (
-                        <div
-                          key={pkg._id}
-                          onClick={() => {
-                            handlePackageChange(pkg._id);
-                            setPackageSearch(pkg.name);
-                            setShowPackageDropdown(false);
-                          }}
-                          className="px-4 py-2 cursor-pointer hover:bg-blue-100 text-sm flex justify-between"
-                        >
-                          <span>{pkg.name}</span>
-                          <span className="text-gray-600">
-                            ₹{pkg.price || pkg.basePrice || 0}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-                )}
-
-                {/* CLICK OUTSIDE CLOSE */}
-                {showPackageDropdown && (
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowPackageDropdown(false)}
-                  />
-                )}
-              </div>
-
-
-
-              {/* <select
-                value={formData.customer.packageDetails.packageId || ""}
-                onChange={(e) => handlePackageChange(e.target.value)}
-                disabled={packageLoading || filteredPackages.length === 0}
-                className="w-full p-2 border rounded"
-              >
-                <option value="" disabled>
-                  {packageLoading
-                    ? "Loading packages..."
-                    : filteredPackages.length === 0
-                      ? "No packages found"
-                      : "-- Select Package --"}
-                </option>
-
-                {filteredPackages.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.name} ₹{pkg.price || pkg.basePrice || 0}
-                  </option>
-                ))}
-              </select> */}
-
-              {formErrors["packageDetails.packageId"] && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formErrors["packageDetails.packageId"]}
-                </p>
-              )}
-
-              <div className="mt-4">
-                <label className="block text-sm font-medium">
-                  Package Price <span className="text-red-500">*</span>
-                  {customPackagePrice &&
-                    formData.customer.packageDetails.packageAmount !==
-                    customPackagePrice && (
-                      <span className="text-xs text-orange-600 ml-2">
-                        (Customized)
-                      </span>
-                    )}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-600 font-medium">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    value={customPackagePrice}
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                {/* Select Package Dropdown */}
+                <div className="flex-1">
+                  <select
+                    value={packageSearch}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      setCustomPackagePrice(value);
-                      // Update the form data so it gets submitted
-                      setFieldValue(
-                        "customer.packageDetails.packageAmount",
-                        value
-                      );
+                      const selectedId = e.target.value;
+                      setPackageSearch(selectedId);
+                      const found = roleSpecificPackages.find((p) => p._id === selectedId);
+                      if (found) {
+                        setCustomPackagePrice(String(found.price || found.basePrice || 0));
+                      } else {
+                        setCustomPackagePrice("");
+                      }
                     }}
-                    className="w-full pl-10 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-green-700"
-                    placeholder="Enter custom price"
-                    min="0"
-                    step="1"
-                  />
+                    disabled={packageLoading}
+                    className="w-full p-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-medium text-gray-800"
+                  >
+                    <option value="">
+                      {packageLoading
+                        ? "-- Loading packages... --"
+                        : roleSpecificPackages.length === 0
+                        ? "-- No packages available --"
+                        : "-- Select a Package to Add --"}
+                    </option>
+                    {roleSpecificPackages.map((pkg) => {
+                      const isAdded = (formData.customer.packages || []).some(
+                        (p) => p.packageId === pkg._id
+                      );
+                      return (
+                        <option key={pkg._id} value={pkg._id} disabled={isAdded}>
+                          {pkg.name} — ₹{pkg.price || pkg.basePrice || 0} {isAdded ? "(Already Added)" : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
-                {formErrors["packageDetails.packageAmount"] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {formErrors["packageDetails.packageAmount"]}
-                  </p>
-                )}
-                {formData.customer.packageDetails.packageAmount && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    Original price: ₹
-                    {formData.customer.packageDetails.packageAmount}
-                    {customPackagePrice &&
-                      customPackagePrice !==
-                      formData.customer.packageDetails.packageAmount &&
-                      ` → Now: ₹${customPackagePrice}`}
-                  </p>
-                )}
+
+                {/* Price input before adding */}
+                <div className="w-full sm:w-36">
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 text-sm font-semibold">
+                      ₹
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Price"
+                      value={customPackagePrice}
+                      onChange={(e) => setCustomPackagePrice(e.target.value)}
+                      disabled={!packageSearch}
+                      className="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-green-700 focus:ring-2 focus:ring-blue-500 outline-none bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Add Button */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!packageSearch) {
+                        toast.warning("Please select a package first");
+                        return;
+                      }
+                      handleAddPackage(packageSearch, customPackagePrice);
+                      setPackageSearch("");
+                      setCustomPackagePrice("");
+                    }}
+                    disabled={!packageSearch || packageLoading}
+                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${
+                      !packageSearch || packageLoading
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add
+                  </button>
+                </div>
               </div>
+            </div>
+
+            {formErrors["packages"] && (
+              <p className="text-red-500 text-sm font-medium">
+                {formErrors["packages"]}
+              </p>
+            )}
+
+            {/* Selected Packages List */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <span>Selected Packages ({formData.customer.packages?.length || 0})</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                  Minimum 1 Mandatory
+                </span>
+              </h4>
+
+              {(!formData.customer.packages || formData.customer.packages.length === 0) ? (
+                <div className="p-4 border-2 border-dashed border-red-300 rounded-lg bg-red-50/50 text-red-600 text-sm">
+                  No packages selected yet. Please select at least one package above.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {formData.customer.packages.map((pkg, idx) => (
+                    <div
+                      key={pkg.packageId || idx}
+                      className="p-4 border rounded-lg bg-gray-50 flex flex-wrap md:flex-nowrap items-center justify-between gap-4 shadow-sm"
+                    >
+                      <div className="min-w-[200px]">
+                        <span className="text-xs font-semibold uppercase text-blue-700">
+                          Package #{idx + 1}
+                        </span>
+                        <h5 className="font-bold text-gray-800 text-base">
+                          {pkg.packageName}
+                        </h5>
+                        <p className="text-xs text-gray-500">
+                          Base Price: ₹{pkg.originalPrice ?? pkg.packageAmount}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                          Custom Price (₹):
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pkg.packageAmount}
+                          onChange={(e) =>
+                            handleUpdatePackagePrice(pkg.packageId, e.target.value)
+                          }
+                          className="w-32 p-2 border rounded-md font-semibold text-green-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                          placeholder="Price"
+                        />
+                      </div>
+
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePackage(pkg.packageId)}
+                          disabled={formData.customer.packages.length <= 1}
+                          title={
+                            formData.customer.packages.length <= 1
+                              ? "At least one package is mandatory"
+                              : "Remove package"
+                          }
+                          className={`px-3 py-1.5 text-xs font-medium rounded transition ${formData.customer.packages.length <= 1
+                              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                            }`}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Summary */}
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center text-sm font-semibold text-blue-900">
+                    <span>Total Packages: {formData.customer.packages.length}</span>
+                    <span>
+                      Total Amount: ₹
+                      {formData.customer.packages.reduce(
+                        (sum, p) => sum + Number(p.packageAmount || 0),
+                        0
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -1569,10 +1925,7 @@ export default function CreateUser() {
               type="button"
               onClick={addDocumentRow}
               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
-              disabled={
-                formData.documents.length >= documentTypes.length &&
-                !formData.documents.some(doc => doc.type === "Other")
-              }
+              
             >
               + Add Document
             </button>

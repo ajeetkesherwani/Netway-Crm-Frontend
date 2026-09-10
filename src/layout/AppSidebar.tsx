@@ -300,7 +300,7 @@ const AppSidebar: React.FC = () => {
     // 📦 Stock Management
     const stockManagementSubItems = [];
 
-    if (hasTruePermission(permissions.Setting)) {
+    if (hasTruePermission(permissions.setting)) {
       if (permissions.setting?.HardwareList) {
         stockManagementSubItems.push({
           name: "Hardware List",

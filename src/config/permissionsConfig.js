@@ -230,6 +230,7 @@ export const permissionsConfig = [
             "HardwareRemove",
             "HardwareUpdate",
             "HardwareCreate",
+            "HardwareAssign",
             "ZoneList",
             "ZoneRemove",
             "ZoneUpdate",
