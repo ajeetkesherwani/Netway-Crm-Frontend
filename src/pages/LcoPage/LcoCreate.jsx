@@ -43,6 +43,7 @@ export default function CreateLco() {
     longitude: "",
     gst: "",
     panNo: "",
+    aadharNumber: "",
     lcoCode: "",
     balance: "",
     dashboard: "Lco",
@@ -117,7 +118,12 @@ export default function CreateLco() {
   const validateLco = () => {
     const errors = {};
     if (!formData.lcoName) errors.lcoName = "LCO Name is required";
+    if (!formData.address) errors.address = "Address is required";
     if (!formData.email) errors.email = "LCO Email is required";
+    if (!formData.panNo) errors.panNo = "PAN Number is required";
+    if (!formData.aadharNumber) errors.aadharNumber = "Aadhar Number is required";
+    if (!formData.contactPersonName) errors.contactPersonName = "Contact Person Name is required";
+    if (!formData.contactPersonNumber) errors.contactPersonNumber = "Contact Person Number is required";
     // if (!formData.password) errors.password = "Password is required";
     if (!formData.mobileNo) errors.mobileNo = "Mobile Number is required";
     if (formData.mobileNo && !/^[0-9]{10}$/.test(formData.mobileNo))
@@ -248,6 +254,19 @@ export default function CreateLco() {
       return;
     }
 
+    const hasAadhaar = formData.documents.some(d => d.fieldName === "aadhaarCard" && d.file);
+    const hasPan = formData.documents.some(d => d.fieldName === "panCard" && d.file);
+    if (!hasAadhaar) {
+      toast.error("Please upload Aadhaar Card");
+      setActiveTab("lcoDocument");
+      return;
+    }
+    if (!hasPan) {
+      toast.error("Please upload PAN Card");
+      setActiveTab("lcoDocument");
+      return;
+    }
+
     setLoading(true);
     try {
       const submitData = new FormData();
@@ -347,7 +366,11 @@ export default function CreateLco() {
             </div> */}
 
             {/* <div><label className="block font-medium">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
-            <div><label className="block font-medium">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div>
+              <label className="block font-medium">Address *</label>
+              <input type="text" name="address" value={formData.address} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.address ? "border-red-500" : ""}`} />
+              {formErrors.address && <p className="text-red-500 text-sm">{formErrors.address}</p>}
+            </div>
             {/* <div><label className="block font-medium">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             <div><label className="block font-medium">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="border p-2 w-full rounded" /></div>
 
@@ -382,10 +405,33 @@ export default function CreateLco() {
             </div>
 
             {/* <div><label className="block font-medium">Phone No</label><input type="text" name="telephone" value={formData.telephone} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
-            <div><label className="block font-medium">Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div>
+              <label className="block font-medium">Email *</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.email ? "border-red-500" : ""}`} />
+              {formErrors.email && <p className="text-red-500 text-sm">{formErrors.email}</p>}
+            </div>
             <div><label className="block font-medium">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="border p-2 w-full rounded" /></div>
             <div><label className="block font-medium">GST No</label><input type="text" name="gst" value={formData.gst} onChange={handleChange} className="border p-2 w-full rounded" /></div>
-            <div><label className="block font-medium">PAN Number</label><input type="text" name="panNo" value={formData.panNo} onChange={handleChange} className="border p-2 w-full rounded" /></div>
+            <div>
+              <label className="block font-medium">PAN Number *</label>
+              <input type="text" name="panNo" value={formData.panNo} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.panNo ? "border-red-500" : ""}`} />
+              {formErrors.panNo && <p className="text-red-500 text-sm">{formErrors.panNo}</p>}
+            </div>
+            <div>
+              <label className="block font-medium">Aadhar Number *</label>
+              <input type="text" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.aadharNumber ? "border-red-500" : ""}`} />
+              {formErrors.aadharNumber && <p className="text-red-500 text-sm">{formErrors.aadharNumber}</p>}
+            </div>
+            <div>
+              <label className="block font-medium">Contact Person Name *</label>
+              <input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.contactPersonName ? "border-red-500" : ""}`} />
+              {formErrors.contactPersonName && <p className="text-red-500 text-sm">{formErrors.contactPersonName}</p>}
+            </div>
+            <div>
+              <label className="block font-medium">Contact Person Number *</label>
+              <input type="text" name="contactPersonNumber" value={formData.contactPersonNumber} onChange={handleChange} required className={`border p-2 w-full rounded ${formErrors.contactPersonNumber ? "border-red-500" : ""}`} />
+              {formErrors.contactPersonNumber && <p className="text-red-500 text-sm">{formErrors.contactPersonNumber}</p>}
+            </div>
             {/* <div><label className="block font-medium">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
             {/* <div><label className="block font-medium">Balance</label><input type="number" name="balance" value={formData.balance} onChange={handleChange} className="border p-2 w-full rounded" /></div> */}
 
@@ -500,8 +546,8 @@ export default function CreateLco() {
         {activeTab === "lcoDocument" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { label: "Aadhaar Card", field: "aadhaarCard" },
-              { label: "PAN Card", field: "panCard" },
+              { label: "Aadhaar Card *", field: "aadhaarCard" },
+              { label: "PAN Card *", field: "panCard" },
               { label: "License", field: "license" },
               { label: "Other Document", field: "other" },
             ].map(({ label, field }) => {

@@ -1,31 +1,56 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch, FaWallet } from "react-icons/fa";
+import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch, FaWallet, FaSignInAlt } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
-import { deleteLco, getAllLco } from "../../service/lco";
+import { deleteLco, getAllLco, getLcosByResellerId } from "../../service/lco";
+import { getRetailer } from "../../service/retailer";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import Select from "react-select";
 
 export default function LcoList() {
   const [lcos, setLcos] = useState([]); // Full list
+  const [retailers, setRetailers] = useState([]);
+  const [selectedReseller, setSelectedReseller] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [appliedSearch, setAppliedSearch] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedLco, setSelectedLco] = useState(null);
+  const [appliedLco, setAppliedLco] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 15;
   const navigate = useNavigate();
   const searchRef = useRef(null);
 
+  // Fetch Retailers once
+  useEffect(() => {
+    getRetailer().then(res => {
+      if (res.data) setRetailers(res.data);
+    }).catch(err => console.error(err));
+  }, []);
+
   // Fetch LCOs
   useEffect(() => {
     const loadLcos = async () => {
       try {
-        const res = await getAllLco();
-        setLcos(res.data || []);
+        setLoading(true);
+        setError(""); // clear past errors
+        let res;
+        if (selectedReseller) {
+          try {
+            res = await getLcosByResellerId(selectedReseller.value);
+            setLcos(res.data || []);
+          } catch (err) {
+            // API throws error when no LCOs exist for reseller
+            setLcos([]);
+          }
+        } else {
+          res = await getAllLco();
+          setLcos(res.data || []);
+        }
+        setSelectedLco(null);
+        setAppliedLco(null);
       } catch (err) {
         console.error("Error fetching LCOs:", err);
         setError("Failed to load LCOs");
@@ -35,7 +60,7 @@ export default function LcoList() {
       }
     };
     loadLcos();
-  }, []);
+  }, [selectedReseller]);
 
   // Close menu & suggestions on outside click
   useEffect(() => {
@@ -84,35 +109,21 @@ export default function LcoList() {
   // };
 
   const handleSearch = () => {
-    setAppliedSearch(searchTerm);
+    setAppliedLco(selectedLco);
     setCurrentPage(1);
-    setShowSuggestions(false);
-  };
-
-  const selectSuggestion = (name) => {
-    setSearchTerm(name);
-    setAppliedSearch(name);
-    setCurrentPage(1);
-    setShowSuggestions(false);
   };
 
   // Filter full list
-  const filteredLcos = lcos.filter((lco) =>
-    lco.lcoName?.toLowerCase().includes(appliedSearch.toLowerCase())
-  );
+  const filteredLcos = lcos.filter((lco) => {
+    if (!appliedLco) return true;
+    return lco._id === appliedLco.value;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filteredLcos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedLcos = filteredLcos.slice(startIndex, endIndex);
-
-  // Suggestions
-  const suggestions = [...new Set(
-    lcos
-      .map((l) => l.lcoName)
-      .filter((name) => name?.toLowerCase().includes(searchTerm.toLowerCase()))
-  )].slice(0, 5);
 
   // Export ALL LCOs
   const exportToExcel = () => {
@@ -146,40 +157,30 @@ export default function LcoList() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <h1 className="text-lg font-medium">LCO List</h1>
-          <div className="ml-4 relative" ref={searchRef}>
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                placeholder="Search by name..."
-                className="px-3 py-1 border border-gray-300 rounded text-sm w-64"
-              />
-              <button
-                onClick={handleSearch}
-                className="ml-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                <FaSearch />
-              </button>
-            </div>
-
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-10">
-                {suggestions.map((name) => (
-                  <div
-                    key={name}
-                    onClick={() => selectSuggestion(name)}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  >
-                    {name}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="ml-4 flex items-center gap-2">
+            <Select
+              options={retailers.map((r) => ({ value: r._id, label: r.resellerName }))}
+              value={selectedReseller}
+              onChange={(option) => setSelectedReseller(option)}
+              placeholder="Select Reseller..."
+              className="w-48 text-sm text-black"
+              isClearable
+            />
+            <Select
+              options={lcos.map((l) => ({ value: l._id, label: l.lcoName }))}
+              value={selectedLco}
+              onChange={(option) => setSelectedLco(option)}
+              placeholder="First Select Reseller."
+              className="w-48 text-sm text-black"
+              isDisabled={!selectedReseller}
+              isClearable
+            />
+            <button
+              onClick={handleSearch}
+              className="px-3 py-[9px] bg-blue-600 text-white rounded hover:bg-blue-700 h-[38px] flex items-center justify-center"
+            >
+              <FaSearch />
+            </button>
           </div>
         </div>
 
@@ -233,7 +234,7 @@ export default function LcoList() {
                         {lco.lcoName}
                       </span>
                     </td>
-                    <td className="px-2 py-2">{lco.retailerId.resellerName ||  "—"}</td>
+                    <td className="px-2 py-2">{lco.retailerId.resellerName || "—"}</td>
                     <td className="px-2 py-2">{lco.email || "—"}</td>
                     <td className="px-2 py-2">{lco.mobileNo}</td>
                     <td className="px-2 py-2">{lco.address || "—"}</td>
@@ -267,6 +268,14 @@ export default function LcoList() {
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
                               >
                                 <FaEye /> View
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() => window.open("/lco", "_blank")}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-purple-600"
+                              >
+                                <FaSignInAlt /> Login as LCO
                               </button>
                             </li>
                             <ProtectedAction module="lco" action="Edit">

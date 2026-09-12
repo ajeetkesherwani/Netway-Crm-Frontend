@@ -1108,6 +1108,7 @@ export default function PriceBookList() {
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">S.No</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Price Book Name</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Status</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Total Plans</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">No of Relseller/Lco</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Assigned</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Created</th>
@@ -1134,6 +1135,11 @@ export default function PriceBookList() {
                             }`}
                         >
                           {pb.status === "active" ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm">
+                          {pb.package?.length || 0}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-700">

@@ -21,6 +21,8 @@ export default function PackageList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [serverTypeSearch, setServerTypeSearch] = useState("");
+  const [appliedServerType, setAppliedServerType] = useState("");
   const navigate = useNavigate();
   const menuRef = useRef(null);
 
@@ -28,7 +30,8 @@ export default function PackageList() {
   useEffect(() => {
     const loadPackages = async () => {
       try {
-        const res = await getAllPackageList();
+        setLoading(true);
+        const res = await getAllPackageList(appliedServerType);
         const normalized = (res.data || []).map((pkg) => ({
           ...pkg,
           status:
@@ -44,7 +47,7 @@ export default function PackageList() {
       }
     };
     loadPackages();
-  }, []);
+  }, [appliedServerType]);
 
   // Close menu on outside click
   useEffect(() => {
@@ -99,6 +102,7 @@ export default function PackageList() {
 
   const handleSearch = () => {
     setAppliedSearch(searchTerm.toLowerCase());
+    setAppliedServerType(serverTypeSearch);
   };
 
   const handleKeyPress = (e) => {
@@ -188,21 +192,31 @@ export default function PackageList() {
             Upd. Package IDs
           </button>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={serverTypeSearch}
+              onChange={(e) => setServerTypeSearch(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Search by name..."
-              className="px-2 py-1 border border-gray-300 rounded-l text-sm"
+              placeholder="Server Type..."
+              className="px-2 py-1 border border-gray-300 rounded text-sm w-32"
             />
-            <button
-              onClick={handleSearch}
-              className="px-2 py-1 bg-blue-600 text-white rounded-r hover:bg-blue-700"
-            >
-              <FaSearch />
-            </button>
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Search by name..."
+                className="px-2 py-1 border border-gray-300 rounded-l text-sm"
+              />
+              <button
+                onClick={handleSearch}
+                className="px-2 py-1 bg-blue-600 text-white rounded-r hover:bg-blue-700"
+              >
+                <FaSearch />
+              </button>
+            </div>
           </div>
 
           <button
@@ -236,7 +250,8 @@ export default function PackageList() {
                 <tr>
                   <th className="px-[2px] py-[2px] text-left">S.No</th>
                   <th className="px-[2px] py-[2px] text-left">Package Name</th>
-                  <th className="px-[2px] py-[2px] text-left">PackageId</th>
+                  <th className="px-[2px] py-[2px] text-left">Package ID</th>
+                  <th className="px-[2px] py-[2px] text-left">Server Type</th>
                   <th className="px-[2px] py-[2px] text-left">Base Price</th>
                   <th className="px-[2px] py-[2px] text-left">No. of User</th>
                   <th className="px-[2px] py-[2px] text-left">Validity</th>
@@ -258,6 +273,9 @@ export default function PackageList() {
 
                     <td className="px-[2px] py-[2px]">
                       {pkg.IppactId || "0"}
+                    </td>
+                    <td className="px-[2px] py-[2px]">
+                      {pkg.servertype || "—"}
                     </td>
 
                     <td className="px-[2px] py-[2px]">

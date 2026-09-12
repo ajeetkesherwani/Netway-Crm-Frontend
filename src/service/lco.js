@@ -140,6 +140,19 @@ export const getAllLco = async () => {
   return res.json();
 };
 
+export const getLcosByResellerId = async (resellerId) => {
+  const res = await fetch(`${BASE_URL}/lco/list/reseller/${resellerId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch LCOs for Reseller");
+  return res.json();
+};
+
 export const getLcos = async ({ search, page = 1, limit = 10 }) => {
   let url = `${BASE_URL}/lco/?page=${page}&limit=${limit}&`;
   if (search) url += `search=${search}`;

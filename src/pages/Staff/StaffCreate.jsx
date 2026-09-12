@@ -126,39 +126,13 @@ export default function StaffCreate() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
 
-        {/* Staff Name */}
-        {/* <div>
-          <label className="block font-medium">Staff Name *</label>
-          <input
-            type="text"
-            name="staffName"
-            value={formData.staffName}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
         {/* Name */}
         <div>
-          <label className="block font-medium"> Staff Name *</label>
+          <label className="block font-medium">Staff Name *</label>
           <input
             type="text"
             name="name"
             value={formData.name}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="block font-medium">Email *</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
             onChange={handleChange}
             required
             className="border p-2 w-full rounded"
@@ -176,9 +150,22 @@ export default function StaffCreate() {
             required
             className="border p-2 w-full rounded"
             placeholder="10-digit number"
-            maxLength={10} // max 10 digits
-            pattern="\d{10}" // exactly 10 digits only
+            maxLength={10}
+            pattern="\d{10}"
             title="Phone number must be 10 digits"
+          />
+        </div>
+
+        {/* User ID */}
+        <div>
+          <label className="block font-medium">User ID *</label>
+          <input
+            type="text"
+            name="logId"
+            value={formData.logId}
+            onChange={handleChange}
+            required
+            className="border p-2 w-full rounded"
           />
         </div>
 
@@ -195,35 +182,19 @@ export default function StaffCreate() {
           />
         </div>
 
-        {/* Log ID */}
+        {/* Email */}
         <div>
-          <label className="block font-medium">User ID *</label>
+          <label className="block font-medium">Email</label>
           <input
-            type="text"
-            name="logId"
-            value={formData.logId}
+            type="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
-            required
             className="border p-2 w-full rounded"
           />
         </div>
-        {/* Role */}
-        {/* <div>
-          <label className="block font-medium">Role *</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          >
-            <option value="">Select Role</option>
-            <option key={roles._id} value={roles._id}>
-              {roles.roleName}
-            </option>
-          </select>
-        </div> */}
 
+        {/* Role */}
         <div>
           <label className="block font-medium">Role *</label>
           <select
@@ -233,7 +204,7 @@ export default function StaffCreate() {
             required
             className="border p-2 w-full rounded"
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               Select Role
             </option>
             {roles.map((role) => (
@@ -258,39 +229,6 @@ export default function StaffCreate() {
           </select>
         </div>
 
-        {/* Address */}
-        {/* <div>
-          <label className="block font-medium">Address</label>
-          <input
-            type="text"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
-        {/* Area */}
-        {/* <div>
-          <label className="block font-medium">Area</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            required
-            className="border p-2 w-full rounded"
-          >
-            <option value="" disabled selected>
-              Select Role
-            </option>
-            {zoneList.map((zone) => (
-              <option key={zone._id} value={zone._id}>
-                {zone.zoneName}
-              </option>
-            ))}
-          </select>
-        </div> */}
-
         {/* Salary */}
         <div>
           <label className="block font-medium">Salary</label>
@@ -303,42 +241,6 @@ export default function StaffCreate() {
             min="0"
           />
         </div>
-
-        {/* Staff IP */}
-        {/* <div>
-          <label className="block font-medium">Staff IP</label>
-          <input
-            type="text"
-            name="staffIp"
-            value={formData.staffIp}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-            placeholder="e.g., 192.168.1.1"
-          />
-        </div> */}
-
-        {/* Reset OTP Expires */}
-        {/* <div>
-          <label className="block font-medium">Reset OTP Expires</label>
-          <input
-            type="datetime-local"
-            name="resetOtpExpires"
-            value={formData.resetOtpExpires}
-            onChange={handleChange}
-            className="border p-2 w-full rounded"
-          />
-        </div> */}
-
-        {/* Bio */}
-        {/* <div className="col-span-2">
-          <label className="block font-medium">Bio</label>
-          <textarea
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            className="border p-2 w-full rounded h-24"
-          />
-        </div> */}
 
         {/* Comment */}
         <div className="col-span-2">

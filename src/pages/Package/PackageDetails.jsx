@@ -167,6 +167,8 @@ export default function PackageDetails() {
               pkg.fromDate ? new Date(pkg.fromDate).toLocaleDateString() : "—"
             }
           />
+          <Row label="servertype" value={pkg.servertype} />
+          <Row label="packageID" value={pkg.packageID} />
           <Row
             label="To Date"
             value={

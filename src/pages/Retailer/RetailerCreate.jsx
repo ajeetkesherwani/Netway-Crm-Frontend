@@ -36,6 +36,7 @@ export default function RetailerCreate() {
     longitude: "",
     gstNo: "",
     panNumber: "",
+    aadharNumber: "",
     resellerCode: "",
     balance: "",
     dashboard: "Reseller",
@@ -146,6 +147,13 @@ export default function RetailerCreate() {
   // Validate retailer form data
   const validateRetailer = () => {
     const errors = {};
+    
+    if (!formData.address) errors.address = "Address is required";
+    if (!formData.panNumber) errors.panNumber = "PAN Number is required";
+    if (!formData.aadharNumber) errors.aadharNumber = "Aadhar Number is required";
+    if (!formData.contactPersonName) errors.contactPersonName = "Contact Person Name is required";
+    if (!formData.contactPersonNumber) errors.contactPersonNumber = "Contact Person Number is required";
+    
     if (!formData.resellerName)
       errors.resellerName = "Reseller Name is required";
     // if (!formData.password) errors.password = "Password is required";
@@ -234,7 +242,22 @@ export default function RetailerCreate() {
       return;
     }
 
+    
+    const hasAadhaar = formData.documents.some(d => d.fieldName === "aadhaarCard" && d.file);
+    const hasPan = formData.documents.some(d => d.fieldName === "panCard" && d.file);
+    if (!hasAadhaar) {
+      toast.error("Please upload Aadhaar Card");
+      setActiveTab("resellerDocument");
+      return;
+    }
+    if (!hasPan) {
+      toast.error("Please upload PAN Card");
+      setActiveTab("resellerDocument");
+      return;
+    }
+
     setLoading(true);
+
 
     try {
       const submitData = new FormData();
@@ -416,13 +439,15 @@ export default function RetailerCreate() {
 
             {/* Address */}
             <div>
-              <label className="block font-medium">Address</label>
+              <label className="block font-medium">Address *</label>
               <input
                 type="text"
                 name="address"
+                required
+                className={`border p-2 w-full rounded ${formErrors.address ? "border-red-500" : ""}`}
                 value={formData.address}
                 onChange={handleChange}
-                className="border p-2 w-full rounded"
+                // className="border p-2 w-full rounded"
               />
             </div>
 
@@ -642,7 +667,7 @@ export default function RetailerCreate() {
             </div> */}
 
             {/* Latitude */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Latitude</label>
               <input
                 type="text"
@@ -651,10 +676,10 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* Longitude */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Longitude</label>
               <input
                 type="text"
@@ -663,7 +688,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* GST No */}
             <div>
@@ -677,15 +702,34 @@ export default function RetailerCreate() {
               />
             </div>
 
+            
+            {/* Aadhar Number */}
+            <div>
+              <label className="block font-medium">Aadhar Number *</label>
+              <input
+                type="text"
+                name="aadharNumber"
+                value={formData.aadharNumber}
+                onChange={handleChange}
+                required
+                className={`border p-2 w-full rounded ${formErrors.aadharNumber ? "border-red-500" : ""}`}
+              />
+              {formErrors.aadharNumber && (
+                <p className="text-red-500 text-sm">{formErrors.aadharNumber}</p>
+              )}
+            </div>
+    
             {/* PAN Number */}
             <div>
-              <label className="block font-medium">PAN Number</label>
+              <label className="block font-medium">PAN Number *</label>
               <input
                 type="text"
                 name="panNumber"
+                required
+                className={`border p-2 w-full rounded ${formErrors.panNumber ? "border-red-500" : ""}`}
                 value={formData.panNumber}
                 onChange={handleChange}
-                className="border p-2 w-full rounded"
+                // className="border p-2 w-full rounded"
               />
             </div>
 
@@ -742,22 +786,25 @@ export default function RetailerCreate() {
 
             {/* Contact Person Name */}
             <div>
-              <label className="block font-medium">Contact Person Name</label>
+              <label className="block font-medium">Contact Person Name *</label>
               <input
                 type="text"
                 name="contactPersonName"
+                required
+                className={`border p-2 w-full rounded ${formErrors.contactPersonName ? "border-red-500" : ""}`}
                 value={formData.contactPersonName}
                 onChange={handleChange}
-                className="border p-2 w-full rounded"
+                // className="border p-2 w-full rounded"
               />
             </div>
 
             {/* Contact Person Number */}
             <div>
-              <label className="block font-medium">Contact Person Number</label>
+              <label className="block font-medium">Contact Person Number *</label>
               <input
                 type="number"
                 name="contactPersonNumber"
+                required
                 value={formData.contactPersonNumber}
                 onChange={handleChange}
                 className={`border p-2 w-full rounded ${formErrors.contactPersonNumber ? "border-red-500" : ""
@@ -772,7 +819,7 @@ export default function RetailerCreate() {
             </div>
 
             {/* Support Email */}
-            <div>
+            {/* <div>
               <label className="block font-medium">Support Email</label>
               <input
                 type="email"
@@ -781,7 +828,7 @@ export default function RetailerCreate() {
                 onChange={handleChange}
                 className="border p-2 w-full rounded"
               />
-            </div>
+            </div> */}
 
             {/* WhatsApp Number */}
             <div>
@@ -981,8 +1028,8 @@ export default function RetailerCreate() {
         {activeTab === "resellerDocument" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { label: "Aadhaar Card", field: "aadhaarCard" },
-              { label: "PAN Card", field: "panCard" },
+              { label: "Aadhaar Card *", field: "aadhaarCard" },
+              { label: "PAN Card *", field: "panCard" },
               { label: "License", field: "license" },
               { label: "Other Document", field: "other" },
             ].map(({ label, field }) => {

@@ -1,28 +1,46 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaLongArrowAltLeft } from "react-icons/fa";
 import { getRoles } from "../../service/role";
+import { getStaffDetails, getAllZoneList } from "../../service/staffService";
 import { toast } from "react-toastify";
-import { getStaffDetails } from "../../service/staffService";
 
 export default function StaffView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [staff, setStaff] = useState(null);
   const [roles, setRoles] = useState([]);
+  const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Fetch staff details and roles
+  // Fetch staff details, roles and zones
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [staffRes, rolesRes] = await Promise.all([
+        const [staffRes, rolesRes, zonesRes] = await Promise.allSettled([
           getStaffDetails(id),
           getRoles(),
+          getAllZoneList(),
         ]);
-        setStaff(staffRes.data || null);
-        setRoles(rolesRes.data || []);
+
+        if (staffRes.status === "fulfilled" && staffRes.value?.data) {
+          setStaff(staffRes.value.data);
+        } else {
+          setError("Failed to load staff details");
+          toast.error("Failed to load staff details ❌");
+        }
+
+        if (rolesRes.status === "fulfilled" && rolesRes.value?.data) {
+          setRoles(rolesRes.value.data);
+        }
+
+        if (zonesRes.status === "fulfilled" && zonesRes.value?.data) {
+          setZones(zonesRes.value.data);
+        }
       } catch (err) {
         console.error("Error fetching data:", err);
+        setError("Failed to load staff details");
         toast.error("Failed to load staff details ❌");
       } finally {
         setLoading(false);
@@ -33,7 +51,7 @@ export default function StaffView() {
 
   // Format date
   const formatDate = (date) => {
-    if (!date) return "N/A";
+    if (!date) return "—";
     return new Date(date).toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
@@ -43,124 +61,87 @@ export default function StaffView() {
 
   // Resolve role name
   const getRoleName = (roleId) => {
+    if (!roleId) return "—";
     const role = roles.find((r) => r._id === roleId);
     return role ? role.roleName : `Unknown (${roleId})`;
   };
 
-  // Normalize status
-  const formatStatus = (status) => {
-    if (status === "active" || status === "true") return "Active";
-    if (status === "false") return "Inactive";
-    return status || "N/A";
+  // Resolve area / zone name
+  const getAreaName = (areaVal) => {
+    if (!areaVal) return "—";
+    if (typeof areaVal === "object") {
+      return areaVal.zoneName || areaVal.name || "—";
+    }
+    const zone = zones.find((z) => z._id === areaVal);
+    return zone ? zone.zoneName : areaVal;
   };
 
-  if (loading) {
-    return <div className="text-center p-6">Loading...</div>;
-  }
+  // Normalize status
+  const formatStatus = (status) => {
+    if (status === "active" || status === "true" || status === true) return "Active";
+    if (status === "inactive" || status === "false" || status === false) return "Inactive";
+    return status || "—";
+  };
 
-  if (!staff) {
-    return <div className="text-center p-6 text-red-500">Staff not found.</div>;
-  }
+  if (loading) return <p className="p-4">Loading...</p>;
+  if (error) return <p className="p-4 text-red-500">{error}</p>;
+
+  const displayStaff = staff || {};
+
+  const Row = ({ label, value }) => (
+    <div className="flex border-b last:border-b-0 md:border-r text-[14px]">
+      <div className="w-1/3 bg-gray-100 p-[2px] font-medium">{label}</div>
+      <div className="w-2/3 p-[2px] break-words">{value || "—"}</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-8xl mx-auto p-6 bg-white shadow rounded">
-      {/* <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Staff Details</h2>
+    <>
+      <h3 className="text-2xl font-semibold">Staff Details</h3>
+
+      <div className="flex justify-between mb-1">
+        {/* BACK BUTTON */}
         <button
-          onClick={() => navigate("/staff/list")}
-          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+          onClick={() => navigate(-1)}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 flex items-center gap-1"
         >
-          Back
+          <FaLongArrowAltLeft /> Back
         </button>
-      </div> */}
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Staff Details</h2>
-
-        <div className="flex gap-3">
+        {/* ACTION BUTTONS (RIGHT SIDE) */}
+        <div className="flex items-center gap-2">
+          {/* EDIT BUTTON */}
           <button
-            onClick={() => navigate(`/staff/update/${id}`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800"
+            onClick={() =>
+              navigate(`/staff/update/${staff?._id || id}`, {
+                state: { from: `/staff/view/${id}` },
+              })
+            }
+            className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
           >
             Edit
           </button>
-
-          <button
-            onClick={() => navigate("/staff/list")}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-          >
-            Back
-          </button>
         </div>
       </div>
 
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* <div>
-          <label className="block font-medium text-gray-700">ID</label>
-          <p className="border p-2 rounded bg-gray-50">{staff._id || "N/A"}</p>
-        </div> */}
-        <div>
-          <label className="block font-medium text-gray-700"> Staff Name</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.name || "N/A"}</p>
-        </div>
-        {/* <div>
-          <label className="block font-medium text-gray-700">Staff Name</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.staffName || "N/A"}</p>
-        </div> */}
-        <div>
-          <label className="block font-medium text-gray-700">Email</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.email || "N/A"}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Phone Number</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.phoneNo || "N/A"}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">User ID</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.logId || "N/A"}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Role</label>
-          <p className="border p-2 rounded bg-gray-50">{getRoleName(staff.role)}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Status</label>
-          <p className="border p-2 rounded bg-gray-50">{formatStatus(staff.status)}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Salary</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.salary ? `₹${staff.salary}` : "N/A"}</p>
-        </div>
-        {/* <div>
-          <label className="block font-medium text-gray-700">Area</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.area || "N/A"}</p>
-        </div> */}
-        {/* <div>
-          <label className="block font-medium text-gray-700">Staff IP</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.staffIp || "N/A"}</p>
-        </div> */}
-        {/* <div>
-          <label className="block font-medium text-gray-700">Address</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.address || "N/A"}</p>
-        </div> */}
-        {/* <div className="col-span-2">
-          <label className="block font-medium text-gray-700">Bio</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.bio || "N/A"}</p>
-        </div> */}
-        <div className="col-span-2">
-          <label className="block font-medium text-gray-700">Comment</label>
-          <p className="border p-2 rounded bg-gray-50">{staff.comment || "N/A"}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Created At</label>
-          <p className="border p-2 rounded bg-gray-50">{formatDate(staff.createdAt)}</p>
-        </div>
-        <div>
-          <label className="block font-medium text-gray-700">Updated At</label>
-          <p className="border p-2 rounded bg-gray-50">{formatDate(staff.updatedAt)}</p>
+      <div className="border rounded-lg overflow-hidden shadow bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <Row label="Staff Name" value={displayStaff.name || displayStaff.staffName} />
+          <Row label="User ID" value={displayStaff.logId} />
+          <Row label="Mobile No." value={displayStaff.phoneNo} />
+          <Row label="E-Mail" value={displayStaff.email} />
+          <Row label="Role" value={getRoleName(displayStaff.role)} />
+          <Row label="Status" value={formatStatus(displayStaff.status)} />
+          <Row label="Salary" value={displayStaff.salary ? `₹${displayStaff.salary}` : "—"} />
+          {/* <Row label="Area" value={getAreaName(displayStaff.area)} />
+          <Row label="Address" value={displayStaff.address} />
+          <Row label="Staff IP" value={displayStaff.staffIp} />
+          <Row label="Bio" value={displayStaff.bio} /> */}
+          <Row label="Comment" value={displayStaff.comment} />
+          <Row label="Created At" value={formatDate(displayStaff.createdAt)} />
+          <Row label="Updated At" value={formatDate(displayStaff.updatedAt)} />
         </div>
       </div>
-    </div>
+    </>
   );
 }
