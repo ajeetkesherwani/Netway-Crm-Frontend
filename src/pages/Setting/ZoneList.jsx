@@ -156,7 +156,6 @@ export default function ZoneList() {
         <div className="flex flex-col">
           <h1 className="text-xl font-semibold text-gray-800 leading-tight">
             Area List
-            List
           </h1>
         </div>
 
@@ -270,7 +269,7 @@ export default function ZoneList() {
                               </button>
                             </ProtectedAction>
 
-                            <ProtectedAction module="setting" action="ZoneDelete">
+                            <ProtectedAction module="setting" action="ZoneRemove">
                               <button
                                 onClick={() => handleDelete(zone._id, zone.zoneName)}
                                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"

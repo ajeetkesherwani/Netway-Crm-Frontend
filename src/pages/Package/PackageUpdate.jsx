@@ -20,6 +20,8 @@
 //     validityUnit: "Day",
 //     status: "active",
 //     sacCode: "",
+      // servertype: "",
+      // packageID: "",
 //     fromDate: "",
 //     toDate: "",
 //     basePrice: "",
@@ -54,6 +56,8 @@
 //           validityUnit: pkg.validity?.unit || "Day",
 //           status: pkg.status || "active",
 //           sacCode: pkg.sacCode || "",
+        // servertype: pkg.servertype || "",
+        // packageID: pkg.packageID || "",
 //           fromDate: pkg.fromDate ? pkg.fromDate.slice(0, 16) : "",
 //           toDate: pkg.toDate ? pkg.toDate.slice(0, 16) : "",
 //           basePrice: pkg.basePrice != null ? String(pkg.basePrice) : "",
@@ -334,7 +338,38 @@
 //           </select>
 //         </div>
 
-//         {/* SAC Code */}
+//         
+          // {/* Server Type */}
+          // <div>
+          //   <label className="block text-sm font-medium text-gray-700 mb-1">
+          //     Server Type
+          //   </label>
+          //   <input
+          //     type="text"
+          //     name="servertype"
+          //     value={formData.servertype}
+          //     onChange={handleChange}
+          //     className="w-full border p-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          //     placeholder="Enter Server Type"
+          //   />
+          // </div>
+
+          // {/* Package ID */}
+          // <div>
+          //   <label className="block text-sm font-medium text-gray-700 mb-1">
+          //     Package ID
+          //   </label>
+          //   <input
+          //     type="text"
+          //     name="packageID"
+          //     value={formData.packageID}
+          //     onChange={handleChange}
+          //     className="w-full border p-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          //     placeholder="Enter Package ID"
+          //   />
+          // </div>
+
+          {/* SAC Code */}
 //         <div>
 //           <label className="block font-medium text-gray-700 mb-1">SAC Code</label>
 //           <input
@@ -633,6 +668,8 @@ export default function PackageUpdate() {
     isOtt: false,
     ottType: "",
     ottPackageId: "",
+    servertype: "",
+    packageID: "",
   });
 
   const [iptvPackages, setIptvPackages] = useState([]);
@@ -654,6 +691,8 @@ export default function PackageUpdate() {
           validityUnit: pkg.validity?.unit || "Day",
           status: pkg.status || "active",
           sacCode: pkg.sacCode || "",
+          servertype: pkg.servertype || "",
+          packageID: pkg.packageID || "",
           fromDate: pkg.fromDate ? new Date(pkg.fromDate).toISOString().slice(0, 16) : "",
           toDate: pkg.toDate ? new Date(pkg.toDate).toISOString().slice(0, 16) : "",
           basePrice: pkg.basePrice != null ? String(pkg.basePrice) : "",
@@ -797,6 +836,8 @@ export default function PackageUpdate() {
         billType: formData.billType,
         packageAvailable: formData.packageAvailable,
         offerPackage: formData.offerPackage,
+        servertype: formData.servertype || "",
+        packageID: formData.packageID || "",
       };
 
       if (formData.isOtt) {
@@ -972,6 +1013,36 @@ export default function PackageUpdate() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+                  {/* Server Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Server Type
+            </label>
+            <input
+              type="text"
+              name="servertype"
+              value={formData.servertype}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter Server Type"
+            />
+          </div>
+
+          {/* Package ID */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Package ID
+            </label>
+            <input
+              type="text"
+              name="packageID"
+              value={formData.packageID}
+              onChange={handleChange}
+              className="w-full border p-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter Package ID"
+            />
+          </div>
 
         {/* Base Price */}
         <div>

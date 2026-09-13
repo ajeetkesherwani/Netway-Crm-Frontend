@@ -431,7 +431,7 @@
 // }
 
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addWalletPayment, getAllUserList } from "../../service/user.js";
@@ -439,6 +439,7 @@ import { getWalletBalance } from "../../service/recharge.js";
 
 export default function AddPayment() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [search, setSearch] = useState("");
     const [suggestions, setSuggestions] = useState([]);
@@ -470,7 +471,16 @@ export default function AddPayment() {
             try {
                 setFetchingUsers(true);
                 const res = await getAllUserList({});
-                setAllUsers(res.data || []);
+                const users = res.data || [];
+                setAllUsers(users);
+                
+                const prefilledUserId = location.state?.userId;
+                if (prefilledUserId) {
+                    const foundUser = users.find((u) => u._id === prefilledUserId);
+                    if (foundUser) {
+                        handleSelectUser(foundUser);
+                    }
+                }
             } catch (err) {
                 console.error("Failed to load users:", err);
                 setError("Could not load users for search");
@@ -479,13 +489,14 @@ export default function AddPayment() {
             }
         };
         loadAllUsers();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.state]);
 
     // Search filter
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
-        if (!search.trim()) {
+        if (!search.trim() || selectedUser) {
             setSuggestions([]);
             return;
         }
@@ -500,7 +511,7 @@ export default function AddPayment() {
         }, 300);
 
         return () => clearTimeout(debounceRef.current);
-    }, [search, allUsers]);
+    }, [search, allUsers, selectedUser]);
 
     // Select user
     const handleSelectUser = async (user) => {
@@ -688,21 +699,29 @@ export default function AddPayment() {
                             <input
                                 type="text"
                                 value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => {
+                                    setSearch(e.target.value);
+                                    setSelectedUser(null);
+                                }}
                                 onFocus={() => {
-                                    if (selectedUser) {
-                                        setSuggestions([]);
+                                    if (!search.trim()) {
+                                        setSuggestions(allUsers);
+                                    } else {
+                                        const filtered = allUsers.filter((user) =>
+                                            (user.generalInformation?.name || "")
+                                                .toLowerCase()
+                                                .includes(search.toLowerCase())
+                                        );
+                                        setSuggestions(filtered);
                                     }
                                 }}
-                                placeholder={selectedUser ? "User selected" : "Search by name"}
-                                readOnly={!!selectedUser}
+                                placeholder="Search by name"
                                 disabled={fetchingUsers}
                                 className={`w-full border ${error && !selectedUser ? "border-red-500" : "border-gray-300"
-                                    } rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 ${selectedUser ? "bg-gray-50 cursor-default" : "cursor-text"
-                                    }`}
+                                    } rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 cursor-text`}
                             />
 
-                            {!selectedUser && suggestions.length > 0 && (
+                            {suggestions.length > 0 && (
                                 <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
                                     {suggestions.map((user) => {
                                         const name = user.generalInformation?.name || "No Name";

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch, FaWallet } from "react-icons/fa";
+import { FaEllipsisV, FaEye, FaEdit, FaTrash, FaSearch, FaWallet, FaSignInAlt } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
 import { deleteRetailer, getRetailer } from "../../service/retailer";
 import toast from "react-hot-toast";
@@ -260,6 +260,14 @@ export default function RetailerList() {
                                 className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-blue-600"
                               >
                                 <FaEye /> View
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() => window.open("/reseller", "_blank")}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-3 text-purple-600"
+                              >
+                                <FaSignInAlt /> Login as Reseller
                               </button>
                             </li>
                             <ProtectedAction module="reseller" action="Edit">

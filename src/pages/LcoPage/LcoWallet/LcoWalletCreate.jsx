@@ -3,6 +3,11 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { createLcoWalletTransaction, reverseLcoWalletBalance } from "../../../service/retailer";
 
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const defaultDateTime = now.toISOString().slice(0, 16);
+
 export default function LcoWalletCreate() {
   const { id } = useParams(); // LCO member ID
   const navigate = useNavigate();
@@ -11,7 +16,7 @@ export default function LcoWalletCreate() {
   const [formData, setFormData] = useState({
     lcoId: id,
     amount: "",
-    transferDate: "",
+    transferDate: defaultDateTime,
     remark: "",
     mode: ""
   });

@@ -98,6 +98,49 @@ export default function ReassignTicketList() {
     }
   };
 
+  const handleDownloadExcel = async () => {
+    if (!tickets || tickets.length === 0) {
+      alert("No tickets to download");
+      return;
+    }
+
+    const formatDateForExcel = (dateString) => {
+      if (!dateString) return dateString;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+      return `${day}-${month}-${year} ${strTime}`;
+    };
+
+    try {
+      const { utils, writeFile } = await import("xlsx");
+      const exportData = tickets.map(({ _id, ...rest }) => {
+        const dateFields = ["createdAt", "updatedAt", "fixedAt", "assignedAt"];
+        dateFields.forEach(field => {
+          if (rest[field]) {
+            rest[field] = formatDateForExcel(rest[field]);
+          }
+        });
+        return rest;
+      });
+      const ws = utils.json_to_sheet(exportData);
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Tickets");
+      writeFile(wb, `RenewalTickets_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (err) {
+      console.error("Error downloading excel", err);
+      alert("Error downloading excel");
+    }
+  };
+
   return (
     <div className="p-5 bg-[#edf2f7] min-h-screen">
       {/* Header */}
@@ -108,6 +151,12 @@ export default function ReassignTicketList() {
             {total}
           </span>
         </h1>
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-green-700 transition"
+        >
+          Download Excel
+        </button>
       </div>
 
       <TicketFilter setSearchParams={setSearchParams} />
@@ -119,7 +168,7 @@ export default function ReassignTicketList() {
             <tr>
               <th className="px-3 py-2 border text-left">S.No</th>
               <th className="px-3 py-2 border text-left">Ticket No</th>
-              <th className="px-3 py-2 border text-left">User ID (userName)</th>
+              <th className="px-3 py-2 border text-left">User ID</th>
               <th className="px-3 py-2 border text-left">Priority</th>
               <th className="px-3 py-2 border text-left">Ticket Date</th>
               <th className="px-3 py-2 border text-left">Call Source</th>

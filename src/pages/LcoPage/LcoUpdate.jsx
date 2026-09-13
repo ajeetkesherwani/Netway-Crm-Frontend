@@ -167,6 +167,7 @@ export default function UpdateLco() {
           website: lco.website || "",
           gst: lco.gst || "",
           panNo: lco.panNo || "",
+          aadharNumber: lco.aadharNumber || "",
           status: lco.status || "active",
           description: lco.description || "",
           supportWhatsApp: lco.supportWhatsApp || "",
@@ -290,6 +291,19 @@ const handleDocumentChange = (e, fieldName) => {
   e.preventDefault();
   if (!formData) return;
 
+  const hasAadhaar = formData.documents.some(d => d.fieldName === "aadhaarCard" && (d.file || (d.isExisting && !formData.remove_aadhaarCard)));
+  const hasPan = formData.documents.some(d => d.fieldName === "panCard" && (d.file || (d.isExisting && !formData.remove_panCard)));
+  if (!hasAadhaar) {
+    toast.error("Please upload Aadhaar Card");
+    setActiveTab("document");
+    return;
+  }
+  if (!hasPan) {
+    toast.error("Please upload PAN Card");
+    setActiveTab("document");
+    return;
+  }
+
   setLoading(true);
   const submitData = new FormData();
 
@@ -381,8 +395,8 @@ useEffect(() => {
             <div><label className="block font-semibold mb-1">Mobile No *</label>
               <input type="text" name="mobileNo" value={formData.mobileNo} onChange={handleChange} required className="w-full border rounded p-3" />
             </div>
-            <div><label className="block font-semibold mb-1">Email</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded p-3" />
+            <div><label className="block font-semibold mb-1">Email *</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full border rounded p-3" />
             </div>
             <div><label className="block font-semibold mb-1">Reseller *</label>
               <select name="retailerId" value={formData.retailerId} onChange={handleChange} required className="w-full border rounded p-3">
@@ -393,7 +407,7 @@ useEffect(() => {
               </select>
             </div>
             {/* <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
-            <div><label className="block font-semibold mb-1">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Address *</label><input type="text" name="address" value={formData.address} onChange={handleChange} required className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">State *</label>
@@ -403,11 +417,14 @@ useEffect(() => {
               </select>
             </div>
             <div><label className="block font-semibold mb-1">Pincode</label><input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full border rounded p-3" /></div>
-             <div><label className="block font-semibold mb-1">Pan No</label><input type="text" name="panNo" value={formData.panNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
+             <div><label className="block font-semibold mb-1">Pan No *</label><input type="text" name="panNo" value={formData.panNo} onChange={handleChange} required className="w-full border rounded p-3" /></div>
               <div><label className="block font-semibold mb-1">Gst No</label><input type="text" name="gst" value={formData.gst} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Area</label><input type="text" name="area" value={formData.area} onChange={handleChange} className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Aadhar Number *</label><input type="text" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} required className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Contact Person Name *</label><input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleChange} required className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Contact Person Number *</label><input type="text" name="contactPersonNumber" value={formData.contactPersonNumber} onChange={handleChange} required className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">LCO Code</label><input type="text" name="lcoCode" value={formData.lcoCode} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Status</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full border rounded p-3">
@@ -477,8 +494,8 @@ useEffect(() => {
         {activeTab === "document" && (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
     {[
-      { label: "Aadhaar Card", field: "aadhaarCard" },
-      { label: "PAN Card",     field: "panCard"     },
+      { label: "Aadhaar Card *", field: "aadhaarCard" },
+      { label: "PAN Card *",     field: "panCard"     },
       { label: "License",      field: "license"     },
       { label: "Other Document", field: "other"   },
     ].map(({ label, field }) => {

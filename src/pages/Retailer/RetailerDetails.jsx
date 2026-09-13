@@ -147,7 +147,8 @@ const [downloadedFile, setDownloadedFile] = useState(null);
           <Row label="Pincode" value={retailer.pincode} />
           <Row label="GST No." value={retailer.gstNo} />
           <Row label="Balance" value={retailer.balance} />
-          <Row label="PAN No." value={retailer.panNumber} />
+          <Row label="Aadhar No." value={retailer.aadharNumber} />
+    <Row label="PAN No." value={retailer.panNumber} />
           <Row label="Dashboard" value={retailer.dashboard} />
           <Row label="Contact Person Number" value={retailer.contactPersonNumber} />
           <Row label="WhatsApp Number" value={retailer.whatsAppNumber} />
@@ -187,9 +188,9 @@ const [downloadedFile, setDownloadedFile] = useState(null);
     <Row label="Website" value={retailer.website} />
     {/* <Row label="Anniversary Date" value={retailer.annversaryDate} /> */}
     <Row label="Contact Person Name" value={retailer.contactPersonName} />
-    <Row label="Support Email" value={retailer.supportEmail} />
-    <Row label="Latitude" value={retailer.latitude} />
-    <Row label="Longitude" value={retailer.longitude} />
+    {/* <Row label="Support Email" value={retailer.supportEmail} /> */}
+    {/* <Row label="Latitude" value={retailer.latitude} /> */}
+    {/* <Row label="Longitude" value={retailer.longitude} /> */}
     <Row label="Status" value={retailer.status} />
 
     {/* ── NEW: Document Previews (inline like LCO) ── */}

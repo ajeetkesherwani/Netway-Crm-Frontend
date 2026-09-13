@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getRetailerDetails, updateRetailer, getRetailer } from "../../service/retailer";
+import { toast } from "react-toastify";
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
@@ -24,7 +25,6 @@ export default function RetailerUpdate() {
   // useEffect(() => {
   //   const fetchRetailer = async () => {
   //     try {
-  //       setLoading(true);
   //       const res = await getRetailerDetails(id);
   //       if (res.data) {
   //         const r = res.data;
@@ -149,6 +149,7 @@ export default function RetailerUpdate() {
             longitude: retailer.longitude || "",
             gstNo: retailer.gstNo || "",
             panNumber: retailer.panNumber || "",
+            aadharNumber: retailer.aadharNumber || "",
             resellerCode: retailer.resellerCode || "",
             balance: retailer.balance || "",
             dashboard: retailer.dashboard || "Reseller",
@@ -278,46 +279,61 @@ export default function RetailerUpdate() {
   //     setLoading(false);
   //   }
   // };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!formData) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData) return;
 
-  setLoading(true);
-  const submitData = new FormData();
-
-  // Append normal fields
-  Object.keys(formData).forEach(key => {
-    if (key === "documents" || key.startsWith("remove_")) return;
-    const value = formData[key];
-    if (value === null || value === undefined || value === "") return;
-    submitData.append(key, value);
-  });
-
-  // New uploaded files
-  formData.documents.forEach(doc => {
-    if (doc.file) {
-      submitData.append(doc.fieldName, doc.file);
+    const hasAadhaar = formData.documents.some(d => d.fieldName === "aadhaarCard" && (d.file || (d.isExisting && !formData[`remove_aadhaarCard`])));
+    const hasPan = formData.documents.some(d => d.fieldName === "panCard" && (d.file || (d.isExisting && !formData[`remove_panCard`])));
+    
+    if (!hasAadhaar) {
+      toast.error("Please upload Aadhaar Card");
+      setActiveTab("document");
+      return;
     }
-  });
-
-  // Send remove flags only if really removing
-  ["aadhaarCard", "panCard", "license", "other"].forEach(field => {
-    if (formData[`remove_${field}`]) {
-      submitData.append(`remove_${field}`, "true");
+    
+    if (!hasPan) {
+      toast.error("Please upload PAN Card");
+      setActiveTab("document");
+      return;
     }
-  });
 
-  try {
-    await updateRetailer(id, submitData);   // ← make sure you have updateRetailer service
-    toast.success("Retailer updated successfully");
-    navigate(-1, { replace: true });
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Failed to update retailer");
-    console.error(err);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    const submitData = new FormData();
+
+    // Append normal fields
+    Object.keys(formData).forEach(key => {
+      if (key === "documents" || key.startsWith("remove_")) return;
+      const value = formData[key];
+      if (value === null || value === undefined || value === "") return;
+      submitData.append(key, value);
+    });
+
+    // New uploaded files
+    formData.documents.forEach(doc => {
+      if (doc.file) {
+        submitData.append(doc.fieldName, doc.file);
+      }
+    });
+
+    // Send remove flags only if really removing
+    ["aadhaarCard", "panCard", "license", "other"].forEach(field => {
+      if (formData[`remove_${field}`]) {
+        submitData.append(`remove_${field}`, "true");
+      }
+    });
+
+    try {
+      await updateRetailer(id, submitData);   // ← make sure you have updateRetailer service
+      toast.success("Retailer updated successfully");
+      navigate(-1, { replace: true });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update retailer");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return <div className="p-10 text-center text-xl">Loading retailer details...</div>;
   if (!formData) return <div className="p-10 text-center text-red-600 text-xl">Retailer not found</div>;
@@ -354,7 +370,7 @@ const handleSubmit = async (e) => {
             <div><label className="block font-semibold mb-1">Email</label><input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Phone No</label><input type="text" name="phoneNo" value={formData.phoneNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">House No.</label><input type="text" name="houseNo" value={formData.houseNo} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
-            <div><label className="block font-semibold mb-1">Address</label><input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Address *</label><input type="text" name="address" required value={formData.address} onChange={handleChange} className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">Taluka</label><input type="text" name="taluka" value={formData.taluka} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">District</label><input type="text" name="district" value={formData.district} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">State *</label>
@@ -368,12 +384,13 @@ const handleSubmit = async (e) => {
             {/* <div><label className="block font-semibold mb-1">Sub Area</label><input type="text" name="subArea" value={formData.subArea} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Website</label><input type="text" name="website" value={formData.website} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">GST No</label><input type="text" name="gstNo" value={formData.gstNo} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">PAN Number</label><input type="text" name="panNumber" value={formData.panNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Aadhar Number *</label><input type="text" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} required className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">PAN Number *</label><input type="text" name="panNumber" required value={formData.panNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
             {/* <div><label className="block font-semibold mb-1">Reseller Code</label><input type="text" name="resellerCode" value={formData.resellerCode} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">Balance</label><input type="text" name="balance" value={formData.balance} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Contact Person Name</label><input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Contact Person Number</label><input type="text" name="contactPersonNumber" value={formData.contactPersonNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
-            <div><label className="block font-semibold mb-1">Support Email</label><input type="email" name="supportEmail" value={formData.supportEmail} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Contact Person Name *</label><input type="text" name="contactPersonName" required value={formData.contactPersonName} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            <div><label className="block font-semibold mb-1">Contact Person Number *</label><input type="text" name="contactPersonNumber" required value={formData.contactPersonNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
+            {/* <div><label className="block font-semibold mb-1">Support Email</label><input type="email" name="supportEmail" value={formData.supportEmail} onChange={handleChange} className="w-full border rounded p-3" /></div> */}
             <div><label className="block font-semibold mb-1">WhatsApp Number</label><input type="text" name="whatsAppNumber" value={formData.whatsAppNumber} onChange={handleChange} className="w-full border rounded p-3" /></div>
             <div><label className="block font-semibold mb-1">Status</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full border rounded p-3">
@@ -443,8 +460,8 @@ const handleSubmit = async (e) => {
         {activeTab === "document" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { label: "Aadhaar Card", field: "aadhaarCard" },
-              { label: "PAN Card", field: "panCard" },
+              { label: "Aadhaar Card *", field: "aadhaarCard" },
+              { label: "PAN Card *", field: "panCard" },
               { label: "License", field: "license" },
               { label: "Other Document", field: "other" },
             ].map(({ label, field }) => {

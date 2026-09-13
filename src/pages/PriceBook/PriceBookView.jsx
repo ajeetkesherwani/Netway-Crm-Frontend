@@ -132,10 +132,7 @@ export default function PriceBookView() {
           <label className="block font-medium text-gray-700">Price Book For</label>
           <p className="border p-2 rounded bg-gray-50">{priceBook.priceBookFor?.join(", ") || "N/A"}</p>
         </div>
-        <div>
-          <label className="block font-medium text-gray-700">ID</label>
-          <p className="border p-2 rounded bg-gray-50">{priceBook._id || "N/A"}</p>
-        </div>
+
         <div>
           <label className="block font-medium text-gray-700">Created At</label>
           <p className="border p-2 rounded bg-gray-50">{formatDate(priceBook.createdAt)}</p>

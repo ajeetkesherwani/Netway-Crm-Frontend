@@ -9,10 +9,15 @@ export default function RetailerWalletCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [transactionType, setTransactionType] = useState("add"); // "add" or "reverse"
+
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  const defaultDateTime = now.toISOString().slice(0, 16);
+
   const [formData, setFormData] = useState({
     resellerId: id,
     amount: "",
-    paymentDate: "",
+    paymentDate: defaultDateTime,
     remark: "",
     mode: ""
   });

@@ -250,6 +250,7 @@ export default function ClosedTicket() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
+  const [rawTickets, setRawTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(null);
@@ -283,6 +284,8 @@ export default function ClosedTicket() {
         res?.data?.closedTickets ||
         res?.closedTickets ||
         [];
+      
+      setRawTickets(ticketData);
 
       const cleaned = ticketData.map((t) => ({
         _id: t._id,
@@ -375,11 +378,60 @@ export default function ClosedTicket() {
 
   const paginatedTickets = tickets.slice((page - 1) * limit, page * limit);
 
+  const handleDownloadExcel = async () => {
+    if (!rawTickets || rawTickets.length === 0) {
+      alert("No tickets to download");
+      return;
+    }
+
+    const formatDateForExcel = (dateString) => {
+      if (!dateString) return dateString;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+      return `${day}-${month}-${year} ${strTime}`;
+    };
+
+    try {
+      const { utils, writeFile } = await import("xlsx");
+      const exportData = rawTickets.map(({ _id, ...rest }) => {
+        const dateFields = ["createdAt", "updatedAt", "fixedAt", "assignedAt"];
+        dateFields.forEach(field => {
+          if (rest[field]) {
+            rest[field] = formatDateForExcel(rest[field]);
+          }
+        });
+        return rest;
+      });
+      const ws = utils.json_to_sheet(exportData);
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Tickets");
+      writeFile(wb, `ClosedTickets_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (err) {
+      console.error("Error downloading excel", err);
+      alert("Error downloading excel");
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Closed Tickets</h1>
+        <button
+          onClick={handleDownloadExcel}
+          className="bg-green-600 text-white px-4 py-2 rounded-md font-semibold text-sm hover:bg-green-700 transition"
+        >
+          Download Excel
+        </button>
       </div>
 
       <TicketFilter setSearchParams={setSearchParams} />
@@ -396,7 +448,7 @@ export default function ClosedTicket() {
             <div className="hidden md:grid grid-cols-11 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
               <div>S.No</div>
               <div>Ticket No</div>
-              <div>User ID (userName)</div>
+              <div>User ID</div>
               <div>Category</div>
               <div>Ticket Date/Time</div>
               <div>Resolution</div>

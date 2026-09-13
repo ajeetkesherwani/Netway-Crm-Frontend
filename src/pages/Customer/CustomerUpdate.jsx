@@ -240,6 +240,9 @@ export default function CustomerUpdate() {
             vcNo: u.generalInformation?.vcNo || "",
             circuitId: u.generalInformation?.circuitId || "",
             networkType: u.networkInformation?.networkType || "",
+            aadharNo: u.generalInformation?.adharNo || "",
+            gstNo: u.generalInformation?.gst || "",
+            panNumber: u.generalInformation?.panNumber || "",
             createdFor: {
               type: createdForType,
               id: getId(u.createdFor?.id),
@@ -539,7 +542,7 @@ export default function CustomerUpdate() {
     setFormData((prev) => ({ ...prev, documents: d }));
   };
 
-  
+
   const getDocumentUrl = (docPath) => {
     if (!docPath) return "";
     if (docPath.startsWith("http://") || docPath.startsWith("https://") || docPath.startsWith("blob:")) {
@@ -900,6 +903,39 @@ export default function CustomerUpdate() {
                   setFieldValue("customer.alternateMobile", e.target.value)
                 }
                 className="mt-1 p-2 border rounded w-full"
+              />
+            </div>
+
+            {/* Aadhar Number */}
+            <div>
+              <label>Aadhar Number</label>
+              <input
+                value={formData.customer.aadharNo}
+                onChange={(e) => setFieldValue("customer.aadharNo", e.target.value)}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="Aadhar Number"
+              />
+            </div>
+
+            {/* GST Number */}
+            <div>
+              <label>GST Number</label>
+              <input
+                value={formData.customer.gstNo}
+                onChange={(e) => setFieldValue("customer.gstNo", e.target.value)}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="GST Number"
+              />
+            </div>
+
+            {/* PAN Number */}
+            <div>
+              <label>PAN Number</label>
+              <input
+                value={formData.customer.panNumber}
+                onChange={(e) => setFieldValue("customer.panNumber", e.target.value)}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="PAN Number"
               />
             </div>
             <div>
@@ -1642,8 +1678,8 @@ export default function CustomerUpdate() {
                       {packageLoading
                         ? "-- Loading packages... --"
                         : roleSpecificPackages.length === 0
-                        ? "-- No packages available --"
-                        : "-- Select a Package to Add --"}
+                          ? "-- No packages available --"
+                          : "-- Select a Package to Add --"}
                     </option>
                     {roleSpecificPackages.map((pkg) => {
                       const isAdded = (formData.customer.packages || []).some(
@@ -1690,11 +1726,10 @@ export default function CustomerUpdate() {
                       setCustomPackagePrice("");
                     }}
                     disabled={!packageSearch || packageLoading}
-                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${
-                      !packageSearch || packageLoading
+                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${!packageSearch || packageLoading
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                         : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
-                    }`}
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

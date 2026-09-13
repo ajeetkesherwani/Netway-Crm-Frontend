@@ -155,6 +155,10 @@ import AddPayment from "./pages/Payment/AddPayment";
 import ReceiptDetails from "./pages/UserProfile/ReceiptDetails";
 import ServerList from "./pages/Server/ServerList";
 import PoolList from "./pages/Pool/PoolList";
+import BannerList from "./pages/Setting/Banner/BannerList";
+import BannerCreate from "./pages/Setting/Banner/BannerCreate";
+import BannerUpdate from "./pages/Setting/Banner/BannerUpdate";
+import BannerView from "./pages/Setting/Banner/BannerView";
 // import InvoiceDetails from "./pages/Invoice/InvoiceDetails";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
@@ -536,6 +540,12 @@ export default function App() {
             <Route path="setting/serverList" element={<ServerList />} />
 
             <Route path="setting/poolList" element={<PoolList/>}/>
+
+            {/* ------------------------------------------------Banner------------------------------------------------- */}
+            <Route path="setting/banner/list" element={<BannerList />} />
+            <Route path="setting/banner/create" element={<BannerCreate />} />
+            <Route path="setting/banner/view/:id" element={<BannerView />} />
+            <Route path="setting/banner/update/:id" element={<BannerUpdate />} />
 
             {/*-------------------------------------------------------------------------Ticket Report list ------------------------------------------------------------------------- */}
             <Route

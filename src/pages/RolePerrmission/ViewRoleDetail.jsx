@@ -1,94 +1,7 @@
-// import { useEffect, useState } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import { getRoleDetails } from "../../service/rolePermission";
-
-// export default function ViewRoleDetail() {
-//   const { id } = useParams();
-//   const navigate = useNavigate();
-//   const [role, setRole] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-
-//   useEffect(() => {
-//     const fetchRole = async () => {
-//       try {
-//         const res = await getRoleDetails(id);
-//         setRole(res.data || res);
-//       } catch (err) {
-//         console.error("Error fetching role:", err);
-//         setError("Failed to load role details");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchRole();
-//   }, [id]);
-
-//   if (loading) return <p className="p-4">Loading role details...</p>;
-//   if (error) return <p className="p-4 text-red-500">{error}</p>;
-//   if (!role) return <p className="p-4">Role not found.</p>;
-
-//   return (
-//     <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
-//       <div className="flex items-center justify-between mb-4">
-//         <h2 className="text-2xl font-bold">Role Details</h2>
-//         <button
-//           onClick={() => navigate("/role/list")}
-//           className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
-//         >
-//           Back
-//         </button>
-//       </div>
-
-//       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//         <div>
-//           <label className="block font-medium">Role Name</label>
-//           <p className="border p-2 rounded bg-gray-100">{role.roleName}</p>
-//         </div>
-//         <div>
-//           <label className="block font-medium">Active</label>
-//           <p className="border p-2 rounded bg-gray-100">{role.isActive ? "Yes" : "No"}</p>
-//         </div>
-//         <div>
-//           <label className="block font-medium">Created At</label>
-//           <p className="border p-2 rounded bg-gray-100">{new Date(role.createdAt).toLocaleString()}</p>
-//         </div>
-//         <div>
-//           <label className="block font-medium">Updated At</label>
-//           <p className="border p-2 rounded bg-gray-100">{new Date(role.updatedAt).toLocaleString()}</p>
-//         </div>
-//       </div>
-
-//       <h3 className="text-xl font-semibold mt-6 mb-2">Permissions</h3>
-//       {Object.keys(role.permissions).length === 0 ? (
-//         <p className="text-gray-500">No permissions defined.</p>
-//       ) : (
-//         <div className="space-y-4">
-//           {Object.entries(role.permissions).map(([category, perms]) => (
-//             <div key={category} className="border p-4 rounded">
-//               <h4 className="font-medium mb-2">{category}</h4>
-//               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-//                 {Object.entries(perms).map(([permName, allowed]) => (
-//                   <div key={permName} className="flex items-center gap-2">
-//                     <input type="checkbox" checked={allowed} disabled />
-//                     <span>{permName}</span>
-//                   </div>
-//                 ))}
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRoleDetails } from "../../service/rolePermission";
-import { IoMdArrowBack } from "react-icons/io";
+import { IoMdArrowBack, IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 export default function ViewRoleDetail() {
   const { id } = useParams();
@@ -96,6 +9,9 @@ export default function ViewRoleDetail() {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  const [expandedCats, setExpandedCats] = useState({});
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -114,45 +30,128 @@ export default function ViewRoleDetail() {
 
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
-  if (!role) return <p className="p-4 text-gray-500">No data available</p>;
+
+  const displayRole = role || {};
+
+  const toggleCategory = (cat) => {
+    setExpandedCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  };
+
+  const toggleAll = () => {
+    const newState = !isAllExpanded;
+    setIsAllExpanded(newState);
+    if (!displayRole.permissions) return;
+    const newCats = {};
+    Object.keys(displayRole.permissions).forEach((cat) => {
+      newCats[cat] = newState;
+    });
+    setExpandedCats(newCats);
+  };
+
+  const Row = ({ label, value }) => (
+    <div className="flex border-b last:border-b-0 md:border-r text-[14px]">
+      <div className="w-1/3 bg-gray-100 p-[2px] font-medium">{label}</div>
+      <div className="w-2/3 p-[2px] break-words">{value || "—"}</div>
+    </div>
+  );
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-semibold mb-4">Role Details</h1>
-      <button
-        onClick={() => navigate("/role/list")}
-        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 flex items-center mb-4"
-      >
-        <IoMdArrowBack /> Back
-      </button>
-      <div className="grid grid-cols-1 gap-4">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-lg font-medium mb-2">General Info</h2>
-          <p><strong>Role Name:</strong> {role.roleName}</p>
-          <p><strong>Status:</strong> {role.isActive ? "Yes" : "No"}</p>
-          <p><strong>Created At:</strong> {new Date(role.createdAt).toLocaleString()}</p>
-          <p><strong>Updated At:</strong> {new Date(role.updatedAt).toLocaleString()}</p>
+    <>
+      <h3 className="text-2xl font-semibold mb-1">Role Details</h3>
+
+      <div className="flex justify-between mb-2">
+        <button
+          onClick={() => navigate("/role/list")}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700 flex items-center gap-1 text-sm font-medium"
+        >
+          <IoMdArrowBack /> Back
+        </button>
+      </div>
+
+      <div className="border rounded-lg overflow-hidden shadow bg-white mb-6">
+        <div className="bg-gray-50 p-2 border-b font-semibold text-gray-700">General Info</div>
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <Row label="Role Name" value={displayRole.roleName} />
+          <Row label="Status" value={displayRole.isActive ? <span className="text-green-600 font-medium">Yes</span> : <span className="text-red-600 font-medium">No</span>} />
+          <Row label="Created At" value={displayRole.createdAt ? new Date(displayRole.createdAt).toLocaleString() : "—"} />
+          <Row label="Updated At" value={displayRole.updatedAt ? new Date(displayRole.updatedAt).toLocaleString() : "—"} />
         </div>
-          <h2 className="text-lg font-medium mb-2">Permissions</h2>
-        <div className="bg-white p-4 rounded shadow grid grid-cols-1 md:grid-cols-3">
-          {Object.keys(role.permissions).length === 0 ? (
-            <p className="text-gray-500">No permissions defined.</p>
+      </div>
+
+      <div className="border rounded-lg overflow-hidden shadow bg-white">
+        <div className="bg-gray-50 p-2 border-b font-semibold text-gray-700 flex justify-between items-center">
+          <span>Permissions</span>
+          {displayRole.permissions && Object.keys(displayRole.permissions).length > 0 && (
+            <button
+              onClick={toggleAll}
+              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+            >
+              {isAllExpanded ? (
+                <>
+                  <IoIosArrowUp /> Collapse All
+                </>
+              ) : (
+                <>
+                  <IoIosArrowDown /> Expand All
+                </>
+              )}
+            </button>
+          )}
+        </div>
+        <div className="p-4">
+          {!displayRole.permissions || Object.keys(displayRole.permissions).length === 0 ? (
+            <p className="text-gray-500 text-sm">No permissions defined.</p>
           ) : (
-            Object.entries(role.permissions).map(([category, perms]) => (
-              <div key={category} className="mb-2 ">
-                <h3 className="text-md font-semibold">{category.charAt(0).toUpperCase() + category.slice(1)}</h3>
-                <ul className="list-disc list-inside text-sm">
-                  {Object.entries(perms).map(([perm, enabled]) => (
-                    <li key={perm} className={enabled ? "text-green-600" : "text-red-600"}>
-                      {perm}: {enabled ? "Enabled" : "Disabled"}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Object.entries(displayRole.permissions).map(([category, perms]) => {
+                const permsEntries = Object.entries(perms);
+                const isExpanded = expandedCats[category];
+                const displayedPerms = isExpanded ? permsEntries : permsEntries.slice(0, 4);
+                const hasMore = permsEntries.length > 4;
+
+                return (
+                  <div key={category} className="border rounded-md overflow-hidden shadow-sm">
+                    <div
+                      className={`bg-gray-100 px-3 py-1.5 text-sm font-medium border-b flex justify-between items-center ${
+                        hasMore ? "cursor-pointer hover:bg-gray-200" : ""
+                      }`}
+                      onClick={() => hasMore && toggleCategory(category)}
+                    >
+                      <span className="capitalize">{category}</span>
+                      {hasMore && (isExpanded ? <IoIosArrowUp /> : <IoIosArrowDown />)}
+                    </div>
+                    <div className="p-2 space-y-1 bg-white">
+                      {displayedPerms.map(([perm, enabled]) => (
+                        <div
+                          key={perm}
+                          className="flex justify-between items-center text-[13px] border-b last:border-b-0 pb-1 last:pb-0 pt-1 first:pt-0"
+                        >
+                          <span className="text-gray-600 capitalize">{perm}</span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
+                      ))}
+                      {!isExpanded && hasMore && (
+                        <div
+                          className="text-center text-xs text-blue-500 cursor-pointer pt-1 hover:underline"
+                          onClick={() => toggleCategory(category)}
+                        >
+                          +{permsEntries.length - 4} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }

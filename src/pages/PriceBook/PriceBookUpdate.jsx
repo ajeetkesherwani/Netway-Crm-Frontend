@@ -580,6 +580,8 @@ export default function PriceBookUpdate() {
   const [selectedResellers, setSelectedResellers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAddPlan, setShowAddPlan] = useState(false);
+  const [addPlanSearch, setAddPlanSearch] = useState("");
   const itemsPerPage = 10;
 
   // Fetch price book details + dropdown data
@@ -1024,72 +1026,87 @@ export default function PriceBookUpdate() {
         </div>
 
         <div className="col-span-2">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">Packages</h3>
-          {packages.length === 0 ? (
-            <p className="text-gray-500">No packages available.</p>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Assigned Plans</h3>
+            <button
+              type="button"
+              onClick={() => { setShowAddPlan((v) => !v); setAddPlanSearch(""); }}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+            >
+              {showAddPlan ? "Close" : "+ Add Plan"}
+            </button>
+          </div>
+
+          {/* Add Plan Panel – only unassigned packages */}
+          {showAddPlan && (
+            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
+              <h4 className="font-medium text-gray-700 mb-3">Select plans to add:</h4>
+              <input
+                type="text"
+                placeholder="Search packages..."
+                value={addPlanSearch}
+                onChange={(e) => setAddPlanSearch(e.target.value)}
+                className="border border-gray-300 p-2 w-full rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <div className="max-h-60 overflow-y-auto divide-y divide-gray-200">
+                {packages
+                  .filter((pkg) => !formData.package[pkg._id]) // only unassigned
+                  .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase()))
+                  .map((pkg) => (
+                    <div key={pkg._id} className="flex items-center justify-between py-2 px-1 hover:bg-blue-100 rounded">
+                      <span className="text-sm text-gray-800">{pkg.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handlePackageToggle(pkg)}
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))}
+                {packages.filter((pkg) => !formData.package[pkg._id] && pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase())).length === 0 && (
+                  <p className="text-gray-500 text-sm py-4 text-center">No more plans available to add.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Currently Assigned Plans Table */}
+          {Object.keys(formData.package).length === 0 ? (
+            <p className="text-gray-500 text-sm">No plans assigned yet. Click "+ Add Plan" to add.</p>
           ) : (
             <div className="overflow-x-auto">
-              <div className="mb-4 w-1/3">
-                <input
-                  type="text"
-                  placeholder="Search by package name"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border border-gray-300 p-3 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
               <table className="min-w-full border border-gray-300 rounded-lg">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        onChange={handleSelectAll}
-                        className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                      />
-                    </th>
                     <th className="px-4 py-3 text-left text-gray-700">Package Name</th>
                     <th className="px-4 py-3 text-left text-gray-700">Base Price</th>
                     <th className="px-4 py-3 text-left text-gray-700">Price *</th>
                     <th className="px-4 py-3 text-left text-gray-700">Retailer Price</th>
                     <th className="px-4 py-3 text-left text-gray-700">Offer Price</th>
+                    <th className="px-4 py-3 text-left text-gray-700">Remove</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {displayedPackages.map((pkg) => (
-                    <tr key={pkg._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={!!formData.package[pkg._id]}
-                          onChange={() => handlePackageToggle(pkg)}
-                          className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-gray-900">{pkg.name}</td>
-                      <td className="px-4 py-3 text-gray-900">{pkg.basePrice || "N/A"}</td>
+                  {Object.values(formData.package).map((pkg) => (
+                    <tr key={pkg.packageId} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900 font-medium">{pkg.name}</td>
+                      <td className="px-4 py-3 text-gray-600">{pkg.basePrice || "N/A"}</td>
                       <td className="px-4 py-3">
                         <input
                           type="number"
-                          value={formData.package[pkg._id]?.price || ""}
-                          onChange={(e) =>
-                            handlePackagePriceChange(pkg._id, "price", e.target.value)
-                          }
-                          disabled={!formData.package[pkg._id]}
+                          value={pkg.price || ""}
+                          onChange={(e) => handlePackagePriceChange(pkg.packageId, "price", e.target.value)}
                           className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
                           min="0"
-                          required={!!formData.package[pkg._id]}
+                          required
                         />
                       </td>
                       <td className="px-4 py-3">
                         <input
                           type="number"
-                          value={formData.package[pkg._id]?.retailerPrice || ""}
-                          onChange={(e) =>
-                            handlePackagePriceChange(pkg._id, "retailerPrice", e.target.value)
-                          }
-                          disabled={!formData.package[pkg._id]}
+                          value={pkg.retailerPrice || ""}
+                          onChange={(e) => handlePackagePriceChange(pkg.packageId, "retailerPrice", e.target.value)}
                           className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
                           min="0"
                         />
@@ -1097,40 +1114,31 @@ export default function PriceBookUpdate() {
                       <td className="px-4 py-3">
                         <input
                           type="number"
-                          value={formData.package[pkg._id]?.offerPrice || ""}
-                          onChange={(e) =>
-                            handlePackagePriceChange(pkg._id, "offerPrice", e.target.value)
-                          }
-                          disabled={!formData.package[pkg._id]}
+                          value={pkg.offerPrice || ""}
+                          onChange={(e) => handlePackagePriceChange(pkg.packageId, "offerPrice", e.target.value)}
                           className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
                           min="0"
                         />
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => {
+                              const newPkg = { ...prev.package };
+                              delete newPkg[pkg.packageId];
+                              return { ...prev, package: newPkg };
+                            });
+                          }}
+                          className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                        >
+                          Remove
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="flex justify-between items-center mt-4">
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
             </div>
           )}
         </div>

@@ -3,8 +3,12 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
 //get all package list
-export const getAllPackageList = async () => {
-  const res = await fetch(`${BASE_URL}/package/list`, {
+export const getAllPackageList = async (servertype = "") => {
+  const url = servertype 
+    ? `${BASE_URL}/package/list?servertype=${encodeURIComponent(servertype)}` 
+    : `${BASE_URL}/package/list`;
+    
+  const res = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -14,7 +18,6 @@ export const getAllPackageList = async () => {
 
   if (!res.ok) throw new Error("Failed to fetch package");
   return res.json();
- 
 };
 
 // Create package

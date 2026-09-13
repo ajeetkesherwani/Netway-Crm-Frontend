@@ -155,6 +155,7 @@ export default function UserDetails() {
           <Row label="CAF No" value={g.cafNo} />
           <Row label="GST" value={g.gst} />
           <Row label="Aadhar No" value={g.adharNo} />
+          <Row label="PAN Number" value={g.panNumber} />
           <Row label="Wallet Balance" value={user.walletBalance} />
 
           {/* Installation By – multiple */}

@@ -14,6 +14,8 @@ export default function PackageCreate() {
     validityNumber: "",
     validityUnit: "Month",
     sacCode: "",
+    servertype: "",
+    packageID: "",
     fromDate: today,
     toDate: "",
     status: "active",
@@ -131,6 +133,8 @@ export default function PackageCreate() {
         offerPrice: formData.offerPrice ? Number(formData.offerPrice) : undefined,
         packageAvailable: formData.packageAvailable,
         offerPackage: formData.offerPackage,
+        servertype: formData.servertype || undefined,
+        packageID: formData.packageID || undefined,
       };
 
       if (formData.isOtt) {
@@ -179,6 +183,8 @@ export default function PackageCreate() {
       isIptv: false,
       iptvType: "ziggTv",
       iptvPackageId: "",
+      servertype: "",
+      packageID: "",
     });
     setIptvPackages([]);
     setOttPackages([]);
@@ -259,6 +265,18 @@ export default function PackageCreate() {
           <label className="block font-medium mb-1">To Date</label>
           <input type="datetime-local" name="toDate" value={formData.toDate} onChange={handleChange} className="border p-2 w-full rounded" />
         </div>
+
+       
+         <div>
+          <label className="block font-medium mb-1">Server Type</label>
+          <input type="text" name="servertype" value={formData.servertype} onChange={handleChange} className="border p-2 w-full rounded" />
+        </div>
+        <div>
+          <label className="block font-medium mb-1">Package ID</label>
+          <input type="text" name="packageID" value={formData.packageID} onChange={handleChange} className="border p-2 w-full rounded" />
+        </div>
+    
+
         <div>
           <label className="block font-medium mb-1">Base Price</label>
           <input type="number" name="basePrice" value={formData.basePrice} onChange={handleChange} className="border p-2 w-full rounded" />

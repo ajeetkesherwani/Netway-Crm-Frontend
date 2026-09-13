@@ -82,6 +82,8 @@ export default function CreateUser() {
       alternateMobile: "",
       gender: "Male",
       aadharNo: "",
+      gstNo: "",
+      panNumber: "",
       panCard: "",
       accountId: "",
       registrationDate: new Date().toISOString().slice(0, 10),
@@ -862,6 +864,39 @@ export default function CreateUser() {
               )}
             </div>
 
+            {/* Aadhar Number */}
+            <div>
+              <label className="block text-sm font-medium">Aadhar Number</label>
+              <input
+                value={formData.customer.aadharNo}
+                onChange={(e) => handleChange(e, "customer.aadharNo")}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="Aadhar Number"
+              />
+            </div>
+
+            {/* GST Number */}
+            <div>
+              <label className="block text-sm font-medium">GST Number</label>
+              <input
+                value={formData.customer.gstNo}
+                onChange={(e) => handleChange(e, "customer.gstNo")}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="GST Number"
+              />
+            </div>
+
+            {/* PAN Number */}
+            <div>
+              <label className="block text-sm font-medium">PAN Number</label>
+              <input
+                value={formData.customer.panNumber}
+                onChange={(e) => handleChange(e, "customer.panNumber")}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="PAN Number"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium">
                 {/* Account Id (IPACCT Id) */}
@@ -940,7 +975,7 @@ export default function CreateUser() {
                   <div className="flex flex-wrap gap-2">
                     {(isDefaultInstaller || formData.customer.installationByName) && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">
-                        Default {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
+                        Other {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1051,7 +1086,7 @@ export default function CreateUser() {
                       </div>
 
                       {/* Default option */}
-                      {(!installerSearch || "default".includes(installerSearch.toLowerCase())) && (
+                      {(!installerSearch || "other".includes(installerSearch.toLowerCase())) && (
                         <label
                           className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition border-b border-gray-100 bg-gray-50/50"
                           onMouseDown={(e) => e.preventDefault()}
@@ -1071,7 +1106,7 @@ export default function CreateUser() {
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
                           <span className="font-semibold text-sm text-gray-800">
-                            Default
+                            Other
                           </span>
                         </label>
                       )}
