@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserFullDetails } from "../../service/user";
 import { FaDownload, FaEdit, FaFileAlt, FaExternalLinkAlt } from "react-icons/fa";
+import UserPackageDetails from "./PackageDetails";
 
 const BASE_FILE_URL = import.meta.env.VITE_IMAGE_URL
   ? `${import.meta.env.VITE_IMAGE_URL}/public/`
@@ -440,6 +441,7 @@ const UserProfile = () => {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
@@ -454,7 +456,7 @@ const UserProfile = () => {
           </div>
 
           <div className="p-5 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {docs
                 .map((doc, docIndex) => {
                   const images = Array.isArray(doc.documentImage)
@@ -494,6 +496,9 @@ const UserProfile = () => {
           </div>
         </div>
       )}
+
+      {/* PACKAGE DETAILS SECTION */}
+      <UserPackageDetails />
     </div>
   );
 };
@@ -535,13 +540,13 @@ const DocItem = ({
   downloaded,
 }) => {
   return (
-    <div className="flex items-center justify-between p-3.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100/70 transition">
-      <div className="flex items-center gap-3 min-w-0">
+    <div className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100/70 transition">
+      <div className="flex items-center gap-2.5 min-w-0">
         {isImage ? (
           <img
             src={url}
             alt={docType}
-            className="w-14 h-14 object-cover rounded border border-gray-300 cursor-pointer flex-shrink-0 hover:opacity-90"
+            className="w-10 h-10 object-cover rounded border border-gray-300 cursor-pointer flex-shrink-0 hover:opacity-90"
             onClick={() => window.open(url, "_blank")}
             onError={(e) => {
               e.target.style.display = "none";
@@ -551,39 +556,39 @@ const DocItem = ({
           />
         ) : null}
         <div
-          className={`w-14 h-14 bg-gray-200 text-gray-500 rounded border border-gray-300 flex items-center justify-center flex-shrink-0 ${
+          className={`w-10 h-10 bg-gray-200 text-gray-500 rounded border border-gray-300 flex items-center justify-center flex-shrink-0 ${
             isImage ? "hidden" : "flex"
           }`}
         >
-          <FaFileAlt className="text-xl text-gray-400" />
+          <FaFileAlt className="text-base text-gray-400" />
         </div>
 
         <div className="min-w-0">
-          <strong className="block text-sm font-semibold text-gray-800 truncate">
+          <strong className="block text-xs font-semibold text-gray-800 truncate">
             {docType}
           </strong>
-          <span className="text-xs text-gray-500 truncate block mt-0.5">{fileName}</span>
+          <span className="text-[10px] text-gray-500 truncate block">{fileName}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+      <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
         <button
           onClick={() => window.open(url, "_blank")}
-          className="p-2 text-gray-600 hover:text-blue-600 hover:bg-white rounded transition"
+          className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-white rounded transition"
           title="Open in new tab"
         >
-          <FaExternalLinkAlt className="text-xs" />
+          <FaExternalLinkAlt className="text-[10px]" />
         </button>
 
         <button
           onClick={() => downloadFile(url, fileName)}
           disabled={downloading === fileName}
-          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-white rounded transition disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
+          className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-white rounded transition disabled:opacity-50 flex items-center gap-1 text-xs font-medium"
           title="Download Document"
         >
-          <FaDownload className="text-sm" />
-          {downloading === fileName && <span className="text-xs">Saving...</span>}
-          {downloaded === fileName && <span className="text-xs text-green-600 font-semibold">Done!</span>}
+          <FaDownload className="text-xs" />
+          {downloading === fileName && <span className="text-[10px]">Saving...</span>}
+          {downloaded === fileName && <span className="text-[10px] text-green-600 font-semibold">Done!</span>}
         </button>
       </div>
     </div>

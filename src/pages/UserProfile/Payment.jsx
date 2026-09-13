@@ -88,7 +88,7 @@ const UserPayments = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-gray-800">User Payments</h2>
         <button
-          onClick={() => navigate("/add/payment")}
+          onClick={() => navigate("/add/payment", { state: { userId: id } })}
           className="px-2 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-sm font-medium"
         >
           Add Payment

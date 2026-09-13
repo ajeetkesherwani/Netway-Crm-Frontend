@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import Select from "react-select";
 // import.meta.env.VITE_IMAGE_URL
 import {
   getAdminTicketDetails,
@@ -324,22 +325,24 @@ export default function TicketDetails() {
                 {/* Assign To (role/staff list) */}
                 <div>
                   <label className="font-semibold">Assign To:</label>
-                  <select
-                    value={editableDetails.assignToId || ""}
-                    onChange={(e) => handleChange("assignToId", e.target.value)}
-                    className="border w-full rounded-md py-1 px-2 mt-1"
-                  >
-                    <option value="">Select Staff / Role</option>
-                    {staffList.map((s) => (
-                      <option key={s._id} value={s._id}>
-                        {/* staffList may be roles (roleName) or staff (staffName/name) */}
-                        {s.staffName || s.name || s.roleName || s.role}
-                        {s.roleName || s.role
-                          ? ` (${s.roleName || s.role})`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    value={
+                      staffList
+                        .map((s) => ({
+                          value: s._id,
+                          label: `${s.staffName || s.name || s.roleName || s.role}${s.roleName || s.role ? ` (${s.roleName || s.role})` : ""}`
+                        }))
+                        .find(opt => opt.value === editableDetails.assignToId) || null
+                    }
+                    onChange={(selectedOption) => handleChange("assignToId", selectedOption ? selectedOption.value : "")}
+                    options={staffList.map((s) => ({
+                      value: s._id,
+                      label: `${s.staffName || s.name || s.roleName || s.role}${s.roleName || s.role ? ` (${s.roleName || s.role})` : ""}`
+                    }))}
+                    isClearable
+                    placeholder="Select Staff / Role"
+                    className="mt-1"
+                  />
                 </div>
 
                 {/* Severity */}
@@ -425,13 +428,45 @@ export default function TicketDetails() {
                   <strong>Category:</strong>{" "}
                   {ticketDetails.category?.name || "N/A"}
                 </p>
-                <p>
-                  <strong>Assigned To:</strong>{" "}
-                  {ticketDetails.assignToId?.staffName ||
-                    ticketDetails.assignToId?.name ||
-                    ticketDetails.assignToId?.roleName ||
-                    "Unassigned"}
-                </p>
+                <div className="flex items-center gap-2 my-1">
+                  <strong className="whitespace-nowrap">Assigned To:</strong>
+                  <div className="w-64">
+                    <Select
+                      value={
+                        staffList
+                          .map((s) => ({
+                            value: s._id,
+                            label: `${s.staffName || s.name || s.roleName || s.role}${s.roleName || s.role ? ` (${s.roleName || s.role})` : ""}`
+                          }))
+                          .find(opt => opt.value === (ticketDetails.assignToId?._id || ticketDetails.assignToId)) || null
+                      }
+                      onChange={async (selectedOption) => {
+                        const newId = selectedOption ? selectedOption.value : "";
+                        try {
+                          const formData = new FormData();
+                          formData.append("assignToId", newId);
+                          const res = await updateTicketDetails(ticketId, formData);
+                          if (res?.status) {
+                            alert("✅ Assigned To updated successfully!");
+                            await loadAll();
+                          } else {
+                            alert(res?.message || "Failed to assign ticket");
+                          }
+                        } catch (err) {
+                          console.error("Error assigning ticket:", err);
+                          alert("Error assigning ticket - see console");
+                        }
+                      }}
+                      options={staffList.map((s) => ({
+                        value: s._id,
+                        label: `${s.staffName || s.name || s.roleName || s.role}${s.roleName || s.role ? ` (${s.roleName || s.role})` : ""}`
+                      }))}
+                      isClearable
+                      placeholder="Select Staff / Role"
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
                 <p>
                   <strong>Severity:</strong> {ticketDetails.severity || "N/A"}
                 </p>

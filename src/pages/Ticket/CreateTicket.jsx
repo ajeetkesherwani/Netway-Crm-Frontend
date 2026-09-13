@@ -407,7 +407,7 @@
 // }
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   createTicket,
   getStaffList,
@@ -418,6 +418,7 @@ import { toast } from "react-toastify";
 
 export default function TicketCreate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [staffList, setStaffList] = useState([]);
@@ -453,15 +454,25 @@ export default function TicketCreate() {
           getStaffList(),
           getTicketCategories(),
         ]);
-        setUsers((userRes.data || []).filter(u => u.generalInformation?.name));
+        const fetchedUsers = (userRes.data || []).filter(u => u.generalInformation?.name);
+        setUsers(fetchedUsers);
         setStaffList(staffRes.data || []);
         setCategories(catRes.data || []);
+        
+        const prefilledUserId = location.state?.userId;
+        if (prefilledUserId) {
+          const foundUser = fetchedUsers.find((u) => u._id === prefilledUserId);
+          if (foundUser) {
+            handleUserSelect(foundUser);
+          }
+        }
       } catch (err) {
         toast.error("Failed to load data");
       }
     };
     fetchData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   // Smart handleChange
   const handleChange = (e) => {
@@ -629,9 +640,13 @@ export default function TicketCreate() {
         </div>
 
         {/* File Uploads */}
-        {["fileI", "fileII", "fileIII"].map((key) => (
+        {[
+          { key: "fileI", label: "File 1" },
+          { key: "fileII", label: "File 2" },
+          { key: "fileIII", label: "File 3" },
+        ].map(({ key, label }) => (
           <div key={key}>
-            <label className="block font-medium">{key.toUpperCase()}</label>
+            <label className="block font-medium">{label}</label>
             <input
               type="file"
               name={key}

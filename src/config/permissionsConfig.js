@@ -240,7 +240,11 @@ export const permissionsConfig = [
             "SubZoneDelete",
             "SubZoneCreate",
             "ServerList",
-            "PoolList"
+            "PoolList",
+            "BannerList",
+            "BannerCreate",
+            "BannerUpdate",
+            "BannerDelete"
         ],
     },
     // {

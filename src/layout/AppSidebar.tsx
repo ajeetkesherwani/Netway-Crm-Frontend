@@ -328,7 +328,7 @@ const AppSidebar: React.FC = () => {
         });
       if (permissions.setting?.TicketResolutionList)
         settingSubItems.push({
-          name: "Resolution",
+          name: "Ticket Resolution",
           path: "/setting/resolution/List",
         });
       if (permissions.setting?.TicketCategoryList)
@@ -343,14 +343,21 @@ const AppSidebar: React.FC = () => {
         });
           if (permissions.setting?.SubZoneList)
         settingSubItems.push({
-          name: "SubZone List",
+          name: "Zone List",
           path: "/setting/subZone/list",
         });
       if (permissions.setting?.ServerList)
         settingSubItems.push({
-          name: "Server",
+          name: "Server List",
           path: "/setting/serverList",
         });
+
+      if (permissions.setting?.BannerList)
+        settingSubItems.push({
+          name: "Banner",
+          path: "/setting/banner/list",
+        });
+
       if (permissions.setting?.PoolList)
         settingSubItems.push({
           name: "Pool",

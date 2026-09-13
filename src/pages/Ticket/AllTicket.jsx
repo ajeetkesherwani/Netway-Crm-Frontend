@@ -926,6 +926,7 @@ export default function AllTicket() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { page, limit } = getSearchParamsVal(searchParams);
   const [tickets, setTickets] = useState([]);
+  const [rawTickets, setRawTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [totalPages, setTotalPages] = useState(1);
@@ -960,6 +961,8 @@ export default function AllTicket() {
         res?.data?.allTickets ||
         res?.allTickets ||
         [];
+
+      setRawTickets(ticketData);
 
       const totalCount =
         res?.data?.data?.totalCount ||
@@ -1056,59 +1059,48 @@ export default function AllTicket() {
     }
   };
 
-  // Function to download current tickets as Excel (CSV format)
-  const downloadExcel = () => {
-    if (tickets.length === 0) {
+  // Function to download current tickets as Excel
+  const downloadExcel = async () => {
+    if (!rawTickets || rawTickets.length === 0) {
       alert("No tickets to download");
       return;
     }
 
-    // Define CSV headers
-    const headers = [
-      "S.No",
-      "Ticket No",
-      "User Name",
-      "Category",
-      "Ticket Date/Time",
-      "Call Source",
-      "Assigned To",
-      "Resolved By",
-      "Resolved Date/Time",
-      "Status",
-    ];
+    const formatDateForExcel = (dateString) => {
+      if (!dateString) return dateString;
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strTime = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+      return `${day}-${month}-${year} ${strTime}`;
+    };
 
-    // Map tickets to rows
-    const rows = tickets.map((ticket, index) => [
-      (page - 1) * limit + index + 1,
-      ticket.ticketNumber,
-      ticket.personName,
-      ticket.category,
-      formatDateTime(ticket.createdAt),
-      ticket.callSource,
-      ticket.assignToName,
-      ticket.fixedBy,
-      formatDateTime(ticket.fixedAt),
-      ticket.status,
-    ]);
-
-    // Create CSV content
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
-
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `tickets_page_${page}_${new Date().toISOString().split("T")[0]}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const { utils, writeFile } = await import("xlsx");
+      const exportData = rawTickets.map(({ _id, ...rest }) => {
+        const dateFields = ["createdAt", "updatedAt", "fixedAt", "assignedAt"];
+        dateFields.forEach(field => {
+          if (rest[field]) {
+            rest[field] = formatDateForExcel(rest[field]);
+          }
+        });
+        return rest;
+      });
+      const ws = utils.json_to_sheet(exportData);
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Tickets");
+      writeFile(wb, `AllTickets_${new Date().toISOString().split("T")[0]}.xlsx`);
+    } catch (err) {
+      console.error("Error downloading excel", err);
+      alert("Error downloading excel");
+    }
   };
 
   if (error)
@@ -1163,7 +1155,7 @@ export default function AllTicket() {
             <div className="hidden md:grid grid-cols-12 bg-gradient-to-r from-blue-50 to-blue-100 border-b font-semibold text-sm text-gray-800 py-4 px-6 gap-4">
               <div>S.No</div>
               <div>Ticket No</div>
-              <div>User ID (userName)</div>
+              <div>User ID</div>
               <div>Category</div>
               <div className="col-span-2">Ticket Date/Time</div>
               <div>Resolution</div>

@@ -196,7 +196,7 @@ export default function TicketUpdate() {
           />
         </div>
         <div>
-          <label className="block font-medium">File I (Upload new if needed)</label>
+          <label className="block font-medium">File 1 (Upload new if needed)</label>
           <input
             type="file"
             name="fileI"
@@ -205,7 +205,7 @@ export default function TicketUpdate() {
           />
         </div>
         <div>
-          <label className="block font-medium">File II (Upload new if needed)</label>
+          <label className="block font-medium">File 2 (Upload new if needed)</label>
           <input
             type="file"
             name="fileII"
@@ -214,7 +214,7 @@ export default function TicketUpdate() {
           />
         </div>
         <div>
-          <label className="block font-medium">File III (Upload new if needed)</label>
+          <label className="block font-medium">File 3 (Upload new if needed)</label>
           <input
             type="file"
             name="fileIII"

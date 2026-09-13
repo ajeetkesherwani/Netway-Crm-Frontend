@@ -259,14 +259,18 @@ export default function TicketCreate() {
         </div>
 
         {/* File Uploads */}
-        {["fileI", "fileII", "fileIII"].map((file) => (
-          <div key={file}>
+        {[
+          { key: "fileI", label: "File 1" },
+          { key: "fileII", label: "File 2" },
+          { key: "fileIII", label: "File 3" },
+        ].map(({ key, label }) => (
+          <div key={key}>
             <label className="block font-medium text-gray-700 mb-1">
-              {file.replace("file", "File ")}
+              {label}
             </label>
             <input
               type="file"
-              name={file}
+              name={key}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-md p-2"
             />
