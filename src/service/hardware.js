@@ -100,6 +100,18 @@ export async function assignHardware(payload) {
   return parseResponse(res, "Failed to assign hardware");
 }
 
+// Bulk upload hardware
+export async function bulkUploadHardware(formData) {
+  const res = await fetch(`${BASE_URL}/hardware/bulk-upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: formData,
+  });
+  return parseResponse(res, "Failed to upload hardware bulk file");
+}
+
 /* User listing (for assign dropdowns) */
 export async function getAllUserList() {
   const res = await fetch(`${BASE_URL}/user/list`, {

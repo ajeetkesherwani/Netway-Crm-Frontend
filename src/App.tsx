@@ -163,6 +163,17 @@ import BannerView from "./pages/Setting/Banner/BannerView";
 // import Hello from "./pages/Package/OttPackageList";
 // import UserRechargePackage from "./pages/UserProfile/Recharge";
 
+import TotalAvailableStock from "./pages/StockManagement/TotalAvailableStock";
+import TotalAssignedStock from "./pages/StockManagement/TotalAssignedStock";
+import AssignToEngineer from "./pages/StockManagement/AssignToEngineer";
+import AssignToUser from "./pages/StockManagement/AssignToUser";
+import CreateStockCategory from "./pages/StockManagement/CreateStockCategory";
+import UpdateStockCategory from "./pages/StockManagement/UpdateStockCategory";
+import ViewStockCategory from "./pages/StockManagement/ViewStockCategory";
+import AttendanceList from "./pages/Attendance/AttendanceList";
+import ExpensesCategoryList from "./pages/Category/ExpensesCategoryList";
+import ExpenseList from "./pages/Category/ExpenseList";
+
 // import UserList from "./pages/User/UserList";
 export default function App() {
   return (
@@ -257,6 +268,7 @@ export default function App() {
             <Route path="staff/create" element={<StaffCreate />} />
             <Route path="staff/view/:id" element={<StaffView />} />
             <Route path="staff/update/:id" element={<StaffUpdate />} />
+            <Route path="attendance" element={<AttendanceList />} />
             {/*---------------------------------------------------------RETAILER  --------------------------------------------------------- */}
             {/* retailer Routes */}
             <Route path="retailer/list" element={<RetailerList />} />
@@ -397,6 +409,16 @@ export default function App() {
               path="/setting/hardware/update/:id"
               element={<HardwareUpdate />}
             />
+
+            {/*---------------------------------------------------------Stock Category Routes--------------------------------------------- */}
+            <Route path="/stock-category/total-available" element={<TotalAvailableStock />} />
+            <Route path="/stock-category/total-assigned" element={<TotalAssignedStock />} />
+            <Route path="/stock-category/assign-to-engineer" element={<AssignToEngineer />} />
+            <Route path="/stock-category/assign-to-user" element={<AssignToUser />} />
+            <Route path="/stock-category/create" element={<CreateStockCategory />} />
+            <Route path="/stock-category/update/:id" element={<UpdateStockCategory />} />
+            <Route path="/stock-category/view/:id" element={<ViewStockCategory />} />
+
             {/*---------------------------------------------------------ticket reply--------------------------------------------- */}
             <Route
               path="/setting/ticketReplyOption/list"
@@ -546,6 +568,10 @@ export default function App() {
             <Route path="setting/banner/create" element={<BannerCreate />} />
             <Route path="setting/banner/view/:id" element={<BannerView />} />
             <Route path="setting/banner/update/:id" element={<BannerUpdate />} />
+
+            {/* ---------------------------------------------------------CATEGORY--------------------------------------------------------- */}
+            <Route path="category/expenses" element={<ExpensesCategoryList />} />
+            <Route path="category/expense-list" element={<ExpenseList />} />
 
             {/*-------------------------------------------------------------------------Ticket Report list ------------------------------------------------------------------------- */}
             <Route

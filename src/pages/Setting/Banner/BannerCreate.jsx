@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 import { createBanner } from "../../../service/banner";
+import { getRetailer } from "../../../service/retailer";
+import { getLcosByResellerId } from "../../../service/lco";
 import toast from "react-hot-toast";
 
 export default function BannerCreate() {
@@ -10,12 +13,43 @@ export default function BannerCreate() {
     bannerName: "",
     bannerType: "web",
     reseller: "",
+    lco: "",
     fromDate: "",
     toDate: "",
     short: 1,
     status: "active",
     file: null
   });
+
+  const [retailers, setRetailers] = useState([]);
+  const [lcos, setLcos] = useState([]);
+
+  useEffect(() => {
+    fetchRetailers();
+  }, []);
+
+  const fetchRetailers = async () => {
+    try {
+      const res = await getRetailer();
+      if (res?.status) setRetailers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleResellerChange = async (e) => {
+    const resellerId = e.target.value;
+    setFormData((prev) => ({ ...prev, reseller: resellerId, lco: "" }));
+    setLcos([]);
+    if (resellerId) {
+      try {
+        const res = await getLcosByResellerId(resellerId);
+        if (res?.status) setLcos(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -89,10 +123,40 @@ export default function BannerCreate() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">Select Bannr Type</option>
+                <option value="">Select Banner Type</option>
                 <option value="Web">Web</option>
                 <option value="App">App</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reseller</label>
+              <Select
+                value={retailers.map((r) => ({ value: r._id, label: r.resellerName })).find(opt => opt.value === formData.reseller) || null}
+                onChange={(selectedOption) => {
+                  const val = selectedOption ? selectedOption.value : "";
+                  handleResellerChange({ target: { value: val } });
+                }}
+                options={retailers.map((r) => ({ value: r._id, label: r.resellerName }))}
+                isClearable
+                placeholder="Select Reseller"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">LCO</label>
+              <Select
+                value={lcos.map((l) => ({ value: l._id, label: l.lcoName || l.name || l.username })).find(opt => opt.value === formData.lco) || null}
+                onChange={(selectedOption) => {
+                  const val = selectedOption ? selectedOption.value : "";
+                  handleChange({ target: { name: "lco", value: val } });
+                }}
+                options={lcos.map((l) => ({ value: l._id, label: l.lcoName || l.name || l.username }))}
+                isDisabled={!formData.reseller}
+                isClearable
+                placeholder="Select LCO"
+                className="text-sm"
+              />
             </div>
             
             <div>

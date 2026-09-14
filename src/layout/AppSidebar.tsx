@@ -83,6 +83,7 @@ const AppSidebar: React.FC = () => {
       staffSubItems.push({ name: "Role List", path: "/role/list" });
     }
 
+
     // Only push Staff menu if there are sub-items
     if (staffSubItems.length > 0) {
       generatedNavItems.push({
@@ -91,6 +92,15 @@ const AppSidebar: React.FC = () => {
         subItems: staffSubItems,
       });
     }
+
+    // 📅 Attendance
+    // if (permissions.staff?.Listing) {
+    //   generatedNavItems.push({
+    //     name: "Attendance",
+    //     icon: <CheckLineIcon />,
+    //     subItems: [{ name: "Attendance List", path: "/attendance" }],
+    //   });
+    // }
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
@@ -317,6 +327,55 @@ const AppSidebar: React.FC = () => {
       });
     }
 
+    // 📦 Stock Category
+    // const stockCategorySubItems = [];
+
+    // stockCategorySubItems.push({
+    //   name: "Total Available Stock",
+    //   path: "/stock-category/total-available",
+    // });
+    // stockCategorySubItems.push({
+    //   name: "Total Assigned Stock",
+    //   path: "/stock-category/total-assigned",
+    // });
+    // stockCategorySubItems.push({
+    //   name: "Assign to Engineer",
+    //   path: "/stock-category/assign-to-engineer",
+    // });
+    // stockCategorySubItems.push({
+    //   name: "Assign to User",
+    //   path: "/stock-category/assign-to-user",
+    // });
+
+    // if (stockCategorySubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Stock Category",
+    //     icon: <BoxIconLine />, 
+    //     subItems: stockCategorySubItems,
+    //   });
+    // }
+
+    // 🏷️ Category
+    const categorySubItems = [];
+    
+    if (permissions.configlist?.Listing) {
+      categorySubItems.push({
+        name: "Expenses Category",
+        path: "/category/expenses",
+      });
+      categorySubItems.push({
+        name: "Expense List",
+        path: "/category/expense-list",
+      });
+    }
+
+    if (categorySubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Category",
+        icon: <ListIcon />, 
+        subItems: categorySubItems,
+      });
+    }
 
     // 🧩 Settings
     const settingSubItems = [];

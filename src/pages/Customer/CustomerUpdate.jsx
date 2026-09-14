@@ -994,7 +994,7 @@ export default function CustomerUpdate() {
                   <div className="flex flex-wrap gap-2">
                     {(isDefaultInstaller || formData.customer.installationByName) && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-md">
-                        Default {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
+                        Other {formData.customer.installationByName ? `(${formData.customer.installationByName})` : ""}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -1101,7 +1101,7 @@ export default function CustomerUpdate() {
                       </div>
 
                       {/* Default option */}
-                      {(!installerSearch || "default".includes(installerSearch.toLowerCase())) && (
+                      {(!installerSearch || "other".includes(installerSearch.toLowerCase())) && (
                         <label
                           className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 cursor-pointer transition border-b border-gray-100 bg-gray-50/50"
                           onMouseDown={(e) => e.preventDefault()}
@@ -1112,16 +1112,14 @@ export default function CustomerUpdate() {
                             onChange={() => {
                               const nextState = !(isDefaultInstaller || Boolean(formData.customer.installationByName));
                               setIsDefaultInstaller(nextState);
-                              if (nextState) {
-                                setFieldValue("customer.installationBy", []);
-                              } else {
+                              if (!nextState) {
                                 setFieldValue("customer.installationByName", "");
                               }
                             }}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                           />
                           <span className="font-semibold text-sm text-gray-800">
-                            Default
+                            Other
                           </span>
                         </label>
                       )}
@@ -1154,11 +1152,6 @@ export default function CustomerUpdate() {
                                     updated
                                   );
                                   if (updated.length > 0) {
-                                    setIsDefaultInstaller(false);
-                                    setFieldValue(
-                                      "customer.installationByName",
-                                      ""
-                                    );
                                   }
                                 }}
                                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
@@ -1196,8 +1189,6 @@ export default function CustomerUpdate() {
                         "customer.installationByName",
                         name
                       );
-                      if (name.trim())
-                        setFieldValue("customer.installationBy", []);
                     }}
                     placeholder="e.g. Ramu Kaka, Local Technician"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"

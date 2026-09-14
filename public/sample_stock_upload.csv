@@ -1,0 +1,4 @@
+productName,vendor,serialNo,macAddress
+Router A1,Cisco,SN123456,00:1B:44:11:3A:B7
+Switch X2,Juniper,SN789012,00:1B:44:11:3A:B8
+Access Point,Ubiquiti,SN345678,00:1B:44:11:3A:B9
