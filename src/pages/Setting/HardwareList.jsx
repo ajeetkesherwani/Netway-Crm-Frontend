@@ -7,6 +7,7 @@ import {
   FaEllipsisV,
   FaSearch,
   FaUserPlus,
+  FaUpload,
 } from "react-icons/fa";
 import ProtectedAction from "../../components/ProtectedAction";
 import {
@@ -14,6 +15,7 @@ import {
   deleteHardware,
   assignHardware,
   getAllUserList,
+  bulkUploadHardware,
 } from "../../service/hardware";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
@@ -26,6 +28,7 @@ export default function HardwareList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
+  const fileInputRef = React.useRef(null);
 
   // Users for assign
   const [users, setUsers] = useState([]);
@@ -149,6 +152,30 @@ export default function HardwareList() {
     setAppliedSearch(searchTerm.trim().toLowerCase());
   };
 
+  const handleBulkUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      toast.loading("Uploading hardware...", { id: "upload-hw" });
+      await bulkUploadHardware(formData);
+      toast.success("Bulk upload successful", { id: "upload-hw" });
+      fetchHardware();
+    } catch (err) {
+      toast.error(err.message || "Bulk upload failed", { id: "upload-hw" });
+    }
+    
+    // Reset input
+    e.target.value = null;
+  };
+
   const exportToExcel = () => {
     if (hardware.length === 0) {
       toast.error("No hardware to export");
@@ -215,6 +242,21 @@ export default function HardwareList() {
           </div>
 
           <div className="flex items-center gap-3 mt-2 sm:mt-0">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".csv, .xlsx, .xls"
+              onChange={handleFileChange}
+            />
+            
+            <button
+              onClick={handleBulkUploadClick}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition whitespace-nowrap"
+            >
+              <FaUpload /> Bulk Upload
+            </button>
+
             <button
               onClick={exportToExcel}
               className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"

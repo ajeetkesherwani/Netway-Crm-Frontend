@@ -608,12 +608,13 @@ export default function RetailerCreate() {
 
             {/* Email */}
             <div>
-              <label className="block font-medium">Email</label>
+              <label className="block font-medium">Email *</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
+                required
                 className="border p-2 w-full rounded"
               />
             </div>

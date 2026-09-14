@@ -159,16 +159,25 @@ export default function UserDetails() {
           <Row label="Wallet Balance" value={user.walletBalance} />
 
           {/* Installation By – multiple */}
-          {Array.isArray(g.installationBy) && g.installationBy.length > 0 && (
+          {( (Array.isArray(g.installationBy) && g.installationBy.length > 0) || g.installationByName ) && (
             <>
               <div className="col-span-2 border-b p-2 font-medium bg-gray-50">Installation By</div>
-              {g.installationBy.map((inst, idx) => (
+              
+              {/* Array Installers */}
+              {Array.isArray(g.installationBy) && g.installationBy.map((inst, idx) => (
                 <div key={inst._id || idx} className="col-span-2 grid grid-cols-1 md:grid-cols-2 border-b last:border-b-0">
                   <Row label={`Installer ${idx + 1} Name`} value={inst.name || inst.staffName} />
                   <Row label="Email" value={inst.email} />
                   <Row label="Phone" value={inst.phoneNo || inst.phone} />
                 </div>
               ))}
+
+              {/* Manual Installer */}
+              {g.installationByName && (
+                <div className="col-span-2 grid grid-cols-1 md:grid-cols-2 border-b last:border-b-0">
+                  <Row label="Manual Installer Name (Other)" value={g.installationByName} />
+                </div>
+              )}
             </>
           )}
         </div>

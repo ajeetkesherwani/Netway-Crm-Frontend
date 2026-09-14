@@ -1097,9 +1097,7 @@ export default function CreateUser() {
                             onChange={() => {
                               const nextState = !(isDefaultInstaller || Boolean(formData.customer.installationByName));
                               setIsDefaultInstaller(nextState);
-                              if (nextState) {
-                                setFieldValue("customer.installationBy", []);
-                              } else {
+                              if (!nextState) {
                                 setFieldValue("customer.installationByName", "");
                               }
                             }}
@@ -1135,11 +1133,6 @@ export default function CreateUser() {
                                     );
                                   } else {
                                     updated.push(s._id);
-                                    setIsDefaultInstaller(false);
-                                    setFieldValue(
-                                      "customer.installationByName",
-                                      ""
-                                    ); // Clear manual
                                   }
                                   setFieldValue(
                                     "customer.installationBy",
@@ -1182,9 +1175,6 @@ export default function CreateUser() {
                     onChange={(e) => {
                       const name = e.target.value;
                       setFieldValue("customer.installationByName", name);
-                      if (name.trim()) {
-                        setFieldValue("customer.installationBy", []);
-                      }
                     }}
                     placeholder="e.g. Ramu Kaka, Local Technician"
                     className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"

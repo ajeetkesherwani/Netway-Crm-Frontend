@@ -16,6 +16,21 @@ export default function BannerList() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return "N/A";
+    const d = new Date(dateStr);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    const strTime = hours + ':' + minutes + ' ' + ampm;
+    return `${day}-${month}-${year} ${strTime}`;
+  };
+
   const handleView = (id) => {
     navigate(`/setting/banner/view/${id}`);
     setOpenMenuId(null);
@@ -101,27 +116,17 @@ export default function BannerList() {
     const exportData = banners.map((item, index) => {
       const { _id, updatedAt, __v, file, ...rest } = item;
       
-      const formatDateTime = (dateStr) => {
-        if (!dateStr) return "";
-        const d = new Date(dateStr);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        let hours = d.getHours();
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
-        const strTime = hours + ':' + minutes + ' ' + ampm;
-        return `${day}-${month}-${year} ${strTime}`;
-      };
-
       return {
         "S.No": index + 1,
-        ...rest,
-        fromDate: item.fromDate ? new Date(item.fromDate).toLocaleDateString() : "",
-        toDate: item.toDate ? new Date(item.toDate).toLocaleDateString() : "",
-        createdAt: formatDateTime(item.createdAt)
+        "Banner Name": item.bannerName || "N/A",
+        "Banner Type": item.bannerType || "N/A",
+        "Reseller Name": item.reseller?.resellerName || "N/A",
+        "LCO Name": item.lco?.lcoName || "N/A",
+        "From Date": item.fromDate ? new Date(item.fromDate).toLocaleDateString() : "N/A",
+        "To Date": item.toDate ? new Date(item.toDate).toLocaleDateString() : "N/A",
+        "Short": item.short,
+        "Status": item.status,
+        "Created At": formatDateTime(item.createdAt)
       };
     });
 
@@ -175,6 +180,10 @@ export default function BannerList() {
                 <th className="px-4 py-3">S.No</th>
                 <th className="px-4 py-3">Image</th>
                 <th className="px-4 py-3">Banner Name</th>
+                <th className="px-4 py-3">Reseller</th>
+                <th className="px-4 py-3">LCO</th>
+                <th className="px-4 py-3">From Date</th>
+                <th className="px-4 py-3">To Date</th>
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Short</th>
                 <th className="px-4 py-3">Status</th>
@@ -194,6 +203,10 @@ export default function BannerList() {
                       )}
                     </td>
                     <td className="px-4 py-3 font-medium">{banner.bannerName}</td>
+                    <td className="px-4 py-3">{banner.reseller?.resellerName || "N/A"}</td>
+                    <td className="px-4 py-3">{banner.lco?.lcoName || "N/A"}</td>
+                    <td className="px-4 py-3">{formatDateTime(banner.fromDate)}</td>
+                    <td className="px-4 py-3">{formatDateTime(banner.toDate)}</td>
                     <td className="px-4 py-3 capitalize">{banner.bannerType}</td>
                     <td className="px-4 py-3">{banner.short}</td>
                     <td className="px-4 py-3">

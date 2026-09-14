@@ -255,7 +255,7 @@ export const permissionsConfig = [
     {
         category: "stockManagement",
         label: "Stock Management",
-        permissions: ["Listing", "Create", "Edit", "Delete", "View", "Assign"],
+        permissions: ["Listing", "Create", "Edit", "Delete", "View", "Assign", "StockCategory"],
     },
     {
         category: "userCms",
