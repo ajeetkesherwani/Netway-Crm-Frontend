@@ -94,13 +94,13 @@ const AppSidebar: React.FC = () => {
     }
 
     // 📅 Attendance
-    if (permissions.attendance?.Listing) {
-      generatedNavItems.push({
-        name: "Attendance",
-        icon: <CheckLineIcon />,
-        subItems: [{ name: "Attendance List", path: "/attendance" }],
-      });
-    }
+    // if (permissions.attendance?.Listing) {
+    //   generatedNavItems.push({
+    //     name: "Attendance",
+    //     icon: <CheckLineIcon />,
+    //     subItems: [{ name: "Attendance List", path: "/attendance" }],
+    //   });
+    // }
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
@@ -341,59 +341,59 @@ const AppSidebar: React.FC = () => {
       });
     }
 
-    // 📦 Stock Category
-    const stockCategorySubItems = [];
+    // // 📦 Stock Category
+    // const stockCategorySubItems = [];
 
-    if (permissions.stockCategory?.TotalAvailable)
-      stockCategorySubItems.push({
-        name: "Total Available Stock",
-        path: "/stock-category/total-available",
-      });
-    if (permissions.stockCategory?.TotalAssigned)
-      stockCategorySubItems.push({
-        name: "Total Assigned Stock",
-        path: "/stock-category/total-assigned",
-      });
-    if (permissions.stockCategory?.AssignToEngineer)
-      stockCategorySubItems.push({
-        name: "Assign to Engineer",
-        path: "/stock-category/assign-to-engineer",
-      });
-    if (permissions.stockCategory?.AssignToUser)
-      stockCategorySubItems.push({
-        name: "Assign to User",
-        path: "/stock-category/assign-to-user",
-      });
+    // if (permissions.stockCategory?.TotalAvailable)
+    //   stockCategorySubItems.push({
+    //     name: "Total Available Stock",
+    //     path: "/stock-category/total-available",
+    //   });
+    // if (permissions.stockCategory?.TotalAssigned)
+    //   stockCategorySubItems.push({
+    //     name: "Total Assigned Stock",
+    //     path: "/stock-category/total-assigned",
+    //   });
+    // if (permissions.stockCategory?.AssignToEngineer)
+    //   stockCategorySubItems.push({
+    //     name: "Assign to Engineer",
+    //     path: "/stock-category/assign-to-engineer",
+    //   });
+    // if (permissions.stockCategory?.AssignToUser)
+    //   stockCategorySubItems.push({
+    //     name: "Assign to User",
+    //     path: "/stock-category/assign-to-user",
+    //   });
 
-    if (stockCategorySubItems.length > 0) {
-      generatedNavItems.push({
-        name: "Stock Category",
-        icon: <BoxIconLine />,
-        subItems: stockCategorySubItems,
-      });
-    }
+    // if (stockCategorySubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Stock Category",
+    //     icon: <BoxIconLine />,
+    //     subItems: stockCategorySubItems,
+    //   });
+    // }
 
     // 🏷️ Expenses
-    const categorySubItems = [];
+    // const categorySubItems = [];
 
-    if (permissions.expenseCategory?.Listing)
-      categorySubItems.push({
-        name: "Expenses Category",
-        path: "/category/expenses",
-      });
-    if (permissions.expense?.Listing)
-      categorySubItems.push({
-        name: "Expense List",
-        path: "/category/expense-list",
-      });
+    // if (permissions.expenseCategory?.Listing)
+    //   categorySubItems.push({
+    //     name: "Expenses Category",
+    //     path: "/category/expenses",
+    //   });
+    // if (permissions.expense?.Listing)
+    //   categorySubItems.push({
+    //     name: "Expense List",
+    //     path: "/category/expense-list",
+    //   });
 
-    if (categorySubItems.length > 0) {
-      generatedNavItems.push({
-        name: "Expenses",
-        icon: <ListIcon />,
-        subItems: categorySubItems,
-      });
-    }
+    // if (categorySubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Expenses",
+    //     icon: <ListIcon />,
+    //     subItems: categorySubItems,
+    //   });
+    // }
 
     // 🧩 Settings
     const settingSubItems = [];
