@@ -1,9 +1,73 @@
-import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaEllipsisV } from "react-icons/fa";
 import { getExpensesCategories, deleteExpensesCategory } from "../../service/expensesCategory";
 import ExpensesCategoryModal from "./ExpensesCategoryModal";
+import { usePermission } from "../../context/PermissionContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "-";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${dd}-${mm}-${yyyy} ${hours}:${minutes} ${ampm}`;
+}
+
+function ActionMenu({ onEdit, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const { permissions } = usePermission();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const hasAnyAction = permissions?.expenseCategory?.Edit || permissions?.expenseCategory?.Delete;
+  if (!hasAnyAction) return null;
+
+  return (
+    <div className="relative flex justify-center" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition"
+        title="Actions"
+      >
+        <FaEllipsisV size={15} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+          {permissions?.expenseCategory?.Edit && (
+            <button
+              onClick={() => { setOpen(false); onEdit(); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+            >
+              <FaEdit size={13} /> Edit
+            </button>
+          )}
+          {permissions?.expenseCategory?.Delete && (
+            <button
+              onClick={() => { setOpen(false); onDelete(); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+            >
+              <FaTrash size={13} /> Delete
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ExpensesCategoryList() {
   const [categories, setCategories] = useState([]);
@@ -11,6 +75,7 @@ export default function ExpensesCategoryList() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
+  const { permissions } = usePermission();
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -81,12 +146,14 @@ export default function ExpensesCategoryList() {
               className="w-full border rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
-          <button
-            onClick={handleAdd}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 flex items-center gap-2 flex-shrink-0"
-          >
-            <FaPlus /> Add Category
-          </button>
+          {permissions?.expenseCategory?.Create && (
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 flex items-center gap-2 flex-shrink-0"
+            >
+              <FaPlus /> Add Category
+            </button>
+          )}
         </div>
       </div>
 
@@ -104,7 +171,9 @@ export default function ExpensesCategoryList() {
                   <th className="py-3 px-4 border-b">Category Name</th>
                   <th className="py-3 px-4 border-b">Added By</th>
                   <th className="py-3 px-4 border-b">Date</th>
-                  <th className="py-3 px-4 border-b text-center w-24">Action</th>
+                  {(permissions?.expenseCategory?.Edit || permissions?.expenseCategory?.Delete) && (
+                    <th className="py-3 px-4 border-b text-center w-24">Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -112,28 +181,20 @@ export default function ExpensesCategoryList() {
                   <tr key={cat._id} className="border-b hover:bg-gray-50 transition">
                     <td className="py-3 px-4">{idx + 1}</td>
                     <td className="py-3 px-4 font-medium text-gray-800">{cat.categoryName}</td>
-                    <td className="py-3 px-4 text-gray-600">
-                      {cat.addedByName} <span className="text-xs text-gray-400">({cat.addedByModel})</span>
+                    <td className="py-3 px-4 font-semibold text-gray-800">
+                      {cat.addedByName || "-"}
                     </td>
                     <td className="py-3 px-4 text-gray-600">
-                      {new Date(cat.createdAt || cat.date).toLocaleDateString()}
+                      {formatDateTime(cat.createdAt || cat.date)}
                     </td>
-                    <td className="py-3 px-4 flex justify-center gap-3">
-                      <button 
-                        onClick={() => handleEdit(cat)}
-                        className="text-blue-500 hover:text-blue-700"
-                        title="Edit"
-                      >
-                        <FaEdit size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(cat._id)}
-                        className="text-red-500 hover:text-red-700"
-                        title="Delete"
-                      >
-                        <FaTrash size={18} />
-                      </button>
-                    </td>
+                    {(permissions?.expenseCategory?.Edit || permissions?.expenseCategory?.Delete) && (
+                      <td className="py-3 px-4 text-center">
+                        <ActionMenu
+                          onEdit={() => handleEdit(cat)}
+                          onDelete={() => handleDelete(cat._id)}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -142,7 +203,7 @@ export default function ExpensesCategoryList() {
         )}
       </div>
 
-      <ExpensesCategoryModal 
+      <ExpensesCategoryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         data={modalData}

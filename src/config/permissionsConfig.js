@@ -247,11 +247,6 @@ export const permissionsConfig = [
             "BannerDelete"
         ],
     },
-    // {
-    //     category: "setting",
-    //     label: "Setting",
-    //     permissions: ["listing", "create", "edit", "delete", "view", "approve"],
-    // },
     {
         category: "stockManagement",
         label: "Stock Management",
@@ -260,16 +255,69 @@ export const permissionsConfig = [
     {
         category: "userCms",
         label: "User CMS",
-        permissions: ["Listing",],
+        permissions: ["Listing"],
     },
-      {
+    {
         category: "server",
         label: "Server",
         permissions: ["Listing", "Create", "Edit", "Delete", "View"],
     },
-      {
+    {
         category: "pool",
         label: "Pool",
         permissions: ["Listing", "Create", "Edit", "Delete", "View"],
+    },
+    // ── NEW CATEGORIES ──────────────────────────────────────────────────────
+    {
+        category: "lead",
+        label: "Lead (Sales)",
+        permissions: [
+            "Create",
+            "Listing",
+            "View",
+            "Edit",
+            "Delete",
+            "ConvertedList",
+        ],
+    },
+    {
+        category: "attendance",
+        label: "Attendance",
+        permissions: [
+            "Listing",
+            "MarkAttendance",
+            "Export",
+        ],
+    },
+    {
+        category: "expenseCategory",
+        label: "Expense Category",
+        permissions: [
+            "Listing",
+            "Create",
+            "Edit",
+            "Delete",
+        ],
+    },
+    {
+        category: "expense",
+        label: "Expense",
+        permissions: [
+            "Listing",
+            "Create",
+            "Edit",
+            "Delete",
+            "Export",
+        ],
+    },
+    {
+        category: "stockCategory",
+        label: "Stock Category",
+        permissions: [
+            "TotalAvailable",
+            "TotalAssigned",
+            "AssignToEngineer",
+            "AssignToUser",
+        ],
     },
 ];

@@ -94,13 +94,13 @@ const AppSidebar: React.FC = () => {
     }
 
     // 📅 Attendance
-    // if (permissions.staff?.Listing) {
-    //   generatedNavItems.push({
-    //     name: "Attendance",
-    //     icon: <CheckLineIcon />,
-    //     subItems: [{ name: "Attendance List", path: "/attendance" }],
-    //   });
-    // }
+    if (permissions.attendance?.Listing) {
+      generatedNavItems.push({
+        name: "Attendance",
+        icon: <CheckLineIcon />,
+        subItems: [{ name: "Attendance List", path: "/attendance" }],
+      });
+    }
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
@@ -229,6 +229,20 @@ const AppSidebar: React.FC = () => {
         subItems: ticketsSubItems,
       });
 
+    // 🏷️ Sales (Lead)
+    const salesSubItems = [];
+    if (permissions.lead?.Create)
+      salesSubItems.push({ name: "Create Lead", path: "/sales/lead/create" });
+    if (permissions.lead?.Listing)
+      salesSubItems.push({ name: "Manage Lead", path: "/sales/lead/manage" });
+    if (permissions.lead?.ConvertedList)
+      salesSubItems.push({ name: "Converted Lead", path: "/sales/lead/converted" });
+    if (salesSubItems.length > 0)
+      generatedNavItems.push({
+        name: "Sales",
+        icon: <PieChartIcon />,
+        subItems: salesSubItems,
+      });
 
     // 💰 Invoice
     const invoiceSubItems = [];
@@ -328,51 +342,55 @@ const AppSidebar: React.FC = () => {
     }
 
     // 📦 Stock Category
-    // const stockCategorySubItems = [];
+    const stockCategorySubItems = [];
 
-    // stockCategorySubItems.push({
-    //   name: "Total Available Stock",
-    //   path: "/stock-category/total-available",
-    // });
-    // stockCategorySubItems.push({
-    //   name: "Total Assigned Stock",
-    //   path: "/stock-category/total-assigned",
-    // });
-    // stockCategorySubItems.push({
-    //   name: "Assign to Engineer",
-    //   path: "/stock-category/assign-to-engineer",
-    // });
-    // stockCategorySubItems.push({
-    //   name: "Assign to User",
-    //   path: "/stock-category/assign-to-user",
-    // });
+    if (permissions.stockCategory?.TotalAvailable)
+      stockCategorySubItems.push({
+        name: "Total Available Stock",
+        path: "/stock-category/total-available",
+      });
+    if (permissions.stockCategory?.TotalAssigned)
+      stockCategorySubItems.push({
+        name: "Total Assigned Stock",
+        path: "/stock-category/total-assigned",
+      });
+    if (permissions.stockCategory?.AssignToEngineer)
+      stockCategorySubItems.push({
+        name: "Assign to Engineer",
+        path: "/stock-category/assign-to-engineer",
+      });
+    if (permissions.stockCategory?.AssignToUser)
+      stockCategorySubItems.push({
+        name: "Assign to User",
+        path: "/stock-category/assign-to-user",
+      });
 
-    // if (stockCategorySubItems.length > 0) {
-    //   generatedNavItems.push({
-    //     name: "Stock Category",
-    //     icon: <BoxIconLine />, 
-    //     subItems: stockCategorySubItems,
-    //   });
-    // }
+    if (stockCategorySubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Stock Category",
+        icon: <BoxIconLine />,
+        subItems: stockCategorySubItems,
+      });
+    }
 
-    // 🏷️ Category
+    // 🏷️ Expenses
     const categorySubItems = [];
-    
-    if (permissions.configlist?.Listing) {
+
+    if (permissions.expenseCategory?.Listing)
       categorySubItems.push({
         name: "Expenses Category",
         path: "/category/expenses",
       });
+    if (permissions.expense?.Listing)
       categorySubItems.push({
         name: "Expense List",
         path: "/category/expense-list",
       });
-    }
 
     if (categorySubItems.length > 0) {
       generatedNavItems.push({
-        name: "Category",
-        icon: <ListIcon />, 
+        name: "Expenses",
+        icon: <ListIcon />,
         subItems: categorySubItems,
       });
     }
@@ -400,7 +418,7 @@ const AppSidebar: React.FC = () => {
           name: "Area List",
           path: "/setting/zonelist",
         });
-          if (permissions.setting?.SubZoneList)
+      if (permissions.setting?.SubZoneList)
         settingSubItems.push({
           name: "Zone List",
           path: "/setting/subZone/list",
@@ -422,13 +440,13 @@ const AppSidebar: React.FC = () => {
           name: "Pool",
           path: "/setting/poolList"
         });
-          
+
       // if (permissions.setting?.hardwareList)
       //   settingSubItems.push({
       //     name: "Hardware List",
       //     path: "/setting/hardware/list",
       //   });
-  
+
     }
     if (settingSubItems.length > 0)
       generatedNavItems.push({

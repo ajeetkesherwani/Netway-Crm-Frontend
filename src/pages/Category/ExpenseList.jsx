@@ -1,15 +1,80 @@
-import React, { useState, useEffect } from "react";
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaFileExcel } from "react-icons/fa";
+import React, { useState, useEffect, useRef } from "react";
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaFileExcel, FaEllipsisV } from "react-icons/fa";
 import { getExpenses, deleteExpense } from "../../service/expense";
 import ExpenseModal from "./ExpenseModal";
+import { usePermission } from "../../context/PermissionContext";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 
+function formatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "-";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${dd}-${mm}-${yyyy} ${hours}:${minutes} ${ampm}`;
+}
+
+function ActionMenu({ onEdit, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const { permissions } = usePermission();
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const hasAnyAction = permissions?.expense?.Edit || permissions?.expense?.Delete;
+  if (!hasAnyAction) return null;
+
+  return (
+    <div className="relative flex justify-center" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition"
+        title="Actions"
+      >
+        <FaEllipsisV size={15} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+          {permissions?.expense?.Edit && (
+            <button
+              onClick={() => { setOpen(false); onEdit(); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition"
+            >
+              <FaEdit size={13} /> Edit
+            </button>
+          )}
+          {permissions?.expense?.Delete && (
+            <button
+              onClick={() => { setOpen(false); onDelete(); }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition"
+            >
+              <FaTrash size={13} /> Delete
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ExpenseList() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const { permissions } = usePermission();
+
   // Filters
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -86,12 +151,12 @@ export default function ExpenseList() {
     const exportData = expenses.map((exp, idx) => ({
       "S.No": idx + 1,
       "Category": exp.expensesCategory?.categoryName || "Unknown",
-      "Expense Date": new Date(exp.expenseDate).toLocaleDateString(),
+      "Expense Date": formatDateTime(exp.expenseDate),
       "Amount": exp.amount,
       "Payment Mode": exp.paymentMode,
       "Description": exp.description || "-",
-      "Added By": `${exp.addedByName || "Unknown"} (${exp.addedByModel || "Admin"})`,
-      "Created At": new Date(exp.createdAt).toLocaleDateString()
+      "Added By": exp.addedByName || "Unknown",
+      "Created At": formatDateTime(exp.createdAt)
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -107,23 +172,29 @@ export default function ExpenseList() {
     setPaymentMode("");
   };
 
+  const showActionCol = permissions?.expense?.Edit || permissions?.expense?.Delete;
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen flex flex-col">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Expense List</h1>
         <div className="flex gap-2 items-center flex-wrap">
-          <button
-            onClick={exportExcel}
-            className="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700 flex items-center gap-2 h-[38px]"
-          >
-            <FaFileExcel /> EXPORT
-          </button>
-          <button
-            onClick={handleAdd}
-            className="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700 flex items-center gap-2 h-[38px]"
-          >
-            <FaPlus /> Add Expense
-          </button>
+          {permissions?.expense?.Export && (
+            <button
+              onClick={exportExcel}
+              className="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700 flex items-center gap-2 h-[38px]"
+            >
+              <FaFileExcel /> EXPORT
+            </button>
+          )}
+          {permissions?.expense?.Create && (
+            <button
+              onClick={handleAdd}
+              className="px-4 bg-blue-600 text-white rounded-md font-semibold text-sm hover:bg-blue-700 flex items-center gap-2 h-[38px]"
+            >
+              <FaPlus /> Add Expense
+            </button>
+          )}
         </div>
       </div>
 
@@ -177,7 +248,7 @@ export default function ExpenseList() {
             </select>
           </div>
           <div>
-            <button 
+            <button
               onClick={clearFilters}
               className="w-full md:w-auto px-4 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 transition"
             >
@@ -204,7 +275,9 @@ export default function ExpenseList() {
                   <th className="py-3 px-4 border-b">Pay Mode</th>
                   <th className="py-3 px-4 border-b">Description</th>
                   <th className="py-3 px-4 border-b">Added By</th>
-                  <th className="py-3 px-4 border-b text-center">Action</th>
+                  {showActionCol && (
+                    <th className="py-3 px-4 border-b text-center">Action</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -212,7 +285,7 @@ export default function ExpenseList() {
                   <tr key={exp._id} className="border-b hover:bg-gray-50 transition">
                     <td className="py-2 px-4">{idx + 1}</td>
                     <td className="py-2 px-4 text-gray-800">
-                      {new Date(exp.expenseDate).toLocaleDateString("en-GB").replace(/\//g, "-")}
+                      {formatDateTime(exp.expenseDate)}
                     </td>
                     <td className="py-2 px-4 font-medium text-blue-800">
                       {exp.expensesCategory?.categoryName || "Unknown"}
@@ -221,37 +294,27 @@ export default function ExpenseList() {
                       ₹{exp.amount}
                     </td>
                     <td className="py-2 px-4">
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                        exp.paymentMode === 'Cash' ? 'bg-green-100 text-green-700' :
-                        exp.paymentMode === 'Online' ? 'bg-blue-100 text-blue-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${exp.paymentMode === 'Cash' ? 'bg-green-100 text-green-700' :
+                          exp.paymentMode === 'Online' ? 'bg-blue-100 text-blue-700' :
+                            'bg-gray-100 text-gray-700'
+                        }`}>
                         {exp.paymentMode}
                       </span>
                     </td>
                     <td className="py-2 px-4 text-gray-600 truncate max-w-[150px]" title={exp.description}>
                       {exp.description || "-"}
                     </td>
-                    <td className="py-2 px-4 text-gray-600 text-xs">
-                      <div className="font-semibold text-gray-800">{exp.addedByName}</div>
-                      <div className="text-[10px] text-gray-500">{exp.addedByModel}</div>
+                    <td className="py-2 px-4 text-gray-800 font-semibold">
+                      {exp.addedByName || "-"}
                     </td>
-                    <td className="py-2 px-4 flex justify-center gap-3 items-center h-full">
-                      <button 
-                        onClick={() => handleEdit(exp)}
-                        className="text-blue-500 hover:text-blue-700"
-                        title="Edit"
-                      >
-                        <FaEdit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(exp._id)}
-                        className="text-red-500 hover:text-red-700"
-                        title="Delete"
-                      >
-                        <FaTrash size={16} />
-                      </button>
-                    </td>
+                    {showActionCol && (
+                      <td className="py-2 px-4 text-center">
+                        <ActionMenu
+                          onEdit={() => handleEdit(exp)}
+                          onDelete={() => handleDelete(exp._id)}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -260,7 +323,7 @@ export default function ExpenseList() {
         )}
       </div>
 
-      <ExpenseModal 
+      <ExpenseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         data={modalData}
