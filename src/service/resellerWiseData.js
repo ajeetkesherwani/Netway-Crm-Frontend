@@ -1,6 +1,6 @@
 import { getToken } from "../utils/auth";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://192.168.1.13:5004';
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://160.187.87.138:3435';
 
 const apiHeaders = {
   "Content-Type": "application/json",

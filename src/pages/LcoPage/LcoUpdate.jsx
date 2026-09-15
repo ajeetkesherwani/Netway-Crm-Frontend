@@ -4,7 +4,7 @@ import { getLcoDetails, updateLco } from "../../service/lco";
 import { getRetailer } from "../../service/retailer";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://localhost:5004";
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://160.187.87.138:3435'; 
 
 const indianStates = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",

@@ -173,6 +173,11 @@ import ViewStockCategory from "./pages/StockManagement/ViewStockCategory";
 import AttendanceList from "./pages/Attendance/AttendanceList";
 import ExpensesCategoryList from "./pages/Category/ExpensesCategoryList";
 import ExpenseList from "./pages/Category/ExpenseList";
+import CreateLead from "./pages/Lead/CreateLead";
+import ManageLead from "./pages/Lead/ManageLead";
+import ConvertedLead from "./pages/Lead/ConvertedLead";
+import LeadView from "./pages/Lead/LeadView";
+import EditLead from "./pages/Lead/EditLead";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -572,6 +577,13 @@ export default function App() {
             {/* ---------------------------------------------------------CATEGORY--------------------------------------------------------- */}
             <Route path="category/expenses" element={<ExpensesCategoryList />} />
             <Route path="category/expense-list" element={<ExpenseList />} />
+
+            {/* ---------------------------------------------------------SALES / LEADS--------------------------------------------------------- */}
+            <Route path="sales/lead/create" element={<CreateLead />} />
+            <Route path="sales/lead/manage" element={<ManageLead />} />
+            <Route path="sales/lead/converted" element={<ConvertedLead />} />
+            <Route path="sales/lead/view/:id" element={<LeadView />} />
+            <Route path="sales/lead/edit/:id" element={<EditLead />} />
 
             {/*-------------------------------------------------------------------------Ticket Report list ------------------------------------------------------------------------- */}
             <Route

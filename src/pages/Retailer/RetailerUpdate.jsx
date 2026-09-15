@@ -12,7 +12,7 @@ const indianStates = [
   "Jammu and Kashmir", "Ladakh"
 ];
 
-const API_BASE_URL = "http://localhost:5004";
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://160.187.87.138:3435';   
 
 export default function RetailerUpdate() {
   const { id } = useParams();

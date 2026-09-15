@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getStaff } from "../../service/staffService";
 import { getMonthlyReport } from "../../service/attendance";
 import AttendanceModal from "./AttendanceModal";
+import { usePermission } from "../../context/PermissionContext";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { FaFileExcel } from "react-icons/fa";
@@ -12,7 +13,8 @@ export default function AttendanceList() {
   const [attendanceData, setAttendanceData] = useState({}); // staffId -> array of attendance objects
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  
+  const { permissions } = usePermission();
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null); // { staff, date, attendance }
@@ -150,12 +152,14 @@ export default function AttendanceList() {
             <span className="px-3 bg-red-600 text-white text-xs font-semibold rounded shadow flex items-center h-full">A ABSENT</span>
             <span className="px-3 bg-[#232a68] text-white text-xs font-semibold rounded shadow flex items-center h-full">H Half Day</span>
           </div>
-          <button
-            onClick={exportExcel}
-            className="px-4 bg-[#232a68] text-white rounded font-semibold text-sm hover:bg-opacity-90 flex items-center gap-2 h-[38px]"
-          >
-            <FaFileExcel /> EXPORT
-          </button>
+          {permissions?.attendance?.Export && (
+            <button
+              onClick={exportExcel}
+              className="px-4 bg-[#232a68] text-white rounded font-semibold text-sm hover:bg-opacity-90 flex items-center gap-2 h-[38px]"
+            >
+              <FaFileExcel /> EXPORT
+            </button>
+          )}
         </div>
       </div>
 
@@ -201,10 +205,10 @@ export default function AttendanceList() {
                           status: "Absent"
                         };
                         return (
-                          <td 
-                            key={day} 
-                            className={`py-1 px-1 border-r cursor-pointer hover:bg-gray-200 transition font-bold ${getStatusColor(att.status)}`}
-                            onClick={() => handleCellClick(staff, att.date, att)}
+                          <td
+                            key={day}
+                            className={`py-1 px-1 border-r ${permissions?.attendance?.MarkAttendance ? 'cursor-pointer hover:bg-gray-200' : 'cursor-default'} transition font-bold ${getStatusColor(att.status)}`}
+                            onClick={() => permissions?.attendance?.MarkAttendance && handleCellClick(staff, att.date, att)}
                             title={`${att.status} - ${staff.name}`}
                           >
                             {getStatusInitial(att.status)}
@@ -220,12 +224,14 @@ export default function AttendanceList() {
         )}
       </div>
 
-      <AttendanceModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        data={modalData} 
-        onUpdate={fetchAttendance}
-      />
+      {permissions?.attendance?.MarkAttendance && (
+        <AttendanceModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          data={modalData}
+          onUpdate={fetchAttendance}
+        />
+      )}
     </div>
   );
 }
