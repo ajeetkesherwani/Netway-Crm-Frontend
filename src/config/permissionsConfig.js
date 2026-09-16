@@ -235,6 +235,7 @@ export const permissionsConfig = [
             "ZoneRemove",
             "ZoneUpdate",
             "ZoneCreate",
+            "ZoneSync",
             "SubZoneList",
             "SubZoneUpdate",
             "SubZoneDelete",
