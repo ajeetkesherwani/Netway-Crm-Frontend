@@ -145,6 +145,7 @@ export default function UserDetails() {
           <Row label="Alternate Phone" value={g.alternatePhone} />
           <Row label="IP Address" value={g.ipAdress} />
           <Row label="IPACT ID" value={g.ipactId} />
+          <Row label="IPACT Customer ID" value={g.ipacctCustomerId} />
           <Row label="Connection Type" value={g.connectionType} />
           <Row label="Service Opted" value={g.serviceOpted} />
           <Row label="ONT/ONU MAC ID" value={g.serialNo} />

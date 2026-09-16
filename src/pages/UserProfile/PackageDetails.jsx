@@ -390,6 +390,7 @@ import {
 import { convertUTCToLocalDateString } from "../../utils/convertUTCtoLocalDate";
 import DatePicker from "react-datepicker";
 import SelectorWithSearchAndPagination from "../../components/SelectorWithSearchAndPagination";
+import { toast } from "react-toastify";
 
 const UserPackageDetails = () => {
   const { id: userId } = useParams();
@@ -411,9 +412,52 @@ const UserPackageDetails = () => {
     hasIptv: false,
   });
 
-  // New states for editing
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
+
+  const handleSyncExpiry = async () => {
+    if (!assignedPackages || assignedPackages.length === 0) {
+      toast.error("No packages assigned to user.");
+      return;
+    }
+    
+    let latestDate = null;
+    assignedPackages.forEach(p => {
+      if (p.endDate) {
+        const d = new Date(p.endDate);
+        if (!latestDate || d > latestDate) {
+          latestDate = d;
+        }
+      }
+    });
+
+    if (!latestDate) {
+      toast.error("Could not determine expiry date from packages.");
+      return;
+    }
+
+    const newExpiryDate = latestDate.toISOString().split('T')[0];
+
+    try {
+      const BASE_URL = import.meta.env.VITE_BASE_URL;
+      const res = await fetch(`${BASE_URL}/ipacct/sync-user-expiry`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ userId, newExpiryDate }),
+      });
+      const data = await res.json();
+      if (res.ok && (data.success || data.status === "success" || data.status)) {
+        toast.success("Expiry date synced to IPACCT successfully!");
+      } else {
+        toast.error(data.message || "Failed to sync to IPACCT");
+      }
+    } catch (error) {
+      toast.error("Failed to sync to IPACCT");
+    }
+  };
 
   useEffect(() => {
     loadPackages({});
@@ -544,7 +588,15 @@ const UserPackageDetails = () => {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen font-sans">
-      <h2 className="text-2xl font-bold mb-6">User Package Details</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">User Package Details</h2>
+        <button 
+          onClick={handleSyncExpiry} 
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 font-medium text-sm"
+        >
+          Sync Expiry with IPACCT
+        </button>
+      </div>
 
       {/* TABLE */}
       <div className="bg-white shadow border border-gray-300 rounded-lg">

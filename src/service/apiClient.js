@@ -66,6 +66,26 @@ export async function updateZone(id, payload) {
   }
 }
 
+// Sync IPACCT zones
+export async function syncIpacctZonesAPI() {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/ipacct/sync-zones`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const text = await res.text().catch(() => null);
+  try {
+    const data = text ? JSON.parse(text) : null;
+    if (!res.ok) throw new Error(data?.message || data?.error || text || `Failed to sync zones`);
+    return data;
+  } catch (err) {
+    if (!res.ok) throw new Error(text || `Failed to sync zones`);
+    return text;
+  }
+}
+
 // Delete zone
 export async function deleteZone(id) {
   const token = localStorage.getItem("token");

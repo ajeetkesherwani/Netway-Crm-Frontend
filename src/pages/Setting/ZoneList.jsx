@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getZones, updateZone, deleteZone } from "../../service/apiClient";
+import { getZones, updateZone, deleteZone, syncIpacctZonesAPI } from "../../service/apiClient";
 import { FaEye, FaEdit, FaTrash, FaEllipsisV, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -22,6 +22,20 @@ export default function ZoneList() {
   const [updateZoneData, setUpdateZoneData] = useState(null);
   const [updateName, setUpdateName] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+
+  const handleSyncZones = async () => {
+    setSyncLoading(true);
+    try {
+      const res = await syncIpacctZonesAPI();
+      toast.success(res?.message || "Zones synced successfully from IPACCT");
+      await fetchZones();
+    } catch (err) {
+      toast.error(err.message || "Failed to sync IPACCT zones");
+    } finally {
+      setSyncLoading(false);
+    }
+  };
 
   const fetchZones = async () => {
     setLoading(true);
@@ -133,6 +147,7 @@ export default function ZoneList() {
     const data = zones.map((z, i) => ({
       "S.No": i + 1,
       "Zone Name": z.zoneName,
+      "IPACCT Zone ID": z.ipacctZoneId || "—",
       "Created By": z.createdBy || "—",
       "Created At": new Date(z.createdAt).toLocaleString(),
     }));
@@ -179,6 +194,16 @@ export default function ZoneList() {
           </div>
 
           <div className="flex items-center gap-3 mt-2 sm:mt-0">
+            <ProtectedAction module="setting" action="ZoneSync">
+              <button
+                onClick={handleSyncZones}
+                disabled={syncLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition whitespace-nowrap disabled:opacity-50"
+              >
+                {syncLoading ? "Syncing..." : "Sync IPACCT Zones"}
+              </button>
+            </ProtectedAction>
+
             <button
               onClick={exportToExcel}
               className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
@@ -221,6 +246,7 @@ export default function ZoneList() {
                 <tr>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">S.No</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Area Name</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-700">IPACCT Zone ID</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Created By</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-700">Created At</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-700">Actions</th>
@@ -233,6 +259,7 @@ export default function ZoneList() {
                     <tr key={zone._id} className="hover:bg-gray-50 transition">
                       <td className="px-4 py-2 text-gray-600">{index + 1}</td>
                       <td className="px-4 py-2 font-medium text-gray-900">{zone.zoneName}</td>
+                      <td className="px-4 py-2 text-gray-600">{zone.ipacctZoneId || "—"}</td>
                       <td className="px-4 py-2 text-gray-600">{zone.createdBy || "—"}</td>
                       <td className="px-4 py-2 text-gray-600">
                         {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
