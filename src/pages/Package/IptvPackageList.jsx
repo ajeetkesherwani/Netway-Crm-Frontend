@@ -231,6 +231,12 @@ export default function IptvList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
 
+  // Edit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingPkg, setEditingPkg] = useState(null);
+  const [editBasePrice, setEditBasePrice] = useState("");
+  const [editOfferPrice, setEditOfferPrice] = useState("");
+
   useEffect(() => {
     const loadPackages = async () => {
       try {
@@ -261,6 +267,38 @@ export default function IptvList() {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleSearch();
+  };
+
+  // Open edit modal with current prices
+  const openEdit = (pkg) => {
+    setEditingPkg(pkg);
+    setEditBasePrice(pkg.iptvPackageId?.customer_price || "");
+    setEditOfferPrice("");
+    setEditModalOpen(true);
+  };
+
+  // Save updated prices (demo - connect real API later)
+  const savePrice = () => {
+    if (!editingPkg) return;
+
+    // Update local state (simulation)
+    setPackages((prev) =>
+      prev.map((p) =>
+        p._id === editingPkg._id
+          ? {
+              ...p,
+              iptvPackageId: {
+                ...p.iptvPackageId,
+                customer_price: Number(editBasePrice) || p.iptvPackageId?.customer_price,
+              },
+            }
+          : p
+      )
+    );
+
+    toast.success("Price updated successfully (demo mode)");
+    setEditModalOpen(false);
+    setEditingPkg(null);
   };
 
   const exportToExcel = () => {
@@ -367,7 +405,10 @@ export default function IptvList() {
                       </td>
                      
                       <td className="px-4 py-3 text-center">
-                        <button className="text-gray-600 hover:text-blue-600 transition">
+                        <button 
+                          onClick={() => openEdit(pkg)}
+                          className="text-gray-600 hover:text-blue-600 transition"
+                        >
                           <FaEllipsisV />
                         </button>
                       </td>
@@ -387,7 +428,10 @@ export default function IptvList() {
               >
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                  <button className="text-gray-600 hover:text-blue-600">
+                  <button 
+                    onClick={() => openEdit(pkg)}
+                    className="text-gray-600 hover:text-blue-600"
+                  >
                     <FaEllipsisV />
                   </button>
                 </div>
@@ -418,6 +462,62 @@ export default function IptvList() {
             ))}
           </div>
         </>
+      )}
+
+      {/* Edit Price Modal */}
+      {editModalOpen && editingPkg && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-5">
+              Edit Price - {editingPkg.iptvPackageId?.plan_name || editingPkg.name}
+            </h3>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Customer Price (₹)
+                </label>
+                <input
+                  type="number"
+                  value={editBasePrice}
+                  onChange={(e) => setEditBasePrice(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Offer Price (₹) - optional
+                </label>
+                <input
+                  type="number"
+                  value={editOfferPrice}
+                  onChange={(e) => setEditOfferPrice(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end gap-4">
+              <button
+                onClick={() => setEditModalOpen(false)}
+                className="px-5 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={savePrice}
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
