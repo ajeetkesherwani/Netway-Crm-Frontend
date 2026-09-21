@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserFullDetails } from "../../service/user";
-import { FaDownload, FaEdit, FaFileAlt, FaExternalLinkAlt } from "react-icons/fa";
+import {
+  FaDownload,
+  FaEdit,
+  FaFileAlt,
+  FaExternalLinkAlt,
+} from "react-icons/fa";
 import UserPackageDetails from "./PackageDetails";
 
 const BASE_FILE_URL = import.meta.env.VITE_IMAGE_URL
@@ -137,7 +142,9 @@ const UserProfile = () => {
     if (g.installationByName?.trim()) return g.installationByName.trim();
     if (Array.isArray(g.installationBy) && g.installationBy.length > 0) {
       const names = g.installationBy
-        .map((inst) => (typeof inst === "object" ? inst.name || inst.staffName : inst))
+        .map((inst) =>
+          typeof inst === "object" ? inst.name || inst.staffName : inst,
+        )
         .filter(Boolean);
       if (names.length > 0) return names.join(", ");
     }
@@ -168,7 +175,11 @@ const UserProfile = () => {
   };
 
   const getProrataDisplay = () => {
-    if (u.prorataBilling === undefined || u.prorataBilling === null || u.prorataBilling === "") {
+    if (
+      u.prorataBilling === undefined ||
+      u.prorataBilling === null ||
+      u.prorataBilling === ""
+    ) {
       return "";
     }
     return u.prorataBilling ? "Yes" : "No";
@@ -255,14 +266,23 @@ const UserProfile = () => {
             <DetailRow label="S/o" value={g.fatherName || g.so} />
             <DetailRow label="Alternate Mobile" value={g.alternatePhone} />
             <DetailRow label="Email" value={g.email} />
-            <DetailRow label="Date Of Birth" value={add.dob ? formatDate(add.dob) : ""} />
+            <DetailRow
+              label="Date Of Birth"
+              value={add.dob ? formatDate(add.dob) : ""}
+            />
             <DetailRow label="GST No." value={g.gstNo} />
             <DetailRow label="Purchase Order No" value={g.purchaseOrderNo} />
-            <DetailRow label="Connection Type" value={g.connectionType?.toUpperCase()} />
+            <DetailRow
+              label="Connection Type"
+              value={g.connectionType?.toUpperCase()}
+            />
             <DetailRow label="IPACCT TECH ID" value={g.ipactId} />
             <DetailRow label="Installation By" value={getInstallerDisplay()} />
             <DetailRow label="Serial No" value={g.serialNo} />
-            <DetailRow label="Jaze User Id" value={g.UserId || g.userId || g.username} />
+            <DetailRow
+              label="Jaze User Id"
+              value={g.UserId || g.userId || g.username}
+            />
             <DetailRow label="SBT No" value={g.stbNo} />
             <DetailRow label="Mac Id" value={g.macId} />
             <DetailRow label="Prorata billing" value={getProrataDisplay()} />
@@ -274,11 +294,20 @@ const UserProfile = () => {
             <DetailRow label="Gender" value={g.gender} />
             <DetailRow label="Due Days" value={u.dueDays} />
             <DetailRow label="Pancard" value={g.pancard} />
-            <DetailRow label="Registration Date/Time" value={formatDateTime(u.createdAt)} />
-            <DetailRow label="Sales Executive" value={getSalesExecutiveDisplay()} />
+            <DetailRow
+              label="Registration Date/Time"
+              value={formatDateTime(u.createdAt)}
+            />
+            <DetailRow
+              label="Sales Executive"
+              value={getSalesExecutiveDisplay()}
+            />
             <DetailRow label="Server Type" value={g.serverType} />
             <DetailRow label="PPPOE Password" value={g.plainPassword} />
-            <DetailRow label="Service Opted" value={g.serviceOpted?.toUpperCase()} />
+            <DetailRow
+              label="Service Opted"
+              value={g.serviceOpted?.toUpperCase()}
+            />
             <DetailRow label="Remark" value={add.description} />
           </div>
 
@@ -294,19 +323,39 @@ const UserProfile = () => {
                 </div>
                 <div className="p-4 space-y-2.5 text-[13px]">
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="State" value={a.billingAddress?.state} width="w-20" />
-                    <AddressField label="City" value={a.billingAddress?.city} width="w-20" />
+                    <AddressField
+                      label="State"
+                      value={a.billingAddress?.state}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="City"
+                      value={a.billingAddress?.city}
+                      width="w-20"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="Pincode" value={a.billingAddress?.pincode} width="w-20" />
-                    <AddressField label="Landmark" value={a.billingAddress?.landmark} width="w-20" />
+                    <AddressField
+                      label="Pincode"
+                      value={a.billingAddress?.pincode}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="Landmark"
+                      value={a.billingAddress?.landmark}
+                      width="w-20"
+                    />
                   </div>
 
                   {hasValue(billingAddressText) && (
                     <div className="pt-1">
-                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
-                      <span className="text-gray-600 leading-relaxed break-words">{billingAddressText}</span>
+                      <span className="font-semibold text-gray-800 block mb-0.5">
+                        Address
+                      </span>
+                      <span className="text-gray-600 leading-relaxed break-words">
+                        {billingAddressText}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -323,19 +372,39 @@ const UserProfile = () => {
                 </div>
                 <div className="p-4 space-y-2.5 text-[13px]">
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="State" value={a.installationAddress?.state} width="w-20" />
-                    <AddressField label="City" value={a.installationAddress?.city} width="w-20" />
+                    <AddressField
+                      label="State"
+                      value={a.installationAddress?.state}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="City"
+                      value={a.installationAddress?.city}
+                      width="w-20"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="Pincode" value={a.installationAddress?.pincode} width="w-20" />
-                    <AddressField label="Landmark" value={a.installationAddress?.landmark} width="w-20" />
+                    <AddressField
+                      label="Pincode"
+                      value={a.installationAddress?.pincode}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="Landmark"
+                      value={a.installationAddress?.landmark}
+                      width="w-20"
+                    />
                   </div>
 
                   {hasValue(installAddressText) && (
                     <div className="pt-1">
-                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
-                      <span className="text-gray-600 leading-relaxed break-words">{installAddressText}</span>
+                      <span className="font-semibold text-gray-800 block mb-0.5">
+                        Address
+                      </span>
+                      <span className="text-gray-600 leading-relaxed break-words">
+                        {installAddressText}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -352,19 +421,39 @@ const UserProfile = () => {
                 </div>
                 <div className="p-4 space-y-2.5 text-[13px]">
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="State" value={a.permanentAddress?.state} width="w-20" />
-                    <AddressField label="City" value={a.permanentAddress?.city} width="w-20" />
+                    <AddressField
+                      label="State"
+                      value={a.permanentAddress?.state}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="City"
+                      value={a.permanentAddress?.city}
+                      width="w-20"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="Pincode" value={a.permanentAddress?.pincode} width="w-20" />
-                    <AddressField label="Landmark" value={a.permanentAddress?.landmark} width="w-20" />
+                    <AddressField
+                      label="Pincode"
+                      value={a.permanentAddress?.pincode}
+                      width="w-20"
+                    />
+                    <AddressField
+                      label="Landmark"
+                      value={a.permanentAddress?.landmark}
+                      width="w-20"
+                    />
                   </div>
 
                   {hasValue(permAddressText) && (
                     <div className="pt-1">
-                      <span className="font-semibold text-gray-800 block mb-0.5">Address</span>
-                      <span className="text-gray-600 leading-relaxed break-words">{permAddressText}</span>
+                      <span className="font-semibold text-gray-800 block mb-0.5">
+                        Address
+                      </span>
+                      <span className="text-gray-600 leading-relaxed break-words">
+                        {permAddressText}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -381,19 +470,43 @@ const UserProfile = () => {
                 </div>
                 <div className="p-4 space-y-2.5 text-[13px]">
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="Area" value={getAreaDisplay()} width="w-24" />
+                    <AddressField
+                      label="Area"
+                      value={getAreaDisplay()}
+                      width="w-24"
+                    />
                     <AddressField label="Box" value={a.box} width="w-20" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <AddressField label="Zone" value={getSubZoneDisplay()} width="w-24" />
-                    <AddressField label="Street" value={a.street} width="w-20" />
+                    <AddressField
+                      label="Zone"
+                      value={getSubZoneDisplay()}
+                      width="w-24"
+                    />
+                    <AddressField
+                      label="Street"
+                      value={a.street}
+                      width="w-20"
+                    />
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <AddressField label="OLT" value={net.olt || a.olt} width="w-12" />
-                    <AddressField label="Splitter" value={net.splitter || a.splitter} width="w-16" />
-                    <AddressField label="Port" value={net.port || a.port} width="w-12" />
+                    <AddressField
+                      label="OLT"
+                      value={net.olt || a.olt}
+                      width="w-12"
+                    />
+                    <AddressField
+                      label="Splitter"
+                      value={net.splitter || a.splitter}
+                      width="w-16"
+                    />
+                    <AddressField
+                      label="Port"
+                      value={net.port || a.port}
+                      width="w-12"
+                    />
                   </div>
 
                   {/* <div className="grid grid-cols-2 gap-4">
@@ -416,12 +529,24 @@ const UserProfile = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <AddressField
                       label="E-KYC"
-                      value={add.ekyc ? (add.ekyc === "yes" ? "Completed" : "Pending") : ""}
+                      value={
+                        add.ekyc
+                          ? add.ekyc === "yes"
+                            ? "Completed"
+                            : "Pending"
+                          : ""
+                      }
                       width="w-36"
                     />
                     <AddressField
                       label="Notification"
-                      value={add.notification !== undefined ? (add.notification ? "Enabled" : "Disabled") : ""}
+                      value={
+                        add.notification !== undefined
+                          ? add.notification
+                            ? "Enabled"
+                            : "Disabled"
+                          : ""
+                      }
                       width="w-36"
                     />
                   </div>
@@ -429,7 +554,13 @@ const UserProfile = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <AddressField
                       label="Add Plan Allowed"
-                      value={add.addPlan !== undefined ? (add.addPlan ? "Yes" : "No") : ""}
+                      value={
+                        add.addPlan !== undefined
+                          ? add.addPlan
+                            ? "Yes"
+                            : "No"
+                          : ""
+                      }
                       width="w-36"
                     />
                     <AddressField
@@ -441,7 +572,6 @@ const UserProfile = () => {
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -462,15 +592,20 @@ const UserProfile = () => {
                   const images = Array.isArray(doc.documentImage)
                     ? doc.documentImage
                     : doc.documentImage
-                    ? [doc.documentImage]
-                    : [];
+                      ? [doc.documentImage]
+                      : [];
 
                   return images.length > 0
                     ? images.map((imgPath, imgIndex) => {
-                        const cleanPath = imgPath.replace(/\\/g, "/").replace(/^public\//, "");
+                        const cleanPath = imgPath
+                          .replace(/\\/g, "/")
+                          .replace(/^public\//, "");
                         const url = BASE_FILE_URL + cleanPath;
-                        const fileName = cleanPath.split("/").pop() || `document-${imgIndex + 1}`;
-                        const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(fileName);
+                        const fileName =
+                          cleanPath.split("/").pop() ||
+                          `document-${imgIndex + 1}`;
+                        const isImage =
+                          /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(fileName);
                         const displayType =
                           images.length > 1
                             ? `${doc.documentType} (${imgIndex + 1})`
@@ -498,7 +633,9 @@ const UserProfile = () => {
       )}
 
       {/* PACKAGE DETAILS SECTION */}
-      <UserPackageDetails />
+      <UserPackageDetails
+        ipactId={u.ipactId ?? g.ipactId ?? u.ipacctId ?? g.ipacctId}
+      />
     </div>
   );
 };
@@ -509,7 +646,9 @@ const DetailRow = ({ label, value }) => {
 
   return (
     <div className="flex items-start py-1.5 text-[13px] border-b border-gray-100 last:border-b-0">
-      <span className="font-semibold text-gray-800 w-44 sm:w-52 shrink-0">{label}</span>
+      <span className="font-semibold text-gray-800 w-44 sm:w-52 shrink-0">
+        {label}
+      </span>
       <span className="text-gray-600 flex-1 break-words font-normal">
         {String(value).trim()}
       </span>
@@ -523,8 +662,12 @@ const AddressField = ({ label, value, width = "w-20" }) => {
 
   return (
     <div className="flex items-start gap-2">
-      <span className={`font-semibold text-gray-800 ${width} shrink-0`}>{label}</span>
-      <span className="text-gray-600 flex-1 break-words">{String(value).trim()}</span>
+      <span className={`font-semibold text-gray-800 ${width} shrink-0`}>
+        {label}
+      </span>
+      <span className="text-gray-600 flex-1 break-words">
+        {String(value).trim()}
+      </span>
     </div>
   );
 };
@@ -551,7 +694,8 @@ const DocItem = ({
             onError={(e) => {
               e.target.style.display = "none";
               e.target.onerror = null;
-              if (e.target.nextSibling) e.target.nextSibling.style.display = "flex";
+              if (e.target.nextSibling)
+                e.target.nextSibling.style.display = "flex";
             }}
           />
         ) : null}
@@ -567,7 +711,9 @@ const DocItem = ({
           <strong className="block text-xs font-semibold text-gray-800 truncate">
             {docType}
           </strong>
-          <span className="text-[10px] text-gray-500 truncate block">{fileName}</span>
+          <span className="text-[10px] text-gray-500 truncate block">
+            {fileName}
+          </span>
         </div>
       </div>
 
@@ -587,8 +733,14 @@ const DocItem = ({
           title="Download Document"
         >
           <FaDownload className="text-xs" />
-          {downloading === fileName && <span className="text-[10px]">Saving...</span>}
-          {downloaded === fileName && <span className="text-[10px] text-green-600 font-semibold">Done!</span>}
+          {downloading === fileName && (
+            <span className="text-[10px]">Saving...</span>
+          )}
+          {downloaded === fileName && (
+            <span className="text-[10px] text-green-600 font-semibold">
+              Done!
+            </span>
+          )}
         </button>
       </div>
     </div>

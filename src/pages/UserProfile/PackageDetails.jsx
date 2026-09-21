@@ -374,7 +374,6 @@
 
 // export default UserPackageDetails;
 
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProtectedAction from "../../components/ProtectedAction";
@@ -391,9 +390,13 @@ import { convertUTCToLocalDateString } from "../../utils/convertUTCtoLocalDate";
 import DatePicker from "react-datepicker";
 import SelectorWithSearchAndPagination from "../../components/SelectorWithSearchAndPagination";
 import { toast } from "react-toastify";
+import { getUserFullDetails } from "../../service/user";
 
-const UserPackageDetails = () => {
+const UserPackageDetails = ({ ipactId: ipactIdProp }) => {
   const { id: userId } = useParams();
+  const [resolvedIpacctId, setResolvedIpacctId] = useState(
+    ipactIdProp ? String(ipactIdProp).trim() : ""
+  );
 
   const [loading, setLoading] = useState(true);
   const [assignedPackages, setAssignedPackages] = useState([]);
@@ -415,14 +418,46 @@ const UserPackageDetails = () => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  // Resolve IPACCT ID — from prop first, then fetch from API if missing
+  useEffect(() => {
+    if (ipactIdProp) {
+      setResolvedIpacctId(String(ipactIdProp).trim());
+      return;
+    }
+    if (!userId) return;
+    // Fetch user full details to get ipactId / ipacctId
+    getUserFullDetails(userId)
+      .then((res) => {
+        if (res?.userDetails) {
+          const u = res.userDetails;
+          const g = u.generalInformation || {};
+          const id =
+            u.ipactId ??
+            g.ipactId ??
+            u.ipacctId ??
+            g.ipacctId ??
+            "";
+          setResolvedIpacctId(String(id).trim());
+        }
+      })
+      .catch((err) => console.error("Failed to fetch user ipacctId:", err));
+  }, [userId, ipactIdProp]);
+
   const handleSyncExpiry = async () => {
+    const syncIpacctId = resolvedIpacctId;
+
+    if (!syncIpacctId) {
+      toast.error("IPACCT ID is not available for this user.");
+      return;
+    }
+
     if (!assignedPackages || assignedPackages.length === 0) {
       toast.error("No packages assigned to user.");
       return;
     }
-    
+
     let latestDate = null;
-    assignedPackages.forEach(p => {
+    assignedPackages.forEach((p) => {
       if (p.endDate) {
         const d = new Date(p.endDate);
         if (!latestDate || d > latestDate) {
@@ -436,7 +471,15 @@ const UserPackageDetails = () => {
       return;
     }
 
-    const newExpiryDate = latestDate.toISOString().split('T')[0];
+    const newExpiryDate = latestDate.toISOString().split("T")[0];
+
+    const payload = {
+      ipacctId: syncIpacctId,
+      expiryDate: newExpiryDate,
+    };
+
+    // Log the payload so you can see it in the Network tab / console
+    console.log("[Sync Expiry] Sending payload:", JSON.stringify(payload, null, 2));
 
     try {
       const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -446,15 +489,17 @@ const UserPackageDetails = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({ userId, newExpiryDate }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (res.ok && (data.success || data.status === "success" || data.status)) {
+      console.log("[Sync Expiry] Response:", data);
+      if (res.ok) {
         toast.success("Expiry date synced to IPACCT successfully!");
       } else {
-        toast.error(data.message || "Failed to sync to IPACCT");
+        toast.error(data.message || data.error || "Failed to sync to IPACCT");
       }
     } catch (error) {
+      console.error("[Sync Expiry] Error:", error);
       toast.error("Failed to sync to IPACCT");
     }
   };
@@ -590,8 +635,8 @@ const UserPackageDetails = () => {
     <div className="p-6 bg-gray-100 min-h-screen font-sans">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">User Package Details</h2>
-        <button 
-          onClick={handleSyncExpiry} 
+        <button
+          onClick={handleSyncExpiry}
           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 font-medium text-sm"
         >
           Sync Expiry with IPACCT
@@ -642,12 +687,15 @@ const UserPackageDetails = () => {
                         type="number"
                         value={editForm.customPrice}
                         onChange={(e) =>
-                          setEditForm({ ...editForm, customPrice: e.target.value })
+                          setEditForm({
+                            ...editForm,
+                            customPrice: e.target.value,
+                          })
                         }
                         className="border border-gray-400 rounded px-2 py-1 w-24"
                       />
                     ) : (
-                      p.customPrice ?? p.basePrice
+                      (p.customPrice ?? p.basePrice)
                     )}
                   </td>
 
@@ -670,7 +718,7 @@ const UserPackageDetails = () => {
                         isClearable
                       />
                     ) : (
-                      convertUTCToLocalDateString(p.endDate) ?? "N/A"
+                      (convertUTCToLocalDateString(p.endDate) ?? "N/A")
                     )}
                   </td>
 
@@ -688,7 +736,7 @@ const UserPackageDetails = () => {
                           onChange={(e) =>
                             changeStatus(
                               p._id,
-                              e.target.checked ? "active" : "inactive"
+                              e.target.checked ? "active" : "inactive",
                             )
                           }
                           disabled={isEditing} // Disable while editing
@@ -698,7 +746,10 @@ const UserPackageDetails = () => {
                       </label>
                     </td>
                   </ProtectedAction>
-                  <ProtectedAction module="customer" action="DeleteAssignPackage">
+                  <ProtectedAction
+                    module="customer"
+                    action="DeleteAssignPackage"
+                  >
                     <td className="py-3 px-3">
                       <div className="flex gap-2 items-center">
                         {isEditing ? (
@@ -743,7 +794,9 @@ const UserPackageDetails = () => {
                                 setEditingId(p._id);
                                 setEditForm({
                                   customPrice: p.customPrice ?? p.basePrice,
-                                  endDate: p.endDate ? new Date(p.endDate) : null,
+                                  endDate: p.endDate
+                                    ? new Date(p.endDate)
+                                    : null,
                                   hasOtt: p.hasOtt || false,
                                   hasIptv: p.hasIptv || false,
                                 });
@@ -773,7 +826,10 @@ const UserPackageDetails = () => {
                           checked={isEditing ? editForm.hasOtt : p.hasOtt}
                           onChange={(e) =>
                             isEditing &&
-                            setEditForm({ ...editForm, hasOtt: e.target.checked })
+                            setEditForm({
+                              ...editForm,
+                              hasOtt: e.target.checked,
+                            })
                           }
                           disabled={!isEditing}
                           className="w-4 h-4"
@@ -787,7 +843,10 @@ const UserPackageDetails = () => {
                           checked={isEditing ? editForm.hasIptv : p.hasIptv}
                           onChange={(e) =>
                             isEditing &&
-                            setEditForm({ ...editForm, hasIptv: e.target.checked })
+                            setEditForm({
+                              ...editForm,
+                              hasIptv: e.target.checked,
+                            })
                           }
                           disabled={!isEditing}
                           className="w-4 h-4"
