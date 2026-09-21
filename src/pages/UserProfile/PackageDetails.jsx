@@ -392,7 +392,7 @@ import SelectorWithSearchAndPagination from "../../components/SelectorWithSearch
 import { toast } from "react-toastify";
 import { getUserFullDetails } from "../../service/user";
 
-const UserPackageDetails = ({ ipactId: ipactIdProp }) => {
+const UserPackageDetails = ({ ipactId: ipactIdProp = undefined }) => {
   const { id: userId } = useParams();
   const [resolvedIpacctId, setResolvedIpacctId] = useState(
     ipactIdProp ? String(ipactIdProp).trim() : ""
@@ -794,9 +794,14 @@ const UserPackageDetails = ({ ipactId: ipactIdProp }) => {
                                 setEditingId(p._id);
                                 setEditForm({
                                   customPrice: p.customPrice ?? p.basePrice,
-                                  endDate: p.endDate
-                                    ? new Date(p.endDate)
-                                    : null,
+                                  endDate: (() => {
+                                    if (!p.endDate) return null;
+                                    // Extract YYYY-MM-DD directly to avoid UTC→IST shift
+                                    const raw = String(p.endDate);
+                                    const datePart = raw.includes("T") ? raw.split("T")[0] : raw.split(" ")[0];
+                                    const [y, m, d] = datePart.split("-").map(Number);
+                                    return new Date(y, m - 1, d); // local date, no timezone shift
+                                  })(),
                                   hasOtt: p.hasOtt || false,
                                   hasIptv: p.hasIptv || false,
                                 });
