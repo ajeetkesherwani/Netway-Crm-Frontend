@@ -3,10 +3,14 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const getToken = () => localStorage.getItem("token");
 
 //get all package list
-export const getAllPackageList = async (servertype = "") => {
-  const url = servertype 
-    ? `${BASE_URL}/package/list?servertype=${encodeURIComponent(servertype)}` 
-    : `${BASE_URL}/package/list`;
+export const getAllPackageList = async (servertype = "", resellerId = "", lcoId = "") => {
+  const params = new URLSearchParams();
+  if (servertype) params.append("servertype", servertype);
+  if (resellerId) params.append("resellerId", resellerId);
+  if (lcoId) params.append("lcoId", lcoId);
+
+  const query = params.toString();
+  const url = `${BASE_URL}/package/list${query ? `?${query}` : ""}`;
     
   const res = await fetch(url, {
     method: "GET",

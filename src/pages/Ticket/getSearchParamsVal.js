@@ -18,5 +18,6 @@ export const getSearchParamsVal = (searchParams) => {
     resellerId: searchParams.get("resellerId") ?? "",
     filter: searchParams.get("status") ?? "",
     fixedBy: searchParams.get("fixedBy") || "",
+    serverType: searchParams.get("serverType") ?? "",
   };
 };

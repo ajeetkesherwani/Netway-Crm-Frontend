@@ -219,34 +219,40 @@
 //   );
 // }
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaEllipsisV } from "react-icons/fa";
-import { getOttPackageList } from "../../service/package"; // adjust if needed
+import { FaSearch } from "react-icons/fa";
+import { getOttPackageListFromThirdParty } from "../../service/package";
 import toast from "react-hot-toast";
-import { FaEdit } from "react-icons/fa";
 import * as XLSX from "xlsx";
 
 export default function OttList() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-
-  // Edit modal states
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingPkg, setEditingPkg] = useState(null);
-  const [editBasePrice, setEditBasePrice] = useState("");
-  const [editOfferPrice, setEditOfferPrice] = useState("");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  
+  // Modals
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const loadPackages = async () => {
+      setLoading(true);
       try {
-        const res = await getOttPackageList();
-        if (res?.status && res?.data) {
-          setPackages(res.data);
+        const res = await getOttPackageListFromThirdParty();
+        if (res && Array.isArray(res)) {
+          setPackages(res);
+        } else {
+          setPackages([]);
         }
       } catch (err) {
-        toast.error("Failed to load packages");
-        console.error(err);
+        console.error("Error fetching OTT packages:", err);
+        setError("Failed to load OTT packages");
+        toast.error(err.message || "Failed to load OTT packages");
       } finally {
         setLoading(false);
       }
@@ -256,263 +262,295 @@ export default function OttList() {
 
   const handleSearch = () => {
     setAppliedSearch(searchTerm.toLowerCase().trim());
+    setCurrentPage(1); // Reset pagination on search
   };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleSearch();
   };
 
-  // Open edit modal with current prices
-  const openEdit = (pkg) => {
-    setEditingPkg(pkg);
-    setEditBasePrice(pkg.ottPackageId?.marketPrice || "");
-    setEditOfferPrice("");
-    setEditModalOpen(true);
+  const toggleMenu = (id) => {
+    setOpenMenuId(openMenuId === id ? null : id);
   };
 
-  // Save updated prices (demo - connect real API later)
-  const savePrice = () => {
-    if (!editingPkg) return;
+  const exportToExcel = () => {
+    if (packages.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
 
-    // Update local state (simulation)
-    setPackages((prev) =>
-      prev.map((p) =>
-        p._id === editingPkg._id
-          ? {
-              ...p,
-              basePrice: Number(editBasePrice) || p.basePrice,
-              offerPrice: Number(editOfferPrice) || p.offerPrice,
-            }
-          : p
-      )
-    );
-
-    toast.success("Price updated successfully (demo mode)");
-    setEditModalOpen(false);
-    setEditingPkg(null);
-  };
-
-  const filtered = packages.filter((pkg) =>
-    appliedSearch
-      ? pkg.ottPackageId?.name?.toLowerCase().includes(appliedSearch) ||
-        pkg.ottType?.toLowerCase().includes(appliedSearch)
-      : true
-  );
-
-  const exportExcel = () => {
-    if (!filtered.length) return toast.error("No data to export");
-
-    const data = filtered.map((pkg, i) => ({
-      "S.NO": i + 1,
-      "PACKAGE NAME": pkg.ottPackageId?.name || pkg.name || "—",
-      AMOUNT: pkg.ottPackageId?.marketPrice ? `₹${pkg.ottPackageId.marketPrice}` : "—",
-      VALIDITY: pkg.ottPackageId?.validity
-        ? `${pkg.ottPackageId.validity.number} ${pkg.ottPackageId.validity.unit}`
-        : "—",
-      PROVIDER: pkg.ottType || "—",
-      "PACKAGES INCLUDED": pkg.ottPackageId?.ottProviders
-        ?.map((p) => p.name)
-        .join(", ") || "—",
+    const exportData = packages.map((pkg, index) => ({
+      "S.No": index + 1,
+      "Name": pkg.name || "—",
+      "Validity": pkg.validity ? `${pkg.validity.number} ${pkg.validity.unit}` : "—",
+      "Price": pkg.marketPrice ? `₹${pkg.marketPrice}` : "—",
+      "Code": pkg.packId || "—",
+      "Providers": pkg.ottProviders ? pkg.ottProviders.map(p => p.name).join(", ") : "—"
     }));
 
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "OTT Packages");
-    XLSX.writeFile(wb, "ott_packages.xlsx");
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "OTT Packages");
+    XLSX.writeFile(workbook, "ott_packages.xlsx");
     toast.success("Exported successfully!");
   };
 
-  if (loading) return <div className="p-6 text-center text-lg">Loading packages...</div>;
+  // Filter Data
+  const displayedPackages = packages.filter((pkg) =>
+    pkg.name?.toLowerCase().includes(appliedSearch) ||
+    pkg.packId?.toLowerCase().includes(appliedSearch)
+  );
+
+  // Pagination Logic
+  const totalPages = Math.ceil(displayedPackages.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = displayedPackages.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  if (loading) return <p className="p-6 text-center text-lg">Loading OTT packages...</p>;
+  if (error) return <p className="p-6 text-center text-red-500">{error}</p>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">OTT Package List</h1>
+    <div className="p-6 bg-gray-50 min-h-screen" onClick={() => setOpenMenuId(null)}>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">OTT Packages List</h1>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <div className="flex">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Search by package or provider..."
-              className="px-4 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search by name or pack ID..."
+              className="px-4 py-2 border border-gray-300 rounded-l-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[280px]"
             />
             <button
               onClick={handleSearch}
-              className="px-4 py-2 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 transition"
             >
               <FaSearch />
             </button>
           </div>
-          <button
-            onClick={exportExcel}
-            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-            Export Excel
-          </button>
-        </div>
-      </div>
 
-      {/* Desktop Table */}
-      <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th className="px-6 py-4 text-left">S.NO</th>
-                <th className="px-6 py-4 text-left">PACKAGE NAME</th>
-                <th className="px-6 py-4 text-left">AMOUNT</th>
-                <th className="px-6 py-4 text-left">VALIDITY</th>
-                <th className="px-6 py-4 text-left">PROVIDER</th>
-                <th className="px-6 py-4 text-left">PACKAGES INCLUDED</th>
-                <th className="px-6 py-4 text-center">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filtered.map((pkg, index) => (
-                <tr key={pkg._id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
-                  <td className="px-6 py-4 font-medium">
-                    {pkg.ottPackageId?.name || pkg.name || "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    ₹{pkg.ottPackageId?.marketPrice || "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {pkg.ottPackageId?.validity?.number || "—"}{" "}
-                    {pkg.ottPackageId?.validity?.unit || ""}
-                  </td>
-                  <td className="px-6 py-4">{pkg.ottType || "—"}</td>
-                  <td className="px-6 py-4">
-                    <div className="max-h-32 overflow-auto whitespace-normal break-words">
-                      {pkg.ottPackageId?.ottProviders
-                        ?.map((p) => p.name)
-                        .join(", ") || "No providers listed"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="relative inline-block">
-                      <button
-                        onClick={() => openEdit(pkg)}
-                        className="text-gray-600 hover:text-blue-600 focus:outline-none"
-                      >
-                        <FaEllipsisV className="text-lg" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            <button
+              onClick={exportToExcel}
+              className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+            >
+              Export Excel
+            </button>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap flex items-center gap-2"
+            >
+              <span>+</span> Add OTT Packages
+            </button>
+            <button
+              className="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition whitespace-nowrap"
+            >
+              Upd. Package
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Cards */}
-      <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {filtered.map((pkg, index) => (
-          <div key={pkg._id} className="bg-white rounded-lg shadow p-5">
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-sm font-medium text-gray-600">#{index + 1}</span>
-              <button
-                onClick={() => openEdit(pkg)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                <FaEdit />
-              </button>
+      {displayedPackages.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <p className="text-lg text-gray-500">
+            {appliedSearch ? "No matching OTT packages found." : "No OTT packages available."}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className="hidden lg:block bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-4 py-3 font-medium text-gray-700">S.No</th>
+                    <th className="px-4 py-3 font-medium text-gray-700 w-32">Name</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">Validity</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">Price</th>
+                    <th className="px-4 py-3 font-medium text-gray-700">Code</th>
+                    <th className="px-4 py-3 font-medium text-gray-700 w-1/2">Providers</th>
+                    <th className="px-4 py-3 font-medium text-gray-700 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {currentItems.map((pkg, index) => (
+                    <tr key={pkg.packId || index} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3 text-gray-600">{startIndex + index + 1}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900 break-words whitespace-normal">{pkg.name || "—"}</td>
+                      <td className="px-4 py-3 text-gray-700">{pkg.validity ? `${pkg.validity.number} ${pkg.validity.unit}` : "—"}</td>
+                      <td className="px-4 py-3 text-gray-900 font-medium">
+                        {pkg.marketPrice ? `₹${pkg.marketPrice}` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">{pkg.packId || "—"}</td>
+                      <td className="px-4 py-3 text-gray-700 text-xs leading-relaxed max-w-md">
+                        {pkg.ottProviders && pkg.ottProviders.length > 0 
+                          ? pkg.ottProviders.map((p) => p.name).join(", ") 
+                          : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center relative">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(pkg.packId);
+                          }}
+                          className="text-gray-500 hover:text-gray-700 p-2 rounded-full focus:outline-none"
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                          </svg>
+                        </button>
+                        {openMenuId === pkg.packId && (
+                          <div className="absolute right-8 top-1/2 -translate-y-1/2 mt-0 w-28 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 flex items-center gap-2">
+                              <span>✏️</span> Edit
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            <h3 className="font-bold text-lg mb-3">
-              {pkg.ottPackageId?.name || pkg.name || "Unnamed"}
-            </h3>
+          {/* Mobile / Tablet Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:hidden gap-5">
+            {currentItems.map((pkg, index) => (
+              <div key={pkg.packId || index} className="bg-white rounded-lg shadow-md p-5 hover:shadow-lg transition">
+                <div className="flex justify-between items-start mb-3">
+                  <span className="text-sm font-medium text-gray-500">#{startIndex + index + 1}</span>
+                  <div className="relative">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMenu(`mobile-${pkg.packId}`);
+                      }}
+                      className="text-gray-500 hover:text-gray-700 p-1 rounded-full focus:outline-none"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
+                    {openMenuId === `mobile-${pkg.packId}` && (
+                      <div className="absolute right-0 top-full mt-1 w-28 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                        <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 flex items-center gap-2">
+                          <span>✏️</span> Edit
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <h3 className="text-base font-bold text-gray-900 mb-4" title={pkg.name}>
+                  {pkg.name || "Unnamed Package"}
+                </h3>
+                <div className="text-xs font-mono text-gray-500 mb-4 truncate">{pkg.packId || "—"}</div>
 
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="font-medium">Amount:</span>{" "}
-                ₹{pkg.ottPackageId?.marketPrice || "—"}
-              </div>
-              <div>
-                <span className="font-medium">Validity:</span>{" "}
-                {pkg.ottPackageId?.validity?.number || "—"}{" "}
-                {pkg.ottPackageId?.validity?.unit || ""}
-              </div>
-              <div>
-                <span className="font-medium">Provider:</span> {pkg.ottType || "—"}
-              </div>
-              <div>
-                <span className="font-medium block mb-1">Packages Included:</span>
-                <div className="max-h-32 overflow-auto text-gray-700 whitespace-normal break-words">
-                  {pkg.ottPackageId?.ottProviders
-                    ?.map((p) => p.name)
-                    .join(", ") || "No providers listed"}
+                <div className="space-y-2.5 text-sm text-gray-700 mb-4">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-500">Validity:</span>
+                    <span>{pkg.validity ? `${pkg.validity.number} ${pkg.validity.unit}` : "—"}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-500">Price:</span>
+                    <span className="font-semibold text-gray-900">
+                      {pkg.marketPrice ? `₹${pkg.marketPrice}` : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                   <span className="font-medium text-gray-500 text-sm block mb-1">Providers:</span>
+                   <span className="text-sm text-gray-700">
+                     {pkg.ottProviders && pkg.ottProviders.length > 0 
+                       ? pkg.ottProviders.map((p) => p.name).join(", ") 
+                       : "—"}
+                   </span>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {/* Edit Price Modal */}
-      {editModalOpen && editingPkg && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-5">
-              Edit Price - {editingPkg.ottPackageId?.name || editingPkg.name}
-            </h3>
+          {/* Pagination Controls */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mt-6 bg-white p-4 rounded-lg shadow">
+            <span className="text-sm text-gray-600 mb-4 sm:mb-0">
+              Showing <span className="font-semibold text-gray-900">{startIndex + 1}</span> to{" "}
+              <span className="font-semibold text-gray-900">
+                {Math.min(startIndex + itemsPerPage, displayedPackages.length)}
+              </span>{" "}
+              of <span className="font-semibold text-gray-900">{displayedPackages.length}</span> entries
+            </span>
 
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Base Price (₹)
-                </label>
-                <input
-                  type="number"
-                  value={editBasePrice}
-                  onChange={(e) => setEditBasePrice(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Offer Price (₹) - optional
-                </label>
-                <input
-                  type="number"
-                  value={editOfferPrice}
-                  onChange={(e) => setEditOfferPrice(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="mt-8 flex justify-end gap-4">
+            <div className="flex gap-2">
               <button
-                onClick={() => setEditModalOpen(false)}
-                className="px-5 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
-                Cancel
+                Previous
               </button>
               <button
-                onClick={savePrice}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
-                Save Changes
+                Next
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
-      {!filtered.length && !loading && (
-        <div className="text-center py-16 text-gray-600 bg-white rounded-lg shadow mt-8">
-          No packages found matching your search.
+      {/* Add OTT Packages Modal (Static UI) */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Add OTT Package</h2>
+            <form className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Provider Type</label>
+                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter Provider Type" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Provider Name</label>
+                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter Provider Name" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter URL" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter API Key" />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

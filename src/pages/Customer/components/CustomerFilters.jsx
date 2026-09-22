@@ -126,6 +126,15 @@ export default function CustomerFilters({ filters, setSearchParams }) {
           <option value="other">Other</option>
         </select>
 
+        {/* Server Type */}
+        <input
+          type="text"
+          placeholder="Filter by Server Type"
+          value={filters.serverType || ""}
+          onChange={(e) => updateParam("serverType", e.target.value)}
+          className="border p-1 rounded"
+        />
+
         {/* Installation By */}
         <div className="relative" ref={staffRef}>
           <input

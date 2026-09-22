@@ -147,6 +147,7 @@ export default function UserDetails() {
           <Row label="IPACT ID" value={g.ipactId} />
           <Row label="IPACT Customer ID" value={g.ipacctCustomerId} />
           <Row label="Connection Type" value={g.connectionType} />
+          <Row label="Server Type" value={g.serverType} />
           <Row label="Service Opted" value={g.serviceOpted} />
           <Row label="ONT/ONU MAC ID" value={g.serialNo} />
           <Row label="Wi-Fi Router MAC ID" value={g.macId} />
