@@ -15,6 +15,7 @@ export default function ManageTicket() {
   const [ticketSuggestions, setTicketSuggestions] = useState([]);
   const [zones, setZones] = useState([]);
   const [selectedSeverity, setSelectedSeverity] = useState("all");
+  const [selectedServerType, setSelectedServerType] = useState("");
 
   // Zone selection & show more per column
   const [selectedZoneOpen, setSelectedZoneOpen] = useState(null);
@@ -184,6 +185,16 @@ export default function ManageTicket() {
           >
             All Ticket
           </button>
+          <input
+            type="text"
+            value={selectedServerType}
+            onChange={(e) => {
+              setSelectedServerType(e.target.value);
+              setPages({ open: 1, assigned: 1 });
+            }}
+            placeholder="Search Server Type..."
+            className="px-3 py-1 ml-2 rounded text-sm border focus:outline-none bg-white text-gray-800 w-40"
+          />
         </div>
         <div className="relative w-80">
           <input
@@ -255,6 +266,7 @@ export default function ManageTicket() {
               handleNextPage={handleNextPage}
               selectedSeverity={selectedSeverity}
               selectedZone={selectedZoneOpen}
+              selectedServerType={selectedServerType}
             />
           </div>
         </ProtectedAction>
@@ -302,6 +314,7 @@ export default function ManageTicket() {
               handleNextPage={handleNextPage}
               selectedSeverity={selectedSeverity}
               selectedZone={selectedZoneAssigned}
+              selectedServerType={selectedServerType}
             />
           </div>
         </ProtectedAction>
@@ -323,6 +336,7 @@ const TicketColumn = ({
   handleNextPage,
   selectedSeverity,
   selectedZone,
+  selectedServerType,
 }) => {
   const getZoneName = (ticket) =>
     ticket.userId?.addressDetails?.area?.zoneName || null;
@@ -338,9 +352,12 @@ const TicketColumn = ({
       const severityMatch =
         selectedSeverity === "all" ||
         (t.severity || "").toLowerCase() === selectedSeverity;
-      return zoneMatch && severityMatch;
+      const serverTypeMatch = 
+        selectedServerType === "" ||
+        (t.serverType || "").toLowerCase().includes(selectedServerType.toLowerCase());
+      return zoneMatch && severityMatch && serverTypeMatch;
     });
-  }, [tickets, selectedZone, selectedSeverity]);
+  }, [tickets, selectedZone, selectedSeverity, selectedServerType]);
 
   const totalPages = Math.ceil(filteredTickets.length / limit) || 1;
   const paginatedTickets = filteredTickets.slice(

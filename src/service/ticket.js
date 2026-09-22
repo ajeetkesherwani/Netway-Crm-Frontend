@@ -30,13 +30,15 @@ export const getAllTicketList = async (
   page = 1,
   limit = 10,
   search = "",
-  filter = ""
+  filter = "",
+  serverType = ""
 ) => {
   const query = new URLSearchParams({
     page,
     limit,
     search,
     ...(filter && { filter }),
+    ...(serverType && { serverType }),
   }).toString();
 
   const res = await fetch(`${BASE_URL}/ticket/list?${query}`, {

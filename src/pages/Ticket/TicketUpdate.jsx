@@ -20,6 +20,7 @@ export default function TicketUpdate() {
     fileIII: null,
     callSource: "Phone",
     severity: "Medium",
+    serverType: "",
     assignToId: "",
     callDescription: "",
     isChargeable: false,
@@ -53,6 +54,7 @@ export default function TicketUpdate() {
           fileIII: null,
           callSource: ticket.callSource || "Phone",
           severity: ticket.severity || "Medium",
+          serverType: ticket.serverType || "",
           assignToId: ticket.assignToId || "",
           callDescription: ticket.callDescription || "",
           isChargeable: ticket.isChargeable || false,
@@ -252,6 +254,17 @@ export default function TicketUpdate() {
             <option value="High">High</option>
             <option value="Critical">Critical</option>
           </select>
+        </div>
+        <div>
+          <label className="block font-medium">Server Type</label>
+          <input
+            type="text"
+            name="serverType"
+            value={formData.serverType}
+            onChange={handleChange}
+            className="border p-2 w-full rounded"
+            placeholder="Enter Server Type"
+          />
         </div>
         <div>
           <label className="block font-medium">Assign To</label>

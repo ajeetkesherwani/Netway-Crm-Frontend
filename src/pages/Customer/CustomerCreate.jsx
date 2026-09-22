@@ -97,6 +97,7 @@ export default function CreateUser() {
       macId: "",
       serviceOpted: "",
       connectionType: "",
+      serverType: "",
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
@@ -514,9 +515,11 @@ export default function CreateUser() {
       payload.append("subZone", selectedSubZone);
 
       formData.documents.forEach((doc) => {
-        if (doc.file && doc.type) {
-          payload.append("documents", doc.file);
-          payload.append("documentTypes[]", doc.type);
+        if (doc.files && doc.files.length > 0 && doc.type) {
+          doc.files.forEach((file) => {
+            payload.append("documents", file);
+            payload.append("documentTypes[]", doc.type);
+          });
         }
       });
 
@@ -576,7 +579,7 @@ export default function CreateUser() {
   const addDocumentRow = () =>
     setFormData((prev) => ({
       ...prev,
-      documents: [...prev.documents, { type: "", file: null, preview: "" }], // ← add preview: ""
+      documents: [...prev.documents, { type: "", files: [], previews: [] }],
     }));
 
   const updateDocumentType = (i, v) =>
@@ -585,20 +588,34 @@ export default function CreateUser() {
       d[i].type = v;
       return { ...prev, documents: d };
     });
-  const updateDocumentFile = (i, f) => {
-    if (!f) return;
-
-    // Create preview only for images
-    const isImage = f.type.startsWith("image/");
-    const preview = isImage ? URL.createObjectURL(f) : "";
-
+  const updateDocumentFile = (i, newFiles) => {
+    if (!newFiles || newFiles.length === 0) return;
+    const fileArray = Array.from(newFiles);
+    const previews = fileArray.map((f) =>
+      f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
+    );
     setFormData((prev) => {
       const d = [...prev.documents];
-      d[i] = {
-        ...d[i],
-        file: f,
-        preview: preview,
-      };
+      (d[i].previews || []).forEach((p) => p && URL.revokeObjectURL(p));
+      d[i] = { ...d[i], files: fileArray, previews };
+      return { ...prev, documents: d };
+    });
+  };
+
+  // Remove a single file from a document row (by file index)
+  const removeDocumentFile = (docIndex, fileIndex) => {
+    setFormData((prev) => {
+      const d = prev.documents.map((doc, di) => {
+        if (di !== docIndex) return doc;
+        const newFiles = doc.files.filter((_, fi) => fi !== fileIndex);
+        const newPreviews = (doc.previews || []).filter((_, fi) => {
+          if (fi === fileIndex && doc.previews[fi]) {
+            URL.revokeObjectURL(doc.previews[fi]);
+          }
+          return fi !== fileIndex;
+        });
+        return { ...doc, files: newFiles, previews: newPreviews };
+      });
       return { ...prev, documents: d };
     });
   };
@@ -608,10 +625,7 @@ export default function CreateUser() {
       const d = [...prev.documents];
 
       // Clean up old preview URL to prevent memory leak
-      if (d[i]?.preview) {
-        URL.revokeObjectURL(d[i].preview);
-      }
-
+      (d[i]?.previews || []).forEach((p) => p && URL.revokeObjectURL(p));
       return {
         ...prev,
         documents: d.filter((_, idx) => idx !== i),
@@ -941,6 +955,18 @@ export default function CreateUser() {
                   {formErrors["customer.connectionType"]}
                 </p>
               )}
+            </div>
+
+            {/* Server Type */}
+            <div>
+              <label className="block text-sm font-medium">Server Type</label>
+              <input
+                type="text"
+                value={formData.customer.serverType}
+                onChange={(e) => handleChange(e, "customer.serverType")}
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="e.g. NAS-01, NAS-02"
+              />
             </div>
 
             <div>
@@ -1881,10 +1907,6 @@ export default function CreateUser() {
                       <option
                         key={dt}
                         value={dt}
-                        disabled={
-                          dt !== "Other" &&
-                          formData.documents.some((d, i) => d.type === dt && i !== index)
-                        }
                       >
                         {dt}
                       </option>
@@ -1892,40 +1914,66 @@ export default function CreateUser() {
                   </select>
                 </div>
 
-                {/* File Upload */}
                 {/* File Upload + Preview */}
                 <div className="md:col-span-2">
-                  <label className="text-sm">Upload File</label>
+                  <label className="text-sm">Upload File(s)</label>
                   <input
                     type="file"
-                    onChange={(e) =>
-                      updateDocumentFile(index, e.target.files[0])
-                    }
+                    multiple
+                    onChange={(e) => updateDocumentFile(index, e.target.files)}
                     className="mt-1 p-2 border rounded w-full"
                     disabled={!doc.type}
                   />
 
-                  {/* Show filename always */}
-                  {doc.file && (
-                    <p className="text-sm mt-2 text-gray-700">
-                      Selected: <span className="font-medium">{doc.file.name}</span>
-                    </p>
-                  )}
-
-                  {/* Show image preview only if it's an image */}
-                  {doc.preview && (
-                    <div className="mt-3">
-                      <p className="text-sm font-medium text-blue-700 mb-2">Preview:</p>
-                      <img
-                        src={doc.preview}
-                        alt="Document preview"
-                        className="w-16 h-16 object-cover border rounded-md shadow-sm"
-                      />
+                  {/* Show selected filenames with individual remove buttons */}
+                  {doc.files && doc.files.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {doc.files.map((f, fi) => {
+                        const isImage = doc.previews && doc.previews[fi];
+                        return (
+                          <div key={fi}>
+                            {isImage ? (
+                              /* Image preview with ✕ button */
+                              <div className="relative inline-block">
+                                <img
+                                  src={doc.previews[fi]}
+                                  alt={"Preview " + (fi + 1)}
+                                  className="w-20 h-20 object-cover border rounded-md shadow-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeDocumentFile(index, fi)}
+                                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center leading-none hover:bg-red-700 shadow"
+                                  title="Remove this file"
+                                >
+                                  ✕
+                                </button>
+                                <p className="text-xs text-gray-500 mt-0.5 max-w-[80px] truncate">{f.name}</p>
+                              </div>
+                            ) : (
+                              /* Non-image file row */
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-700">
+                                  {fi + 1}. <span className="font-medium">{f.name}</span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeDocumentFile(index, fi)}
+                                  className="w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-700 shadow flex-shrink-0"
+                                  title="Remove this file"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
-                  {/* Show message for non-image files */}
-                  {doc.file && !doc.preview && (
+                  {/* Message for non-image files */}
+                  {doc.files && doc.files.length > 0 && !doc.previews?.some(Boolean) && (
                     <p className="text-sm text-gray-500 mt-3 italic">
                       (Preview not available for non-image files like PDF)
                     </p>

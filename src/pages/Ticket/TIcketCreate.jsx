@@ -26,6 +26,7 @@ export default function TicketCreate() {
     fileIII: null,
     callSource: "Phone",
     severity: "Medium",
+    serverType: "",
     assignToId: "",
     callDescription: "",
     isChargeable: false,
@@ -95,6 +96,7 @@ export default function TicketCreate() {
       fileIII: null,
       callSource: "Phone",
       severity: "Medium",
+      serverType: "",
       assignToId: "",
       callDescription: "",
       isChargeable: false,
@@ -244,6 +246,19 @@ export default function TicketCreate() {
             <option value="High">High</option>
             <option value="Critical">Critical</option>
           </select>
+        </div>
+
+        {/* Server Type */}
+        <div>
+          <label className="block font-medium text-gray-700 mb-1">Server Type</label>
+          <input
+            type="text"
+            name="serverType"
+            value={formData.serverType}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md p-2.5"
+            placeholder="Enter Server Type"
+          />
         </div>
 
         {/* Call Description */}

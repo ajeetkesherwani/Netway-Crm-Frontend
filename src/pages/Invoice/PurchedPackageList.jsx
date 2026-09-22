@@ -224,7 +224,7 @@ export default function PurchasedPlanList() {
     <div className="p-6 flex flex-col min-h-screen w-8xl">
       {/* Header with search, download + status legend */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-800">Purchased Invoice List</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Purchased Packages List</h2>
 
         <div className="flex flex-wrap items-center gap-4 md:gap-6">
           {/* Search input */}

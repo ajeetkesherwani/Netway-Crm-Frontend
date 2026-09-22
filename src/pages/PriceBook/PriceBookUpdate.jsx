@@ -582,6 +582,49 @@ export default function PriceBookUpdate() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddPlan, setShowAddPlan] = useState(false);
   const [addPlanSearch, setAddPlanSearch] = useState("");
+  const [stagedPackages, setStagedPackages] = useState({});
+
+  const handleStagedPackageToggle = (pkg) => {
+    setStagedPackages((prev) => {
+      const newPackages = { ...prev };
+      if (newPackages[pkg._id]) {
+        delete newPackages[pkg._id];
+      } else {
+        newPackages[pkg._id] = {
+          packageId: pkg._id,
+          name: pkg.name,
+          basePrice: pkg.basePrice,
+          price: pkg.basePrice || "",
+          retailerPrice: pkg.basePrice || "",
+          offerPrice: pkg.basePrice || "",
+        };
+      }
+      return newPackages;
+    });
+  };
+
+  const handleStagedPackagePriceChange = (packageId, field, value) => {
+    setStagedPackages((prev) => ({
+      ...prev,
+      [packageId]: {
+        ...prev[packageId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const confirmAddPlans = () => {
+    setFormData((prev) => ({
+      ...prev,
+      package: {
+        ...prev.package,
+        ...stagedPackages,
+      },
+    }));
+    setStagedPackages({});
+    setShowAddPlan(false);
+    setAddPlanSearch("");
+  };
   const itemsPerPage = 10;
 
   // Fetch price book details + dropdown data
@@ -861,6 +904,37 @@ export default function PriceBookUpdate() {
   const start = (currentPage - 1) * itemsPerPage;
   const displayedPackages = filteredPackages.slice(start, start + itemsPerPage);
 
+  const availablePackagesForStaging = packages
+    .filter((pkg) => !formData.package[pkg._id])
+    .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase()));
+
+  const allStagedSelected = availablePackagesForStaging.length > 0 && availablePackagesForStaging.every((pkg) => !!stagedPackages[pkg._id]);
+
+  const handleStagedSelectAll = () => {
+    setStagedPackages((prev) => {
+      const newPackages = { ...prev };
+      if (allStagedSelected) {
+        availablePackagesForStaging.forEach((pkg) => {
+          delete newPackages[pkg._id];
+        });
+      } else {
+        availablePackagesForStaging.forEach((pkg) => {
+          if (!newPackages[pkg._id]) {
+            newPackages[pkg._id] = {
+              packageId: pkg._id,
+              name: pkg.name,
+              basePrice: pkg.basePrice,
+              price: pkg.basePrice || "",
+              retailerPrice: pkg.basePrice || "",
+              offerPrice: pkg.basePrice || "",
+            };
+          }
+        });
+      }
+      return newPackages;
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Update Price Book</h2>
@@ -1037,36 +1111,121 @@ export default function PriceBookUpdate() {
             </button>
           </div>
 
-          {/* Add Plan Panel – only unassigned packages */}
+          {/* Add Plan Modal */}
           {showAddPlan && (
-            <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
-              <h4 className="font-medium text-gray-700 mb-3">Select plans to add:</h4>
-              <input
-                type="text"
-                placeholder="Search packages..."
-                value={addPlanSearch}
-                onChange={(e) => setAddPlanSearch(e.target.value)}
-                className="border border-gray-300 p-2 w-full rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <div className="max-h-60 overflow-y-auto divide-y divide-gray-200">
-                {packages
-                  .filter((pkg) => !formData.package[pkg._id]) // only unassigned
-                  .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase()))
-                  .map((pkg) => (
-                    <div key={pkg._id} className="flex items-center justify-between py-2 px-1 hover:bg-blue-100 rounded">
-                      <span className="text-sm text-gray-800">{pkg.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => handlePackageToggle(pkg)}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  ))}
-                {packages.filter((pkg) => !formData.package[pkg._id] && pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase())).length === 0 && (
-                  <p className="text-gray-500 text-sm py-4 text-center">No more plans available to add.</p>
-                )}
+            <div className="fixed inset-0 flex items-center justify-center z-50 py-10 shadow-none pointer-events-none">
+              {/* Click outside to close (optional, but no dark overlay) */}
+              <div className="absolute inset-0 pointer-events-auto" onClick={() => { setShowAddPlan(false); setAddPlanSearch(""); setStagedPackages({}); }}></div>
+              <div className="bg-white rounded-lg p-6 w-11/12 max-w-5xl shadow-2xl relative z-10 max-h-[70vh] flex flex-col border border-gray-300 pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={() => { setShowAddPlan(false); setAddPlanSearch(""); setStagedPackages({}); }}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 font-bold text-2xl leading-none"
+                >
+                  &times;
+                </button>
+                <h4 className="font-semibold text-gray-800 mb-4 text-xl">Select and Update Plans</h4>
+                <input
+                  type="text"
+                  placeholder="Search packages..."
+                  value={addPlanSearch}
+                  onChange={(e) => setAddPlanSearch(e.target.value)}
+                  className="border border-gray-300 p-3 w-full rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <div className="overflow-y-auto flex-1">
+                  <table className="min-w-full border border-gray-300 rounded-lg">
+                    <thead className="bg-gray-100 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={allStagedSelected}
+                            onChange={handleStagedSelectAll}
+                            className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                          />
+                        </th>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">Package Name</th>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">Base Price</th>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">Price *</th>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">Retailer Price</th>
+                        <th className="px-2 py-2 text-left text-sm text-gray-700">Offer Price</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {packages
+                        .filter((pkg) => !formData.package[pkg._id])
+                        .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase()))
+                        .map((pkg) => (
+                          <tr key={pkg._id} className="hover:bg-gray-50">
+                            <td className="px-2 py-1">
+                              <input
+                                type="checkbox"
+                                checked={!!stagedPackages[pkg._id]}
+                                onChange={() => handleStagedPackageToggle(pkg)}
+                                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
+                              />
+                            </td>
+                            <td className="px-2 py-1 text-gray-900 font-medium text-sm">{pkg.name}</td>
+                            <td className="px-2 py-1 text-gray-600 text-sm">{pkg.basePrice || "N/A"}</td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="number"
+                                value={stagedPackages[pkg._id]?.price || ""}
+                                onChange={(e) => handleStagedPackagePriceChange(pkg._id, "price", e.target.value)}
+                                disabled={!stagedPackages[pkg._id]}
+                                className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 text-sm"
+                                min="0"
+                                required={!!stagedPackages[pkg._id]}
+                              />
+                            </td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="number"
+                                value={stagedPackages[pkg._id]?.retailerPrice || ""}
+                                onChange={(e) => handleStagedPackagePriceChange(pkg._id, "retailerPrice", e.target.value)}
+                                disabled={!stagedPackages[pkg._id]}
+                                className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 text-sm"
+                                min="0"
+                              />
+                            </td>
+                            <td className="px-2 py-1">
+                              <input
+                                type="number"
+                                value={stagedPackages[pkg._id]?.offerPrice || ""}
+                                onChange={(e) => handleStagedPackagePriceChange(pkg._id, "offerPrice", e.target.value)}
+                                disabled={!stagedPackages[pkg._id]}
+                                className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 text-sm"
+                                min="0"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      {packages
+                        .filter((pkg) => !formData.package[pkg._id])
+                        .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase())).length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="text-gray-500 text-sm py-4 text-center">No plans found or all plans added.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddPlan(false); setAddPlanSearch(""); setStagedPackages({}); }}
+                    className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmAddPlans}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                  >
+                    Add Plan
+                  </button>
+                </div>
               </div>
             </div>
           )}

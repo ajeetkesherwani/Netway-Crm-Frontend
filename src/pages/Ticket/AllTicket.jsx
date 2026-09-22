@@ -917,7 +917,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getAllTicketListWithFilter, deleteTicket } from "../../service/ticket";
-import { FaEllipsisV, FaTrash, FaDownload } from "react-icons/fa";
+import { FaEllipsisV, FaTrash, FaDownload, FaEye, FaEdit } from "react-icons/fa";
 import TicketFilter from "../Ticket/TicketFilter";
 import ProtectedAction from "../../components/ProtectedAction";
 import { getSearchParamsVal } from "./getSearchParamsVal";
@@ -1193,15 +1193,14 @@ export default function AllTicket() {
                   <div className="text-xs">{ticket.fixedAt}</div>
                   <div className="flex justify-between md:justify-center items-center gap-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        ticket.status === "Closed"
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${ticket.status === "Closed"
                           ? "bg-green-100 text-green-800"
                           : ticket.status === "Fixed"
-                          ? "bg-blue-100 text-blue-800"
-                          : ticket.status === "Assigned"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
+                            ? "bg-blue-100 text-blue-800"
+                            : ticket.status === "Assigned"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
                     >
                       {ticket.status}
                     </span>
@@ -1217,6 +1216,36 @@ export default function AllTicket() {
                       </button>
                       {menuOpen === ticket._id && (
                         <div className="action-menu absolute -top-8 right-0 bg-white border rounded-lg shadow-xl w-40 z-50">
+                          <ProtectedAction
+                            module="tickets"
+                            action="AllTicketView"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/ticket/view/${ticket._id}`);
+                              }}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 w-full text-left text-gray-700 text-sm transition"
+                            >
+                              <FaEye className="text-sm" /> View Ticket
+                            </button>
+                          </ProtectedAction>
+
+                          <ProtectedAction
+                            module="tickets"
+                            action="AllTicketUpdate"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/ticket/update/${ticket._id}`);
+                              }}
+                              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 w-full text-left text-gray-700 text-sm transition"
+                            >
+                              <FaEdit className="text-sm" /> Edit Ticket
+                            </button>
+                          </ProtectedAction>
+
                           <ProtectedAction
                             module="tickets"
                             action="AllTicketRemove"

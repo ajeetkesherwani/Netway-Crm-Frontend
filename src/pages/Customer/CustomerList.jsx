@@ -54,6 +54,7 @@ export default function UserList() {
     reseller: searchParams.get("reseller") || "",
     lco: searchParams.get("lco") || "",
     cafUploaded: searchParams.get("cafUploaded") || "",
+    serverType: searchParams.get("serverType") || "",
   };
 
   const debouncedSearch = useDebounce(filters.searchQuery, 500);
@@ -106,6 +107,7 @@ export default function UserList() {
     filters.cafUploaded,
     filters.connectionType,
     filters.installationBy,
+    filters.serverType,
   ]);
 
   const toggleMenu = (userId) => {

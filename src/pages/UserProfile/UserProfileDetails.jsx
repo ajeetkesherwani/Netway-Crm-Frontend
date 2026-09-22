@@ -139,7 +139,6 @@ const UserProfile = () => {
   };
 
   const getInstallerDisplay = () => {
-    if (g.installationByName?.trim()) return g.installationByName.trim();
     if (Array.isArray(g.installationBy) && g.installationBy.length > 0) {
       const names = g.installationBy
         .map((inst) =>
@@ -278,6 +277,7 @@ const UserProfile = () => {
             />
             <DetailRow label="IPACCT TECH ID" value={g.ipactId} />
             <DetailRow label="Installation By" value={getInstallerDisplay()} />
+            <DetailRow label="Installation By (Manual)" value={g.installationByName} />
             <DetailRow label="Serial No" value={g.serialNo} />
             <DetailRow
               label="Jaze User Id"
@@ -465,7 +465,7 @@ const UserProfile = () => {
               <div className="border border-gray-200 rounded overflow-hidden bg-white shadow-xs">
                 <div className="bg-[#f0f4f9] px-4 py-2 border-b border-gray-200">
                   <h3 className="text-xs font-bold text-[#143e6a] uppercase tracking-wider">
-                    Address Address
+                    Area/Zone
                   </h3>
                 </div>
                 <div className="p-4 space-y-2.5 text-[13px]">

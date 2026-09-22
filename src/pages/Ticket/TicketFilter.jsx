@@ -43,6 +43,7 @@ export default function TicketFilter({ setSearchParams }) {
   const [selectedZone, setSelectedZone] = useState(null);
   const [selectedSubZone, setSelectedSubZone] = useState(null);
   const [resolvedBy, setResolvedBy] = useState("");
+  const [serverType, setServerType] = useState("");
 
   /* ───────────── FETCH DATA ───────────── */
   useEffect(() => {
@@ -105,6 +106,7 @@ export default function TicketFilter({ setSearchParams }) {
     setSelectedSubZone(null);
     setSubZoneText("");
     setResolvedBy("");
+    setServerType("");
     
 
 
@@ -120,6 +122,7 @@ export default function TicketFilter({ setSearchParams }) {
     sp.delete("callSource");
     sp.delete("subZoneId");
     sp.delete("fixedBy");
+    sp.delete("serverType");
 
     setSearchParams(sp);
   };
@@ -189,6 +192,7 @@ export default function TicketFilter({ setSearchParams }) {
     if (selectedReseller) sp.set("resellerId", selectedReseller?._id);
     if (callSource.trim()) sp.set("callSource", callSource.trim());
     if (resolvedBy.trim()) sp.set("fixedBy", resolvedBy.trim());
+    if (serverType) sp.set("serverType", serverType);
 
     setSearchParams(sp);
   };
@@ -207,6 +211,20 @@ export default function TicketFilter({ setSearchParams }) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Type name, mobile or email..."
+          />
+        </div>
+
+        {/* Server Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Server Type
+          </label>
+          <input
+            type="text"
+            value={serverType}
+            onChange={(e) => setServerType(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="Search Server Type..."
           />
         </div>
 

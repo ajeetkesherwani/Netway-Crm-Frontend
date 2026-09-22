@@ -82,6 +82,7 @@ export default function TicketDetails() {
               (ticketData.assignToId._id || ticketData.assignToId)) ||
             "",
           severity: ticketData.severity || "",
+          serverType: ticketData.serverType || "",
           isChargeable: !!ticketData.isChargeable,
           price: ticketData.price ?? "",
           callDescription: ticketData.callDescription ?? "",
@@ -148,6 +149,7 @@ export default function TicketDetails() {
         "category",
         // "assignToId",
         "severity",
+        "serverType",
         "callDescription",
         "price",
         "isChargeable",
@@ -360,6 +362,18 @@ export default function TicketDetails() {
                   </select>
                 </div>
 
+                {/* Server Type */}
+                <div className="mt-2">
+                  <label className="font-semibold">Server Type:</label>
+                  <input
+                    type="text"
+                    value={editableDetails.serverType || ""}
+                    onChange={(e) => handleChange("serverType", e.target.value)}
+                    className="border w-full rounded-md py-1 px-2 mt-1"
+                    placeholder="Enter Server Type"
+                  />
+                </div>
+
                 {/* Description */}
                 <div>
                   <label className="font-semibold">Description:</label>
@@ -469,6 +483,9 @@ export default function TicketDetails() {
                 </div>
                 <p>
                   <strong>Severity:</strong> {ticketDetails.severity || "N/A"}
+                </p>
+                <p>
+                  <strong>Server Type:</strong> {ticketDetails.serverType || "N/A"}
                 </p>
                 <p>
                   <strong>Price:</strong> ₹{ticketDetails.price ?? 0}

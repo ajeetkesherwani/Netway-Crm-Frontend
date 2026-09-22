@@ -101,6 +101,7 @@ export default function CustomerUpdate() {
       vcNo: "",
       circuitId: "",
       networkType: "",
+      serverType: "",
       createdFor: { id: null, type: "Self" }, // ← null by default
       customArea: "",
       packageDetails: { packageId: "", packageName: "", packageAmount: "" },
@@ -240,6 +241,7 @@ export default function CustomerUpdate() {
             vcNo: u.generalInformation?.vcNo || "",
             circuitId: u.generalInformation?.circuitId || "",
             networkType: u.networkInformation?.networkType || "",
+            serverType: u.generalInformation?.serverType || "",
             aadharNo: u.generalInformation?.adharNo || "",
             gstNo: u.generalInformation?.gst || "",
             panNumber: u.generalInformation?.panNumber || "",
@@ -532,7 +534,7 @@ export default function CustomerUpdate() {
       ...prev,
       documents: [
         ...prev.documents,
-        { type: "", file: null, existingImage: null, existingUrl: null, preview: "" },
+        { type: "", files: [], previews: [], existingImage: null, existingUrl: null },
       ],
     }));
 
@@ -558,29 +560,25 @@ export default function CustomerUpdate() {
     return `${base.replace(/\/$/, "")}/${clean}`;
   };
 
-  const updateDocumentFile = (i, f) => {
-    if (!f) return;
-    const d = [...formData.documents];
-    // Create preview only for images
-    const isImage = f.type.startsWith("image/");
-    const preview = isImage ? URL.createObjectURL(f) : "";
-    d[i] = {
-      ...d[i],
-      file: f,
-      preview: preview,
-      existingImage: null, // Remove existing image if new file is uploaded
-      existingUrl: null,
-    };
-    setFormData((prev) => ({ ...prev, documents: d }));
+  const updateDocumentFile = (i, newFiles) => {
+    if (!newFiles || newFiles.length === 0) return;
+    const fileArray = Array.from(newFiles);
+    const previews = fileArray.map((f) =>
+      f.type.startsWith("image/") ? URL.createObjectURL(f) : ""
+    );
+    setFormData((prev) => {
+      const d = [...prev.documents];
+      (d[i].previews || []).forEach((p) => p && URL.revokeObjectURL(p));
+      d[i] = { ...d[i], files: fileArray, previews, existingImage: null, existingUrl: null };
+      return { ...prev, documents: d };
+    });
   };
 
   const removeDocumentRow = (i) =>
     setFormData((prev) => {
       const d = [...prev.documents];
       // Clean up preview URL to prevent memory leak
-      if (d[i]?.preview) {
-        URL.revokeObjectURL(d[i].preview);
-      }
+      (d[i]?.previews || []).forEach((p) => p && URL.revokeObjectURL(p));
       // Remove both new and existing documents
       return {
         ...prev,
@@ -763,16 +761,18 @@ export default function CustomerUpdate() {
 
     // --- NEW FILES ---
     // Prepare new documents for upload
-    const newDocuments = formData.documents.filter(doc => doc.file);
+    const newDocuments = formData.documents.filter(doc => doc.files && doc.files.length > 0);
     newDocuments.forEach((doc) => {
-      payload.append("documents", doc.file);
-      payload.append("documentTypes[]", doc.type || "Other");
+      doc.files.forEach((file) => {
+        payload.append("documents", file);
+        payload.append("documentTypes[]", doc.type || "Other");
+      });
     });
 
     // Prepare existing documents to keep
 
     const keptFilenames = formData.documents
-      .filter(doc => doc.existingImage && !doc.file)
+      .filter(doc => doc.existingImage && !(doc.files && doc.files.length > 0))
       .map(doc => doc.existingImage.split("/").pop())
       .filter(Boolean);
     payload.append("existingDocuments", JSON.stringify(keptFilenames));
@@ -961,6 +961,18 @@ export default function CustomerUpdate() {
                   <option key={t}>{t}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label>Server Type</label>
+              <input
+                type="text"
+                value={formData.customer.serverType}
+                onChange={(e) =>
+                  setFieldValue("customer.serverType", e.target.value)
+                }
+                className="mt-1 p-2 border rounded w-full"
+                placeholder="e.g. NAS-01, NAS-02"
+              />
             </div>
             <div>
               <label>Sales Executive</label>
@@ -1850,10 +1862,6 @@ export default function CustomerUpdate() {
                       <option
                         key={t}
                         value={t}
-                        disabled={
-                          t !== "Other" &&
-                          formData.documents.some((d, j) => d.type === t && j !== i)
-                        }
                       >
                         {t}
                       </option>
@@ -1868,35 +1876,47 @@ export default function CustomerUpdate() {
                   )}
                 </div>
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium">Upload New File</label>
+                  <label className="text-sm font-medium">Upload New File(s)</label>
                   <input
                     type="file"
+                    multiple
                     accept="image/*,application/pdf"
-                    onChange={(e) => updateDocumentFile(i, e.target.files[0])}
+                    onChange={(e) => updateDocumentFile(i, e.target.files)}
                     className="w-full p-2 border rounded mt-1"
                   />
 
-                  {/* Show filename when new file selected */}
-                  {doc.file && (
-                    <p className="text-sm mt-2 text-green-700 font-medium">
-                      Selected: {doc.file.name}
-                    </p>
+                  {/* Show selected filenames */}
+                  {doc.files && doc.files.length > 0 && (
+                    <div className="mt-2 space-y-0.5">
+                      {doc.files.map((f, fi) => (
+                        <p key={fi} className="text-sm text-green-700 font-medium">
+                          {fi + 1}. {f.name}
+                        </p>
+                      ))}
+                    </div>
                   )}
 
-                  {/* Preview for NEW image */}
-                  {doc.preview && (
+                  {/* Preview for NEW images */}
+                  {doc.previews && doc.previews.some(Boolean) && (
                     <div className="mt-4">
-                      <p className="text-xs font-medium text-green-700 mb-1">New Preview:</p>
-                      <img
-                        src={doc.preview}
-                        alt="New preview"
-                        className="w-24 h-24 object-cover border-2 border-green-500 rounded-lg shadow"
-                      />
+                      <p className="text-xs font-medium text-green-700 mb-1">New Preview(s):</p>
+                      <div className="flex flex-wrap gap-2">
+                        {doc.previews.map((prev, pi) =>
+                          prev ? (
+                            <img
+                              key={pi}
+                              src={prev}
+                              alt={"New preview " + (pi + 1)}
+                              className="w-20 h-20 object-cover border-2 border-green-500 rounded-lg shadow"
+                            />
+                          ) : null
+                        )}
+                      </div>
                     </div>
                   )}
 
                   {/* Current existing image (if not replaced) */}
-                  {doc.existingUrl && !doc.file && (
+                  {doc.existingUrl && !(doc.files && doc.files.length > 0) && (
                     <div className="mt-4">
                       <p className="text-xs font-medium text-blue-700 mb-1">Current:</p>
                       <img
@@ -1907,30 +1927,8 @@ export default function CustomerUpdate() {
                     </div>
                   )}
 
-                  {/* Show both if replacing */}
-                  {doc.existingUrl && doc.file && (
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs font-medium text-gray-600 mb-1">Current:</p>
-                        <img
-                          src={getDocumentUrl(doc.existingUrl)}
-                          alt="Current"
-                          className="w-full h-20 object-cover border rounded-lg"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-green-700 mb-1">New:</p>
-                        <img
-                          src={doc.preview}
-                          alt="New"
-                          className="w-full h-20 object-cover border-2 border-green-500 rounded-lg"
-                        />
-                      </div>
-                    </div>
-                  )}
-
                   {/* Message for non-image */}
-                  {doc.file && !doc.preview && (
+                  {doc.files && doc.files.length > 0 && !doc.previews?.some(Boolean) && (
                     <p className="text-sm text-gray-500 mt-3 italic">
                       Preview not available for non-image files (e.g. PDF)
                     </p>
