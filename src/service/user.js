@@ -342,6 +342,38 @@ export const getUserRenewHistory = async (userId) => {
   }
 };
 
+//user refund history
+export const getUserRefundHistory = async (userId) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/purchasedPlan/refund-history?userId=${userId}`, 
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.status) {
+      throw new Error(data.message || "Failed to fetch refund history");
+    }
+
+    return {
+      status: true,
+      data: data.data?.history || [], 
+    };
+  } catch (err) {
+    return {
+      status: false,
+      message: err.message || "Network error",
+    };
+  }
+};
+
 //auto recharge
 export const toggleAutoRecharge = async (userId, enable) => {
   const res = await fetch(`${BASE_URL}/user/auto-recharge/${userId}`, {

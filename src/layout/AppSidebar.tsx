@@ -262,6 +262,11 @@ const AppSidebar: React.FC = () => {
           name: "IPTV Recharge",
           path: "/invoice/iptv-recharge",
         });
+      if (permissions.invoice?.TaxInvoiceList)
+        invoiceSubItems.push({
+          name: "Tax Invoice",
+          path: "/invoice/tax-invoice",
+        });
     }
     if (invoiceSubItems.length > 0)
       generatedNavItems.push({

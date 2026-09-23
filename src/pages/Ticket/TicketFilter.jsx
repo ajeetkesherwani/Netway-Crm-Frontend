@@ -215,7 +215,7 @@ export default function TicketFilter({ setSearchParams }) {
         </div>
 
         {/* Server Type */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Server Type
           </label>
@@ -226,7 +226,7 @@ export default function TicketFilter({ setSearchParams }) {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             placeholder="Search Server Type..."
           />
-        </div>
+        </div> */}
 
         {/* Ticket No */}
         <div>
@@ -527,6 +527,22 @@ export default function TicketFilter({ setSearchParams }) {
             placeholder="Type name (Admin / Reseller / LCO / Staff)"
           />
         </div>
+
+ {/* Server Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Server Type
+          </label>
+          <input
+            type="text"
+            value={serverType}
+            onChange={(e) => setServerType(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            placeholder="Search Server Type..."
+          />
+        </div>
+
+
       </div>
 
 

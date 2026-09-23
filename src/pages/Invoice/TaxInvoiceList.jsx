@@ -2,14 +2,14 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaCheck, FaTrashAlt, FaEye, FaEllipsisV, FaSearch, FaDownload, FaUndo } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-import { getInvoices, fetchInvoicePdfBlob, downloadInvoicePdf, deleteInvoice } from "../../service/purchasedPlan";
+import { getTaxInvoices, fetchInvoicePdfBlob, downloadInvoicePdf, deleteInvoice } from "../../service/purchasedPlan";
 import ProtectedAction from "../../components/ProtectedAction";
 import * as XLSX from "xlsx";
 import { InvoiceFilters } from "../Invoice/InvoiceFilter";
 
 const ITEMS_PER_PAGE = 15;
 
-export default function PurchasedPlanList() {
+export default function TaxInvoiceList() {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -54,7 +54,7 @@ export default function PurchasedPlanList() {
         ...(filters.servertype && { servertype: filters.servertype }),
       }).toString();
 
-      const res = await getInvoices(`?${queryParams}`);
+      const res = await getTaxInvoices(`?${queryParams}`);
       setInvoices(res.data.invoices || []);
       setTotalCount(res.data.totalCount || 0);
     } catch (err) {
@@ -227,7 +227,7 @@ export default function PurchasedPlanList() {
     <div className="p-6 flex flex-col min-h-screen w-8xl">
       {/* Header with search, download + status legend */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-gray-800">Purchased Plans List</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Tax Invoices List</h2>
 
         <div className="flex flex-wrap items-center gap-4 md:gap-6">
           {/* Search input */}
@@ -296,6 +296,7 @@ export default function PurchasedPlanList() {
               <th className="px-4 py-3 border">S.NO</th>
               <th className="px-4 py-3 border text-center">RECHARGE TYPE</th>
               <th className="px-4 py-3 border">USER DETAILS</th>
+              <th className="px-4 py-3 border">GST NO.</th>
               <th className="px-4 py-3 border">INVOICE NO.</th>
               <th className="px-4 py-3 border">PACKAGE</th>
               <th className="px-4 py-3 border">AMOUNT</th>
@@ -352,6 +353,12 @@ export default function PurchasedPlanList() {
                         className="text-xs text-gray-600 cursor-pointer hover:underline"
                       >
                         {userInfo.name || "N/A"}
+                      </div>
+                    </td>
+
+                    <td className="border px-4 py-3">
+                      <div className="font-medium text-gray-800">
+                        {userInfo.gst || "—"}
                       </div>
                     </td>
 
