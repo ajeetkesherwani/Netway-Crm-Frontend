@@ -123,6 +123,7 @@ import TicketCreate from "./pages/Ticket/CreateTicket";
 import TicketReplyOptionList from "./pages/Setting/TicketReplyOptionList";
 import TicketReplyOptionUpdate from "./pages/Setting/TicketReplyOptionUpdate";
 import PurchasedPlanList from "./pages/Invoice/PurchedPackageList";
+import TaxInvoiceList from "./pages/Invoice/TaxInvoiceList";
 import OttPackageList from "./pages/Invoice/OttPackageList";
 import IptvPackageList from "./pages/Invoice/IptvPackageList";
 import CompletePaymentList from "./pages/Payment/SuccessPayment";
@@ -480,6 +481,7 @@ export default function App() {
               path="/invoice/package-recharge"
               element={<PurchasedPlanList />}
             />
+            <Route path="/invoice/tax-invoice" element={<TaxInvoiceList />} />
             <Route path="/invoice/ott-recharge" element={<OttPackageList />} />
             <Route path="/invoice/iptv-recharge" element={<IptvPackageList />} />
             {/* <Route path="/invoice/:id" element={<InvoiceDetails/>} /> */}

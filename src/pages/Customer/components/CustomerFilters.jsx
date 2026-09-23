@@ -10,7 +10,12 @@ export default function CustomerFilters({ filters, setSearchParams }) {
   const [staffList, setStaffList] = useState([]);
   const [showStaffDropdown, setShowStaffDropdown] = useState(false);
   const [installerDisplay, setInstallerDisplay] = useState("");
+  const [serverTypeDisplay, setServerTypeDisplay] = useState(filters.serverType || "");
   const staffRef = useRef(null);
+
+  useEffect(() => {
+    setServerTypeDisplay(filters.serverType || "");
+  }, [filters.serverType]);
 
   useEffect(() => {
     (async () => {
@@ -127,16 +132,16 @@ export default function CustomerFilters({ filters, setSearchParams }) {
         </select>
 
         {/* Server Type */}
-        <input
+        {/* <input
           type="text"
           placeholder="Filter by Server Type"
           value={filters.serverType || ""}
           onChange={(e) => updateParam("serverType", e.target.value)}
           className="border p-1 rounded"
-        />
+        /> */}
 
         {/* Installation By */}
-        <div className="relative" ref={staffRef}>
+        {/* <div className="relative" ref={staffRef}>
           <input
             placeholder="Installation By"
             value={installerDisplay}
@@ -170,7 +175,7 @@ export default function CustomerFilters({ filters, setSearchParams }) {
                 ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Start Date */}
         <DatePicker
@@ -234,6 +239,58 @@ export default function CustomerFilters({ filters, setSearchParams }) {
           value={filters.lco}
           onSelect={(id) => updateParam("lco", id)}
         />
+
+             {/* Server Type */}
+        <input
+          type="text"
+          placeholder="Filter by Server Type"
+          value={serverTypeDisplay}
+          onChange={(e) => setServerTypeDisplay(e.target.value)}
+          onBlur={(e) => updateParam("serverType", e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              updateParam("serverType", e.target.value);
+            }
+          }}
+          className="border p-1 rounded"
+        />
+
+        {/* Installation By */}
+        <div className="relative" ref={staffRef}>
+          <input
+            placeholder="Installation By"
+            value={installerDisplay}
+            onChange={(e) => {
+              setInstallerDisplay(e.target.value);
+              setShowStaffDropdown(true);
+            }}
+            onFocus={() => setShowStaffDropdown(true)}
+            className="border p-1 rounded w-full"
+          />
+          {showStaffDropdown && (
+            <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg max-h-48 overflow-y-auto">
+              {staffList
+                .filter((s) => {
+                  const name = s.staffName || s.name || "";
+                  return name.toLowerCase().includes(installerDisplay.toLowerCase());
+                })
+                .map((s) => (
+                  <div
+                    key={s._id}
+                    className="px-2 py-1 hover:bg-gray-100 cursor-pointer text-sm"
+                    onClick={() => {
+                      updateParam("installationBy", s._id);
+                      setInstallerDisplay(s.staffName || s.name);
+                      setShowStaffDropdown(false);
+                    }}
+                  >
+                    {s.staffName || s.name}
+                  </div>
+                ))}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* 🔹 SEARCH & RESET BUTTONS */}

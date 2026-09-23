@@ -111,6 +111,23 @@ export const getPurchasedPlans = async (type = "") => {
 //   }
 // };
 
+export const getTaxInvoices = async (query = "") => {
+  try {
+    const res = await fetch(`${BASE_URL}/common/taxInvoiceList${query}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.status) throw new Error(data.message || "Failed to fetch tax invoices");
+    return data;
+  } catch (err) {
+    throw err;
+  }
+};
+
 //getInvoices
 export const getInvoices = async (type = "") => {
   try {

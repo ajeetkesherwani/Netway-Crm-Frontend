@@ -345,6 +345,18 @@ export const InvoiceFilters = ({
             placeholder="Admin/Reseller/LCO name"
           />
         </div>
+
+        {/* Server Type */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Server Type</label>
+          <input
+            type="text"
+            className="w-full px-4 py-2 border rounded-lg"
+            value={filters.servertype || ""}
+            onChange={(e) => setFilters(prev => ({ ...prev, servertype: e.target.value }))}
+            placeholder="Server type"
+          />
+        </div>
       </div>
 
       {/* Buttons */}

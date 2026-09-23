@@ -184,7 +184,8 @@ export const permissionsConfig = [
             "OttRecharge",
             "IptvRecharge",
             "InvoiceDownload",
-            "PackageRechargeRefund"
+            "PackageRechargeRefund",
+            "TaxInvoiceList"
         ],
     },
     {
