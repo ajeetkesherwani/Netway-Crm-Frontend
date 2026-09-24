@@ -262,6 +262,7 @@ const UserProfile = () => {
           {/* LEFT COLUMN: Customer Attributes (Only fields with data are shown) */}
           <div className="space-y-0.5">
             <DetailRow label="IP Address" value={g.ipAdress || g.ipAddress} />
+            <DetailRow label="Pool" value={g.pool} />
             <DetailRow label="S/o" value={g.fatherName || g.so} />
             <DetailRow label="Alternate Mobile" value={g.alternatePhone} />
             <DetailRow label="Email" value={g.email} />
@@ -280,7 +281,7 @@ const UserProfile = () => {
             <DetailRow label="Installation By (Manual)" value={g.installationByName} />
             <DetailRow label="Serial No" value={g.serialNo} />
             <DetailRow
-              label="Jaze User Id"
+              label="User Id"
               value={g.UserId || g.userId || g.username}
             />
             <DetailRow label="SBT No" value={g.stbNo} />

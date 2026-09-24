@@ -81,3 +81,22 @@ export const deletePool = async (id) => {
   if (!res.ok) throw new Error(data.message || "Failed to delete pool");
   return data;
 };
+
+// Get IPACCT pools by zone id
+export const getIpacctPools = async (zoneid, ipacctid) => {
+  const res = await fetch(`${BASE_URL}/ipacct/get-pools`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({
+      zoneid,
+      ...(ipacctid !== undefined && ipacctid !== null ? { ipacctid } : {}),
+    }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch pools");
+  return data;
+};

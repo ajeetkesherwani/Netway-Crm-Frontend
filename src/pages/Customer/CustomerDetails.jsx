@@ -143,7 +143,8 @@ export default function UserDetails() {
           <Row label="Email" value={g.email} />
           <Row label="Phone" value={g.phone} />
           <Row label="Alternate Phone" value={g.alternatePhone} />
-          <Row label="IP Address" value={g.ipAdress} />
+          <Row label="IP Address" value={g.ipAdress || g.ipAddress} />
+          <Row label="Pool" value={g.pool} />
           <Row label="IPACT ID" value={g.ipactId} />
           <Row label="IPACT Customer ID" value={g.ipacctCustomerId} />
           <Row label="Connection Type" value={g.connectionType} />
