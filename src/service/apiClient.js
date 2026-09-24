@@ -86,6 +86,25 @@ export async function syncIpacctZonesAPI() {
   }
 }
 
+// Get IPACCT pools by zone id
+export async function getIpacctPools(zoneid, ipacctid) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/ipacct/get-pools`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      zoneid,
+      ...(ipacctid !== undefined && ipacctid !== null ? { ipacctid } : {}),
+    }),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || `Failed to fetch pools`);
+  return data;
+}
+
 // Delete zone
 export async function deleteZone(id) {
   const token = localStorage.getItem("token");

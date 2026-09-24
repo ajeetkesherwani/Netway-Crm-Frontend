@@ -16,8 +16,7 @@ import { checkAlternateSameAsMobile } from "../../validations/validateAlternateM
 import { pincodeValidate } from "../../validations/pincodeValidate";
 import { cityValidate } from "../../validations/cityValidate";
 import { stateValidate } from "../../validations/stateValidate";
-import { getSubzonesWithZoneId } from "../../service/apiClient";
-import { getAllSubZones } from "../../service/apiClient";
+import { getSubzonesWithZoneId, getAllSubZones, getIpacctPools } from "../../service/apiClient";
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -39,6 +38,8 @@ export default function CreateUser() {
 
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedSubZone, setSelectedSubZone] = useState("");
+  const [poolList, setPoolList] = useState([]);
+  const [poolLoading, setPoolLoading] = useState(false);
 
   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Admin");
   const [selectedRetailerForLco, setSelectedRetailerForLco] = useState("");
@@ -98,6 +99,7 @@ export default function CreateUser() {
       serviceOpted: "",
       connectionType: "",
       serverType: "",
+      pool: "",
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
@@ -248,6 +250,45 @@ export default function CreateUser() {
       }
     })();
   }, []);
+
+  // ================== FETCH POOLS BASED ON AREA (ZONE) ==================
+  useEffect(() => {
+    const loadPools = async () => {
+      if (!selectedArea || !zoneList.length) {
+        setPoolList([]);
+        return;
+      }
+
+      const matchedZone = zoneList.find(
+        (z) => String(z._id) === String(selectedArea)
+      );
+
+      const ipacctZoneId = matchedZone?.ipacctZoneId;
+      if (ipacctZoneId === undefined || ipacctZoneId === null || ipacctZoneId === "") {
+        setPoolList([]);
+        return;
+      }
+
+      setPoolLoading(true);
+      try {
+        const res = await getIpacctPools(ipacctZoneId);
+        if (res?.data && Array.isArray(res.data)) {
+          setPoolList(res.data);
+        } else if (Array.isArray(res)) {
+          setPoolList(res);
+        } else {
+          setPoolList([]);
+        }
+      } catch (err) {
+        console.error("Failed to load pools from IPACCT:", err);
+        setPoolList([]);
+      } finally {
+        setPoolLoading(false);
+      }
+    };
+
+    loadPools();
+  }, [selectedArea, zoneList]);
 
   // ================== FIX 2: PACKAGE FETCH LOGIC ==================
   const fetchPackagesForRole = async () => {
@@ -507,7 +548,13 @@ export default function CreateUser() {
     setFormErrors({});
     try {
       const payload = new FormData();
-      payload.append("customer", JSON.stringify(formData.customer));
+      const customerData = {
+        ...formData.customer,
+        ipAdress: formData.customer.ipAddress,
+        pool: formData.customer.pool || "",
+      };
+      payload.append("customer", JSON.stringify(customerData));
+      payload.append("pool", formData.customer.pool || "");
       payload.append("addresses", JSON.stringify(formData.addresses));
       payload.append("payment", JSON.stringify(formData.payment));
       payload.append("additional", JSON.stringify(formData.additional));
@@ -1222,15 +1269,6 @@ export default function CreateUser() {
                 </p>
               )}
             </div>
-            <div>
-              <label className="block text-sm font-medium">IP Address</label>
-              <input
-                value={formData.customer.ipAddress}
-                onChange={(e) => handleChange(e, "customer.ipAddress")}
-                className="mt-1 p-2 border rounded w-full"
-                placeholder="IP Address"
-              />
-            </div>
 
             {formData.customer.ipType === "Dynamic IP Pool" && (
               <div>
@@ -1619,9 +1657,10 @@ export default function CreateUser() {
                     const value = e.target.value;
                     setSelectedArea(value);
 
-                    // Reset subzone when zone changes
+                    // Reset subzone and pool when zone changes
                     setSelectedSubZone("");
                     setFieldValue("customer.subZoneId", "");
+                    setFieldValue("customer.pool", "");
 
                     // Clear related errors
                     setFormErrors((prev) => ({
@@ -1678,6 +1717,64 @@ export default function CreateUser() {
                 )}
               </div>
             </div>
+
+            {/* POOL & IP ADDRESS */}
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              {/* Left: Pool Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Pool
+                </label>
+                <select
+                  value={formData.customer.pool || ""}
+                  onChange={(e) => handleChange(e, "customer.pool")}
+                  className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${!selectedArea || poolLoading ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                    }`}
+                  disabled={!selectedArea || poolLoading}
+                >
+                  <option value="">
+                    {poolLoading
+                      ? "-- Loading Pools... --"
+                      : !selectedArea
+                        ? "-- First Select Area --"
+                        : poolList.length === 0
+                          ? "-- No Pools Available --"
+                          : "-- Select Pool --"}
+                  </option>
+                  {formData.customer.pool &&
+                    !poolList.some((p) => String(p.id) === String(formData.customer.pool)) && (
+                      <option value={formData.customer.pool}>
+                        {formData.customer.pool}
+                      </option>
+                    )}
+                  {poolList.map((pool) => (
+                    <option key={pool.id || pool.name} value={pool.id}>
+                      {pool.name}
+                    </option>
+                  ))}
+
+                  {/* {poolList.map((pool) => (
+                    <option key={pool.id || pool.name} value={pool.name}>
+                      {pool.name}
+                    </option>
+                  ))} */}
+                </select>
+              </div>
+
+              {/* Right: IP Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  IP Address
+                </label>
+                <input
+                  type="text"
+                  value={formData.customer.ipAddress || ""}
+                  onChange={(e) => handleChange(e, "customer.ipAddress")}
+                  placeholder="IP Address"
+                  className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
+                />
+              </div>
+            </div>
           </div>
         </section>
         {/* ====== NETWORK & PACKAGE - YE SECTION REPLACE KIYA ====== */}
@@ -1714,8 +1811,8 @@ export default function CreateUser() {
                       {packageLoading
                         ? "-- Loading packages... --"
                         : roleSpecificPackages.length === 0
-                        ? "-- No packages available --"
-                        : "-- Select a Package to Add --"}
+                          ? "-- No packages available --"
+                          : "-- Select a Package to Add --"}
                     </option>
                     {roleSpecificPackages.map((pkg) => {
                       const isAdded = (formData.customer.packages || []).some(
@@ -1762,11 +1859,10 @@ export default function CreateUser() {
                       setCustomPackagePrice("");
                     }}
                     disabled={!packageSearch || packageLoading}
-                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${
-                      !packageSearch || packageLoading
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
-                    }`}
+                    className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${!packageSearch || packageLoading
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
+                      }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1851,8 +1947,8 @@ export default function CreateUser() {
                               : "Remove package"
                           }
                           className={`px-3 py-1.5 text-xs font-medium rounded transition ${formData.customer.packages.length <= 1
-                              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            : "bg-red-100 text-red-700 hover:bg-red-200"
                             }`}
                         >
                           Remove
@@ -1998,7 +2094,7 @@ export default function CreateUser() {
               type="button"
               onClick={addDocumentRow}
               className="mt-3 px-4 py-2 bg-blue-700 text-white rounded"
-              
+
             >
               + Add Document
             </button>

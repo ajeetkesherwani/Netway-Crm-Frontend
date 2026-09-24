@@ -12,7 +12,7 @@ import {
 import { getRetailer } from "../../service/retailer";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
-import { getSubzonesWithZoneId } from "../../service/apiClient";
+import { getSubzonesWithZoneId, getIpacctPools } from "../../service/apiClient";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
@@ -34,6 +34,8 @@ export default function CustomerUpdate() {
   const [subZoneList, setSubZoneList] = useState([]);
   const [selectedSubZone, setSelectedSubZone] = useState("");
   const [subZoneLoading, setSubZoneLoading] = useState(false);
+  const [poolList, setPoolList] = useState([]);
+  const [poolLoading, setPoolLoading] = useState(false);
 
   // Created For States
   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
@@ -91,6 +93,7 @@ export default function CustomerUpdate() {
       selsExecutive: "",
       installationBy: [],
       installationByName: "",
+      pool: "",
       ipAddress: "",
       ipType: "Static IP",
       dynamicIpPool: "",
@@ -175,6 +178,42 @@ export default function CustomerUpdate() {
     loadSubZones();
   }, [selectedArea]);
 
+  // LOAD POOLS BASED ON ZONE (AREA)
+  useEffect(() => {
+    const loadPools = async () => {
+      if (!selectedArea || !zoneList.length) {
+        setPoolList([]);
+        return;
+      }
+      const matchedZone = zoneList.find(
+        (z) => String(z._id) === String(selectedArea)
+      );
+      const ipacctZoneId = matchedZone?.ipacctZoneId;
+      if (ipacctZoneId === undefined || ipacctZoneId === null || ipacctZoneId === "") {
+        setPoolList([]);
+        return;
+      }
+      setPoolLoading(true);
+      try {
+        const res = await getIpacctPools(ipacctZoneId);
+        if (res?.data && Array.isArray(res.data)) {
+          setPoolList(res.data);
+        } else if (Array.isArray(res)) {
+          setPoolList(res);
+        } else {
+          setPoolList([]);
+        }
+      } catch (err) {
+        console.error("Failed to load pools from IPACCT:", err);
+        setPoolList([]);
+      } finally {
+        setPoolLoading(false);
+      }
+    };
+
+    loadPools();
+  }, [selectedArea, zoneList]);
+
   // Load Customer + Reference Data
   useEffect(() => {
     const load = async () => {
@@ -231,7 +270,8 @@ export default function CustomerUpdate() {
             selsExecutive: getId(u.generalInformation?.selsExecutive),
             installationBy: getIds(u.generalInformation?.installationBy),
             installationByName: u.generalInformation?.installationByName || "",
-            ipAddress: u.generalInformation?.ipAdress || "",
+            pool: u.generalInformation?.pool || "",
+            ipAddress: u.generalInformation?.ipAdress || u.generalInformation?.ipAddress || "",
             ipType: u.generalInformation?.ipType || "Static IP",
             dynamicIpPool: u.networkInformation?.dynamicIpPool || "",
             serialNo: u.generalInformation?.serialNo || "",
@@ -736,6 +776,8 @@ export default function CustomerUpdate() {
     // Customer, addresses, additional
     const cleanCustomer = {
       ...formData.customer,
+      ipAdress: formData.customer.ipAddress,
+      pool: formData.customer.pool || "",
       createdFor: {
         type: formData.customer.createdFor.type,
         id: formData.customer.createdFor.id || null,
@@ -753,6 +795,7 @@ export default function CustomerUpdate() {
     }
 
     payload.append("customer", JSON.stringify(cleanCustomer));
+    payload.append("pool", formData.customer.pool || "");
     payload.append("addresses", JSON.stringify(formData.addresses));
     payload.append("additional", JSON.stringify(formData.additional));
     payload.append("area", selectedArea || "");
@@ -1215,17 +1258,6 @@ export default function CustomerUpdate() {
                 </p>
               )}
             </div>
-
-            <div>
-              <label>IP Address</label>
-              <input
-                value={formData.customer.ipAddress}
-                onChange={(e) =>
-                  setFieldValue("customer.ipAddress", e.target.value)
-                }
-                className="mt-1 p-2 border rounded w-full"
-              />
-            </div>
             <div>
               <label>IP Type</label>
               <select
@@ -1610,6 +1642,7 @@ export default function CustomerUpdate() {
                   const value = e.target.value;
                   setSelectedArea(value);
                   setSelectedSubZone(""); // Reset subzone when zone changes
+                  setFieldValue("customer.pool", ""); // Reset pool when zone changes
                 }}
                 className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
               >
@@ -1643,6 +1676,61 @@ export default function CustomerUpdate() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+
+          {/* POOL & IP ADDRESS */}
+          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 pt-0">
+            {/* Left: Pool Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pool
+              </label>
+              <select
+                value={formData.customer.pool || ""}
+                onChange={(e) => setFieldValue("customer.pool", e.target.value)}
+                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                  !selectedArea || poolLoading ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                }`}
+                disabled={!selectedArea || poolLoading}
+              >
+                <option value="">
+                  {poolLoading
+                    ? "-- Loading Pools... --"
+                    : !selectedArea
+                    ? "-- First Select Zone --"
+                    : poolList.length === 0
+                    ? "-- No Pools Available --"
+                    : "-- Select Pool --"}
+                </option>
+                {formData.customer.pool &&
+                  !poolList.some((p) => String(p.id) === String(formData.customer.pool)) && (
+                    <option value={formData.customer.pool}>
+                      {formData.customer.pool}
+                    </option>
+                  )}
+                {poolList.map((pool) => (
+                  <option key={pool.id || pool.name} value={pool.id}>
+                    {pool.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Right: IP Address */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                IP Address
+              </label>
+              <input
+                type="text"
+                value={formData.customer.ipAddress || ""}
+                onChange={(e) =>
+                  setFieldValue("customer.ipAddress", e.target.value)
+                }
+                placeholder="IP Address"
+                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
+              />
             </div>
           </div>
         </section>
