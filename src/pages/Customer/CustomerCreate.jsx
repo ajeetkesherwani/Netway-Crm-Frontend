@@ -1837,14 +1837,19 @@ export default function CreateUser() {
                       : "-- Select IP Address --"}
                   </option>
                   {formData.customer.ipAddress &&
-                    !poolIpList.includes(formData.customer.ipAddress) && (
+                    !poolIpList.some(item => item.ip === formData.customer.ipAddress) && (
                       <option value={formData.customer.ipAddress}>
                         {formData.customer.ipAddress}
                       </option>
                     )}
-                  {poolIpList.map((ip) => (
-                    <option key={ip} value={ip}>
-                      {ip}
+                  {poolIpList.map((item) => (
+                    <option 
+                      key={item.ip} 
+                      value={item.ip}
+                      disabled={!item.available}
+                      style={{ color: item.available ? 'inherit' : 'red' }}
+                    >
+                      {item.ip} {!item.available ? "(Unavailable)" : ""}
                     </option>
                   ))}
                 </select>

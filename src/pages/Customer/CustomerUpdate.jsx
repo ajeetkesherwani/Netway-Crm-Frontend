@@ -1803,14 +1803,19 @@ export default function CustomerUpdate() {
                     : "-- Select IP Address --"}
                 </option>
                 {formData.customer.ipAddress &&
-                  !poolIpList.includes(formData.customer.ipAddress) && (
+                  !poolIpList.some(item => item.ip === formData.customer.ipAddress) && (
                     <option value={formData.customer.ipAddress}>
                       {formData.customer.ipAddress} (Current)
                     </option>
                   )}
-                {poolIpList.map((ip) => (
-                  <option key={ip} value={ip}>
-                    {ip}
+                {poolIpList.map((item) => (
+                  <option 
+                    key={item.ip} 
+                    value={item.ip}
+                    disabled={!item.available && item.ip !== formData.customer.ipAddress}
+                    style={{ color: (!item.available && item.ip !== formData.customer.ipAddress) ? 'red' : 'inherit' }}
+                  >
+                    {item.ip} {(!item.available && item.ip !== formData.customer.ipAddress) ? "(Unavailable)" : ""}
                   </option>
                 ))}
               </select>
