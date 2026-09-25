@@ -8,6 +8,7 @@ import {
   getAllZoneList,
   getLcoByRetailer,
   getPackagesByRole,
+  getPoolIps,
 } from "../../service/user";
 import { getRetailer } from "../../service/retailer";
 import { getStaffList } from "../../service/ticket";
@@ -36,6 +37,8 @@ export default function CustomerUpdate() {
   const [subZoneLoading, setSubZoneLoading] = useState(false);
   const [poolList, setPoolList] = useState([]);
   const [poolLoading, setPoolLoading] = useState(false);
+  const [poolIpList, setPoolIpList] = useState([]);
+  const [ipLoading, setIpLoading] = useState(false);
 
   // Created For States
   const [selectedCreatedFor, setSelectedCreatedFor] = useState("Self");
@@ -213,6 +216,52 @@ export default function CustomerUpdate() {
 
     loadPools();
   }, [selectedArea, zoneList]);
+
+  // ================== FETCH POOL IPS ==================
+  useEffect(() => {
+    const loadPoolIps = async () => {
+      const currentPool = formData.customer.pool;
+      if (!currentPool) {
+        setPoolIpList([]);
+        return;
+      }
+
+      let targetPoolId = currentPool;
+      if (poolList.length > 0) {
+        const found = poolList.find(
+          (p) =>
+            String(p.id ?? p.poolId ?? p._id) === String(currentPool) ||
+            String(p.name ?? p.poolName) === String(currentPool)
+        );
+        if (found) {
+          targetPoolId = found.id ?? found.poolId ?? found._id ?? targetPoolId;
+        }
+      }
+
+      setIpLoading(true);
+      try {
+        const res = await getPoolIps(targetPoolId, 253);
+        let ips = [];
+        if (Array.isArray(res?.data?.ips)) {
+          ips = res.data.ips;
+        } else if (res?.data?.ip) {
+          ips = [res.data.ip];
+        } else if (Array.isArray(res?.data)) {
+          ips = res.data;
+        } else if (Array.isArray(res?.ips)) {
+          ips = res.ips;
+        }
+        setPoolIpList(ips);
+      } catch (err) {
+        console.error("Failed to load pool IPs:", err);
+        setPoolIpList([]);
+      } finally {
+        setIpLoading(false);
+      }
+    };
+
+    loadPoolIps();
+  }, [formData.customer.pool, poolList]);
 
   // Load Customer + Reference Data
   useEffect(() => {
@@ -1688,7 +1737,13 @@ export default function CustomerUpdate() {
               </label>
               <select
                 value={formData.customer.pool || ""}
-                onChange={(e) => setFieldValue("customer.pool", e.target.value)}
+                onChange={(e) => {
+                  const newPool = e.target.value;
+                  setFieldValue("customer.pool", newPool);
+                  if (newPool !== formData.customer.pool) {
+                    setFieldValue("customer.ipAddress", "");
+                  }
+                }}
                 className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !selectedArea || poolLoading ? "bg-gray-100 cursor-not-allowed" : "bg-white"
                 }`}
@@ -1704,33 +1759,61 @@ export default function CustomerUpdate() {
                     : "-- Select Pool --"}
                 </option>
                 {formData.customer.pool &&
-                  !poolList.some((p) => String(p.id) === String(formData.customer.pool)) && (
+                  !poolList.some((p) => String(p.id ?? p.poolId ?? p._id) === String(formData.customer.pool)) && (
                     <option value={formData.customer.pool}>
                       {formData.customer.pool}
                     </option>
                   )}
-                {poolList.map((pool) => (
-                  <option key={pool.id || pool.name} value={pool.id}>
-                    {pool.name}
-                  </option>
-                ))}
+                {poolList.map((pool) => {
+                  const pId = pool.id ?? pool.poolId ?? pool._id;
+                  const pName = pool.name ?? pool.poolName;
+                  return (
+                    <option key={pId || pName} value={pId}>
+                      {pName}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
-            {/* Right: IP Address */}
+            {/* Right: IP Address Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 IP Address
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.customer.ipAddress || ""}
                 onChange={(e) =>
                   setFieldValue("customer.ipAddress", e.target.value)
                 }
-                placeholder="IP Address"
-                className="mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-              />
+                disabled={!formData.customer.pool || ipLoading}
+                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                  !formData.customer.pool || ipLoading
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : "bg-white"
+                }`}
+              >
+                <option value="">
+                  {ipLoading
+                    ? "-- Loading IPs... --"
+                    : !formData.customer.pool
+                    ? "-- First Select Pool --"
+                    : poolIpList.length === 0
+                    ? "-- No Free IPs Available --"
+                    : "-- Select IP Address --"}
+                </option>
+                {formData.customer.ipAddress &&
+                  !poolIpList.includes(formData.customer.ipAddress) && (
+                    <option value={formData.customer.ipAddress}>
+                      {formData.customer.ipAddress} (Current)
+                    </option>
+                  )}
+                {poolIpList.map((ip) => (
+                  <option key={ip} value={ip}>
+                    {ip}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </section>

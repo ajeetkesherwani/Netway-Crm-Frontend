@@ -100,3 +100,26 @@ export const getIpacctPools = async (zoneid, ipacctid) => {
   if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch pools");
   return data;
 };
+
+// Get free IP(s) for a pool from IPACCT
+export const getPoolIps = async (poolId, count = 253) => {
+  const id = typeof poolId === "object" && poolId !== null ? poolId.poolId : poolId;
+  const requestedCount =
+    typeof poolId === "object" && poolId !== null && poolId.count !== undefined
+      ? poolId.count
+      : count;
+  const res = await fetch(
+    `${BASE_URL}/ipacct/get-pool-ips?poolId=${id}&count=${requestedCount}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+    }
+  );
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch pool IPs");
+  return data;
+};

@@ -238,3 +238,25 @@ export const getSubzonesWithZoneId = async (zoneId) => {
     };
   }
 };
+
+// Get free IP(s) for a pool from IPACCT
+export async function getPoolIps(poolId, count = 253) {
+  const token = localStorage.getItem("token");
+  const id = typeof poolId === "object" && poolId !== null ? poolId.poolId : poolId;
+  const requestedCount =
+    typeof poolId === "object" && poolId !== null && poolId.count !== undefined
+      ? poolId.count
+      : count;
+  const res = await fetch(
+    `${BASE_URL}/ipacct/get-pool-ips?poolId=${id}&count=${requestedCount}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch pool IPs");
+  return data;
+}
