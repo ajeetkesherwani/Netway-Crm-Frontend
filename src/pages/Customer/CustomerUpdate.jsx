@@ -9,6 +9,7 @@ import {
   getLcoByRetailer,
   getPackagesByRole,
   getPoolIps,
+  syncUserIpFromIpacct,
 } from "../../service/user";
 import { getRetailer } from "../../service/retailer";
 import { getStaffList } from "../../service/ticket";
@@ -19,6 +20,26 @@ export default function CustomerUpdate() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [syncIpLoading, setSyncIpLoading] = useState(false);
+
+  const handleSyncIp = async () => {
+    try {
+      const ipacctId = formData.customer.ipacctCustomerId || formData.customer.ipactId || id; 
+      setSyncIpLoading(true);
+      const res = await syncUserIpFromIpacct(ipacctId);
+      if (res && res.status) {
+        import("react-toastify").then(module => module.toast.success(`IP Synced: ${res.ip}`));
+        setFieldValue("customer.ipAddress", res.ip);
+      } else {
+        import("react-toastify").then(module => module.toast.error(res?.message || "Failed to sync IP"));
+      }
+    } catch (err) {
+      import("react-toastify").then(module => module.toast.error(err.message || "Error syncing IP"));
+    } finally {
+      setSyncIpLoading(false);
+    }
+  };
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [installerSearch, setInstallerSearch] = useState("");
   const [isDefaultInstaller, setIsDefaultInstaller] = useState(false);
@@ -315,6 +336,7 @@ export default function CustomerUpdate() {
             mobile: u.generalInformation?.phone || "",
             alternateMobile: u.generalInformation?.alternatePhone || "",
             ipactId: u.generalInformation?.ipactId || "",
+            ipacctCustomerId: u.generalInformation?.ipacctCustomerId || "",
             connectionType: u.generalInformation?.connectionType || "ILL",
             selsExecutive: getId(u.generalInformation?.selsExecutive),
             installationBy: getIds(u.generalInformation?.installationBy),
@@ -1781,13 +1803,14 @@ export default function CustomerUpdate() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 IP Address
               </label>
+              <div className="flex gap-2 items-center">
               <select
                 value={formData.customer.ipAddress || ""}
                 onChange={(e) =>
                   setFieldValue("customer.ipAddress", e.target.value)
                 }
                 disabled={!formData.customer.pool || ipLoading}
-                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full flex-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !formData.customer.pool || ipLoading
                     ? "bg-gray-100 cursor-not-allowed"
                     : "bg-white"
@@ -1819,6 +1842,15 @@ export default function CustomerUpdate() {
                   </option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={handleSyncIp}
+                disabled={syncIpLoading}
+                className="mt-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition whitespace-nowrap"
+              >
+                {syncIpLoading ? "Syncing..." : "Sync IP"}
+              </button>
+              </div>
             </div>
           </div>
         </section>
@@ -2255,4 +2287,7 @@ export default function CustomerUpdate() {
     </div>
   );
 }
+
+
+
 
