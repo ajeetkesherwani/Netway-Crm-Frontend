@@ -472,3 +472,19 @@ export const getPoolIps = async (poolId, count = 253) => {
   if (!res.ok) throw new Error(data?.message || data?.error || "Failed to fetch pool IPs");
   return data;
 };
+
+// Sync User IP from IPACCT
+export const syncUserIpFromIpacct = async (ipacctId) => {
+  const res = await fetch(`${BASE_URL}/ipacct/sync-user-ip`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ ipacctId }),
+  });
+
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(data?.message || data?.error || "Failed to sync user IP");
+  return data;
+};
