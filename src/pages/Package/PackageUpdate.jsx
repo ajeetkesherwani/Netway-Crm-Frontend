@@ -665,9 +665,11 @@ export default function PackageUpdate() {
     isIptv: false,
     iptvType: "",
     iptvPackageId: "",
+    iptvPackageName: "",
     isOtt: false,
     ottType: "",
     ottPackageId: "",
+    ottPackageName: "",
     servertype: "",
     packageID: "",
   });
@@ -703,9 +705,11 @@ export default function PackageUpdate() {
           isOtt: !!pkg.isOtt,
           ottType: pkg.ottType || "",
           ottPackageId: pkg.ottPackageId?.packId || "",
+          ottPackageName: pkg.ottPackageId?.name || "",
           isIptv: !!pkg.isIptv,
           iptvType: pkg.iptvType || "",
-          iptvPackageId: pkg.iptvPackageId?.plan_name || pkg.iptvPackageId?.plan_id || "",
+          iptvPackageId: pkg.iptvPackageId?.plan_id || pkg.iptvPackageId?.plan_Id || "",
+          iptvPackageName: pkg.iptvPackageId?.plan_name || "",
         });
       } catch (err) {
         toast.error("Failed to load package details");
@@ -798,7 +802,7 @@ export default function PackageUpdate() {
         setSaving(false);
         return;
       }
-      if (!formData.ottPackageId.trim()) {
+      if (!String(formData.ottPackageId || "").trim()) {
         toast.error("Please select an OTT Package");
         setSaving(false);
         return;
@@ -811,7 +815,7 @@ export default function PackageUpdate() {
         setSaving(false);
         return;
       }
-      if (!formData.iptvPackageId.trim()) {
+      if (!String(formData.iptvPackageId || "").trim()) {
         toast.error("Please select an IPTV Package");
         setSaving(false);
         return;
@@ -843,7 +847,7 @@ export default function PackageUpdate() {
       if (formData.isOtt) {
         payload.isOtt = true;
         payload.ottType = formData.ottType.trim();
-        payload.ottPackageId = formData.ottPackageId.trim(); // sending ID string
+        payload.ottPackageId = String(formData.ottPackageId || "").trim(); // sending ID string
       } else {
         payload.isOtt = false;
       }
@@ -851,7 +855,7 @@ export default function PackageUpdate() {
       if (formData.isIptv) {
         payload.isIptv = true;
         payload.iptvType = formData.iptvType.trim();
-        payload.iptvPackageId = formData.iptvPackageId.trim(); // sending ID string
+        payload.iptvPackageId = String(formData.iptvPackageId || "").trim(); // sending ID string
       } else {
         payload.isIptv = false;
       }
@@ -873,7 +877,7 @@ export default function PackageUpdate() {
         value: formData.ottPackageId,
         label:
           ottPackages.find((p) => String(p.packId) === formData.ottPackageId)?.name ||
-          `(${formData.ottPackageId})`,
+          formData.ottPackageName || formData.ottPackageId,
       }
     : null;
 
@@ -882,7 +886,7 @@ export default function PackageUpdate() {
         value: formData.iptvPackageId,
         label:
           iptvPackages.find((p) => String(p.plan_id || p.plan_Id) === formData.iptvPackageId)?.plan_name ||
-          `(${formData.iptvPackageId})`,
+          formData.iptvPackageName || formData.iptvPackageId,
       }
     : null;
 

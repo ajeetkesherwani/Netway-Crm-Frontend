@@ -24,7 +24,7 @@ export default function ZoneCreate() {
     try {
       await createZone(formData);
       toast.success("Zone created successfully ✅");
-      navigate("/zone/list");
+      navigate("/setting/zonelist");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to create zone ❌");

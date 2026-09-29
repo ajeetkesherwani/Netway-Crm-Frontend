@@ -440,11 +440,11 @@ const AppSidebar: React.FC = () => {
           path: "/setting/banner/list",
         });
 
-      if (permissions.setting?.PoolList)
-        settingSubItems.push({
-          name: "Pool",
-          path: "/setting/poolList"
-        });
+      // if (permissions.setting?.PoolList)
+      //   settingSubItems.push({
+      //     name: "Pool",
+      //     path: "/setting/poolList"
+      //   });
 
       // if (permissions.setting?.hardwareList)
       //   settingSubItems.push({
