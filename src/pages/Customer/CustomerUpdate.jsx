@@ -28,8 +28,11 @@ export default function CustomerUpdate() {
       setSyncIpLoading(true);
       const res = await syncUserIpFromIpacct(ipacctId);
       if (res && res.status) {
-        import("react-toastify").then(module => module.toast.success(`IP Synced: ${res.ip}`));
+        import("react-toastify").then(module => module.toast.success(`IP & MAC Synced!`));
         setFieldValue("customer.ipAddress", res.ip);
+        if (res.mac) {
+          setFieldValue("customer.macId", res.mac);
+        }
       } else {
         import("react-toastify").then(module => module.toast.error(res?.message || "Failed to sync IP"));
       }
@@ -2287,6 +2290,7 @@ export default function CustomerUpdate() {
     </div>
   );
 }
+
 
 
 

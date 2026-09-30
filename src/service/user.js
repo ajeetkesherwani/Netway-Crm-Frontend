@@ -488,3 +488,33 @@ export const syncUserIpFromIpacct = async (ipacctId) => {
   if (!res.ok) throw new Error(data?.message || data?.error || "Failed to sync user IP");
   return data;
 };
+
+// get Ziggtv UserDetails
+export const getZiggtvUserDetails = async (phone) => {
+  const res = await fetch(`${BASE_URL}/user/ziggtv/details/${phone}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch Ziggtv user Details");
+  return res.json();
+};
+
+// cancel Ziggtv plan
+export const cancelZiggtvPlan = async (payload) => {
+  const res = await fetch(`${BASE_URL}/user/ziggtv/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || "Failed to cancel Ziggtv plan");
+  return data;
+};
