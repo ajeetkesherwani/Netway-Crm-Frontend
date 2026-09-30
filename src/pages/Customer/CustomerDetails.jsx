@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getUserDetails } from "../../service/user";
+import { getUserDetails, getZiggtvUserDetails, cancelZiggtvPlan } from "../../service/user";
 import { FaLongArrowAltLeft, FaDownload } from "react-icons/fa";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 import CustomerPurchasePlanList from "./CustomerPurchasePlans/CustomerPurchasePlanList";
+import toast from "react-hot-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-const BASE_FILE_URL = "http://localhost:5004/public/"; 
+const BASE_FILE_URL = "http://localhost:5004/public/";
 
 export default function UserDetails() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function UserDetails() {
   const [isPurchasePlansOpen, setIsPurchasePlansOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [ziggtvData, setZiggtvData] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -25,6 +27,17 @@ export default function UserDetails() {
         if (res.status && res.data?.user) {
           setUser(res.data.user);
           setPurchasePlans(res.data.purchasePlans || []);
+
+          if (res.data.user?.generalInformation?.phone) {
+            try {
+              const ziggRes = await getZiggtvUserDetails(res.data.user.generalInformation.phone);
+              if (ziggRes.success && ziggRes.data?.success) {
+                setZiggtvData(ziggRes.data);
+              }
+            } catch (err) {
+              console.error("Error fetching ZiggTV details:", err);
+            }
+          }
         } else {
           setError("User data not found in response");
         }
@@ -41,6 +54,43 @@ export default function UserDetails() {
   if (loading) return <p className="p-4">Loading...</p>;
   if (error) return <p className="p-4 text-red-500">{error}</p>;
   if (!user) return <p className="p-4">User not found</p>;
+
+  const handleCancelPlan = async (planId, period) => {
+    if (window.confirm("Are you sure you want to cancel this plan?")) {
+      try {
+        const phone = user?.generalInformation?.phone;
+        if (!phone) {
+          toast.error("User phone number not found.");
+          return;
+        }
+
+        let monthStr = "1";
+        if (period && !isNaN(period)) {
+          monthStr = Math.max(1, Math.round(parseInt(period) / 30)).toString();
+        }
+
+        const payload = {
+          phone: phone,
+          planId: planId.toString(),
+          month: monthStr
+        };
+
+        const res = await cancelZiggtvPlan(payload);
+        toast.success("Ziggtv plan cancel successfully");
+
+        // Refresh ZiggTV data
+        const ziggRes = await getZiggtvUserDetails(phone);
+        if (ziggRes.success && ziggRes.data?.success) {
+          setZiggtvData(ziggRes.data);
+        } else {
+          setZiggtvData(null);
+        }
+      } catch (err) {
+        console.error("Cancel plan error:", err);
+        toast.error(err.message || "An error occurred while canceling");
+      }
+    }
+  };
 
   const hasValue = (val) =>
     val !== undefined &&
@@ -162,10 +212,10 @@ export default function UserDetails() {
           <Row label="Wallet Balance" value={user.walletBalance} />
 
           {/* Installation By – multiple */}
-          {( (Array.isArray(g.installationBy) && g.installationBy.length > 0) || g.installationByName ) && (
+          {((Array.isArray(g.installationBy) && g.installationBy.length > 0) || g.installationByName) && (
             <>
               <div className="col-span-2 border-b p-2 font-medium bg-gray-50">Installation By</div>
-              
+
               {/* Array Installers */}
               {Array.isArray(g.installationBy) && g.installationBy.map((inst, idx) => (
                 <div key={inst._id || idx} className="col-span-2 grid grid-cols-1 md:grid-cols-2 border-b last:border-b-0">
@@ -240,13 +290,13 @@ export default function UserDetails() {
         {hasValue(area.zoneName) && (
           <div className="p-4 border-t">
             <Row label="Area" value={area.zoneName} />
-             {hasValue(subZone.name) && (
-            <Row label="Zone" value={subZone.name} />
-        )}
+            {hasValue(subZone.name) && (
+              <Row label="Zone" value={subZone.name} />
+            )}
           </div>
         )}
 
-       
+
 
       </div>
 
@@ -265,7 +315,7 @@ export default function UserDetails() {
 
       {/* Documents */}
       <div className="border rounded-lg overflow-hidden shadow mb-4">
-        
+
         {/* Package Information */}
         <h4 className="text-lg font-semibold p-2 bg-gray-200">Package Information</h4>
         <div className="p-4">
@@ -273,8 +323,8 @@ export default function UserDetails() {
             const pkgs = Array.isArray(user?.packageInfomation)
               ? user.packageInfomation
               : user?.packageInfomation?.packageId
-              ? [user.packageInfomation]
-              : [];
+                ? [user.packageInfomation]
+                : [];
             if (pkgs.length === 0) {
               return <p className="text-sm text-gray-500">No packages assigned.</p>;
             }
@@ -305,6 +355,44 @@ export default function UserDetails() {
           })()}
         </div>
 
+        {/* ZiggTV Information */}
+        {ziggtvData && ziggtvData.plan_data && ziggtvData.plan_data.some(p => p.plan_name && p.plan_id !== 0) && (
+          <>
+            <h4 className="text-lg font-semibold p-2 bg-gray-200 border-t">ZiggTV Information</h4>
+            <div className="p-4">
+              <div className="mb-4 text-sm">
+                <strong>Customer Status: </strong>
+                <span className={ziggtvData.customer_status === "CON" ? "text-green-600 font-bold" : "text-gray-800"}>
+                  {ziggtvData.customer_status}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ziggtvData.plan_data.filter(p => p.plan_name && p.plan_id !== 0).map((plan, idx) => (
+                  <div key={plan.plan_id || idx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
+                    <span className="text-xs font-semibold text-purple-700 uppercase">
+                      ZiggTV Plan #{idx + 1}
+                    </span>
+                    <h5 className="font-bold text-gray-800 text-base mt-1">{plan.plan_name}</h5>
+                    <p className="text-sm text-gray-600 mt-1">Category: {plan.plan_cat}</p>
+                    <p className="text-sm text-gray-600">Period: {plan.plan_period} days</p>
+                    <p className="text-xs text-gray-500 mt-2 mb-2">
+                      Start: {plan.plan_start_date}<br />
+                      End: {plan.plan_end_date}
+                    </p>
+                    <button
+                      onClick={() => handleCancelPlan(plan.plan_id, plan.plan_period)}
+                      className="w-full px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium transition-colors"
+                    >
+                      Cancel Plan
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
         <h4 className="text-lg font-semibold p-2 bg-gray-200">Documents</h4>
 
         {docs.length === 0 ? (
@@ -315,8 +403,8 @@ export default function UserDetails() {
               const images = Array.isArray(doc.documentImage)
                 ? doc.documentImage
                 : doc.documentImage
-                ? [doc.documentImage]
-                : [];
+                  ? [doc.documentImage]
+                  : [];
 
               return images.map((imgPath, idx) => {
                 const url = getFullImageUrl(imgPath);
@@ -335,7 +423,7 @@ export default function UserDetails() {
                         src={url}
                         alt={doc.documentType}
                         // className="w-full h-40 object-cover rounded mb-3 cursor-pointer border"
-                         className="w-35 h-35 object-contain rounded mb-2 cursor-pointer border bg-gray-50 mx-auto"
+                        className="w-35 h-35 object-contain rounded mb-2 cursor-pointer border bg-gray-50 mx-auto"
                         onClick={() => window.open(url, "_blank")}
                         onError={(e) => {
                           e.target.src = "/placeholder-image.jpg"; // fallback
