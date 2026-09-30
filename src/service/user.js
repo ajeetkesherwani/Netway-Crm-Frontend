@@ -518,3 +518,17 @@ export const cancelZiggtvPlan = async (payload) => {
   if (!res.ok) throw new Error(data?.message || "Failed to cancel Ziggtv plan");
   return data;
 };
+
+// get PlayBoxTV UserDetails
+export const getPlayboxUserDetails = async (phone) => {
+  const res = await fetch(`${BASE_URL}/user/playbox/details/${phone}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch PlayBoxTV user Details");
+  return res.json();
+};

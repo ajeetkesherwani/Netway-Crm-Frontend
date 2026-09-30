@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getUserDetails, getZiggtvUserDetails, cancelZiggtvPlan } from "../../service/user";
+import { getUserDetails, getZiggtvUserDetails, cancelZiggtvPlan, getPlayboxUserDetails } from "../../service/user";
 import { FaLongArrowAltLeft, FaDownload } from "react-icons/fa";
 import { MdKeyboardDoubleArrowDown, MdKeyboardDoubleArrowUp } from "react-icons/md";
 import CustomerPurchasePlanList from "./CustomerPurchasePlans/CustomerPurchasePlanList";
@@ -19,6 +19,7 @@ export default function UserDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [ziggtvData, setZiggtvData] = useState(null);
+  const [playboxData, setPlayboxData] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -36,6 +37,15 @@ export default function UserDetails() {
               }
             } catch (err) {
               console.error("Error fetching ZiggTV details:", err);
+            }
+            
+            try {
+              const playboxRes = await getPlayboxUserDetails(res.data.user.generalInformation.phone);
+              if (playboxRes.success && playboxRes.data?.data && playboxRes.data.data.length > 0) {
+                setPlayboxData(playboxRes.data.data);
+              }
+            } catch (err) {
+              console.error("Error fetching PlayBoxTV details:", err);
             }
           }
         } else {
@@ -386,6 +396,35 @@ export default function UserDetails() {
                     >
                       Cancel Plan
                     </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* PlayBoxTV Information */}
+        {playboxData && playboxData.length > 0 && (
+          <>
+            <h4 className="text-lg font-semibold p-2 bg-gray-200 border-t">PlayBoxTV Information</h4>
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {playboxData.map((plan, idx) => (
+                  <div key={plan.id || idx} className="border rounded-lg p-4 bg-gray-50 shadow-sm">
+                    <span className="text-xs font-semibold text-blue-700 uppercase">
+                      PlayBoxTV Plan #{idx + 1}
+                    </span>
+                    <h5 className="font-bold text-gray-800 text-base mt-1">{plan.pack_name}</h5>
+                    <p className="text-sm text-gray-600 mt-1">Validity: {plan.validity} days</p>
+                    <p className="text-xs text-gray-500 mt-2 mb-2">
+                      Start: {new Date(plan.startAt).toLocaleString()}<br />
+                      End: {new Date(plan.expiryAt).toLocaleString()}
+                    </p>
+                    {plan.otts && plan.otts.length > 0 && (
+                      <p className="text-xs text-gray-600 bg-gray-200 p-2 rounded mt-2 break-words">
+                        <strong>OTTs:</strong> {plan.otts.map(ott => ott.ottName).join(", ")}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
