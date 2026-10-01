@@ -355,7 +355,16 @@ export default function StaffPage() {
         password: staff.plainPassword,
       });
       toast.dismiss();
-      if (res?.token || res?.success) {
+      if (res?.loginSessionId || (res?.message && res.message.toLowerCase().includes("otp"))) {
+        toast.success(res?.message || "OTP sent successfully!");
+        navigate("/staff", {
+          state: {
+            otpRequired: true,
+            pendingPayload: { userName: staff.userName, password: staff.plainPassword },
+            loginSessionId: res.loginSessionId
+          }
+        });
+      } else if (res?.token || res?.success) {
         toast.success(`Logged in as ${staff.name}`);
         navigate("/");
       } else {
@@ -381,6 +390,7 @@ export default function StaffPage() {
 
     const exportData = staffList.map((staff, index) => ({
       "S.No": index + 1,
+      "User ID": staff.logId || "—",
       Name: staff.name,
       "Phone No": staff.phoneNo,
       Email: staff.email || "—",
@@ -451,6 +461,7 @@ export default function StaffPage() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-[2px] py-[2px] text-left">S.No</th>
+                <th className="px-[2px] py-[2px] text-left">User ID</th>
                 <th className="px-[2px] py-[2px] text-left">Name</th>
                 <th className="px-[2px] py-[2px] text-left">Phone No</th>
                 <th className="px-[2px] py-[2px] text-left">Email</th>
@@ -463,6 +474,7 @@ export default function StaffPage() {
               {displayedStaff.map((staff, index) => (
                 <tr key={staff._id} className="hover:bg-gray-50">
                   <td className="px-[2px] py-[2px]">{index + 1}</td>
+                  <td className="px-[2px] py-[2px] font-medium">{staff.logId || "—"}</td>
                   <td
                     className="px-[2px] py-[2px] text-black hover:text-blue-600 hover:underline cursor-pointer"
                     onClick={() => handleView(staff._id)}

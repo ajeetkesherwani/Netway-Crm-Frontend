@@ -135,6 +135,7 @@ import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
+import { useVerifyOtp } from "../../service/login";
 
 // ✅ Define props type
 type SignInFormProps = {
@@ -169,10 +170,30 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
   });
   const [showPassword, setShowPassword] = useState(false);
 
+  // OTP State
+  const { verifyOtp } = useVerifyOtp();
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   // Sync role if heading or path changes
   useEffect(() => {
     setSelectedRole(getInitialRole());
   }, [heading, location.pathname]);
+
+  // Read OTP state from navigation (e.g. from Employee List login buttons)
+  useEffect(() => {
+    if (location.state?.otpRequired && location.state?.loginSessionId && location.state?.pendingPayload) {
+      setPendingPayload({
+        ...location.state.pendingPayload,
+        loginSessionId: location.state.loginSessionId,
+      });
+      setShowOtpModal(true);
+      // Clear state so it doesn't pop up again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // ✅ Handle role switch (Admin, Reseller, LCO)
   const handleRoleChange = (role: string) => {
@@ -222,19 +243,75 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
 
       const res = await loginApi(dataToSend);
 
-      if (res?.success) {
-        // ✅ No need to manually store token or permissions — context already does this
-        console.log("✅ Login successful — handled by PermissionContext");
-        toast.success("Login successful!");
-        setTimeout(() => {
-          navigate("/");
-        }, 200);
+      const isSuccess = res?.success || res?.status === "success" || res?.status === true || res?.status === 200 || res?.isOtpSent || (res?.message && res.message.toLowerCase().includes("otp"));
+      const requiresOtp = !res?.token || res?.otpRequired || res?.isOtpSent || res?.otp_sent || (res?.message && res.message.toLowerCase().includes("otp"));
+
+      if (isSuccess) {
+        if (requiresOtp) {
+          // ✅ OTP Required
+          setPendingPayload({
+            ...dataToSend,
+            loginSessionId: res?.loginSessionId || res?.data?.loginSessionId || res?.sessionId || res?.data?.sessionId
+          });
+          setShowOtpModal(true);
+        } else if (res?.token) {
+          // ✅ Token received immediately (No OTP required)
+          console.log("✅ Login successful — handled by PermissionContext");
+          setTimeout(() => {
+            window.location.href = "/";
+          }, 200);
+        }
       } else {
-        toast.error(res?.error || res?.message || "Login failed");
+        // Error toast is already handled inside loginApi/useLogin
       }
     } catch (err) {
       console.error(err);
-      toast.error("Login failed");
+    }
+  };
+
+  const handleVerifyOtpSubmit = async () => {
+    if (!otp.trim() || !pendingPayload) return toast.error("Please enter a valid OTP");
+
+    setIsVerifying(true);
+    try {
+      const verifyPayload = {
+        ...pendingPayload,
+        loginSessionId: pendingPayload.loginSessionId,
+        otp: otp.trim()
+      };
+
+      console.log("📤 Sending verify payload:", verifyPayload);
+      const res = await verifyOtp(verifyPayload);
+
+      const isSuccess = res?.success || res?.status === "success" || res?.status === true || res?.status === 200;
+
+      if (isSuccess && res?.token) {
+        setShowOtpModal(false);
+        setOtp("");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 200);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!pendingPayload) return;
+    try {
+      const res = await loginApi(pendingPayload);
+      if (res?.loginSessionId) {
+        // Update the session ID in case the backend generated a new one
+        setPendingPayload((prev: any) => ({
+          ...prev,
+          loginSessionId: res.loginSessionId
+        }));
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -367,6 +444,55 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
           </form>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-20 px-4 transition-opacity">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl p-6 relative">
+            <button
+              onClick={() => setShowOtpModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-sm font-bold text-gray-800 mb-3">
+              Enter OTP
+            </h2>
+
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleVerifyOtpSubmit()}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                className="text-sm font-medium text-blue-600 hover:text-blue-800"
+              >
+                Send OTP
+              </button>
+
+              <button
+                type="button"
+                onClick={handleVerifyOtpSubmit}
+                disabled={isVerifying}
+                className="px-6 py-2 text-sm font-medium text-white bg-[#00a65a] rounded hover:bg-[#008d4c] disabled:opacity-50"
+              >
+                {isVerifying ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

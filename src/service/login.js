@@ -44,7 +44,73 @@ export const useLogin = () => {
             const result = await res.json();
             console.log("🔐 Login API response:", result);
 
-            if (result.success && result.token) {
+            const isSuccess = result.success || result.status === true || result.status === 200 || result.isOtpSent || (result.message && result.message.toLowerCase().includes("otp"));
+            const requiresOtp = !result.token || result.otpRequired || result.isOtpSent || result.otp_sent || (result.message && result.message.toLowerCase().includes("otp"));
+
+            if (isSuccess) {
+                if (requiresOtp) {
+                    // ✅ OTP required case
+                    toast.success(result.message || "OTP sent successfully!");
+                } else if (result.token) {
+                    // ✅ Save token persistently
+                    saveToken(result.token);
+
+                    // ✅ Try extracting permissions dynamically from all possible locations
+                    let permissions = {};
+
+                    if (result?.data?.user?.role?.permissions) {
+                        permissions = result.data.user.role.permissions;
+                    } else if (result?.data?.role?.permissions) {
+                        permissions = result.data.role.permissions;
+                    } else if (result?.permissions) {
+                        permissions = result.permissions;
+                    }
+
+                    console.log("🧩 Extracted Permissions Object:", permissions);
+
+                    // ✅ Update permission context (for Sidebar, ProtectedAction, etc.)
+                    updatePermissions({
+                        roleName:
+                            result?.data?.user?.role?.roleName ||
+                            result?.data?.role?.roleName ||
+                            "Unknown",
+                        permissions,
+                    });
+
+                    toast.success("Login Successful ✅");
+                }
+            } else {
+                toast.error(result.message || "Login failed ❌");
+            }
+
+            return result;
+        } catch (err) {
+            console.error("❌ Login error:", err);
+            toast.error(err.message || "Something went wrong!");
+            throw err;
+        }
+    };
+
+    return { login };
+};
+
+export const useVerifyOtp = () => {
+    const { saveToken, updatePermissions } = usePermission();
+
+    const verifyOtp = async (payload) => {
+        try {
+            const res = await fetch(`${BASE_URL}/auth/verify-otp`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await res.json();
+            console.log("🔐 Verify OTP API response:", result);
+
+            const isSuccess = result.success || result.status === "success" || result.status === true || result.status === 200;
+
+            if (isSuccess && result.token) {
                 // ✅ Save token persistently
                 saveToken(result.token);
 
@@ -61,7 +127,7 @@ export const useLogin = () => {
 
                 console.log("🧩 Extracted Permissions Object:", permissions);
 
-                // ✅ Update permission context (for Sidebar, ProtectedAction, etc.)
+                // ✅ Update permission context
                 updatePermissions({
                     roleName:
                         result?.data?.user?.role?.roleName ||
@@ -70,20 +136,20 @@ export const useLogin = () => {
                     permissions,
                 });
 
-                toast.success("Login Successful ✅");
+                toast.success("OTP Verified Successfully ✅");
             } else {
-                toast.error(result.message || "Login failed ❌");
+                toast.error(result.message || "Please enter correct OTP ❌");
             }
 
             return result;
         } catch (err) {
-            console.error("❌ Login error:", err);
+            console.error("❌ Verify OTP error:", err);
             toast.error(err.message || "Something went wrong!");
             throw err;
         }
     };
 
-    return { login };
+    return { verifyOtp };
 };
 
 //1
