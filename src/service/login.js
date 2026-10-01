@@ -138,7 +138,8 @@ export const useVerifyOtp = () => {
 
                 toast.success("OTP Verified Successfully ✅");
             } else {
-                toast.error(result.message || "Please enter correct OTP ❌");
+                const errorMsg = result.message || result.error || "Invalid OTP. Please try again.";
+                toast.error(errorMsg);
             }
 
             return result;

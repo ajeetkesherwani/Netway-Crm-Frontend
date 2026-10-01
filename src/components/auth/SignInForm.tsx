@@ -174,6 +174,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
   const { verifyOtp } = useVerifyOtp();
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [pendingPayload, setPendingPayload] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -291,6 +292,11 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
         setTimeout(() => {
           window.location.href = "/";
         }, 200);
+      } else {
+        const errorMsg = res?.message || res?.error || "Invalid OTP. Please try again.";
+        toast.error(errorMsg);
+        setOtpError(errorMsg);
+        setOtp(""); // Clear input on failure so they can try again
       }
     } catch (err) {
       console.error(err);
@@ -447,7 +453,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
 
       {/* OTP Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 pt-20 px-4 transition-opacity">
+        <div className="fixed inset-0 z-[99] flex items-start justify-center bg-black/50 pt-20 px-4 transition-opacity">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl p-6 relative">
             <button
               onClick={() => setShowOtpModal(false)}
@@ -465,11 +471,17 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
                 type="text"
                 placeholder="Enter OTP"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 text-sm"
+                onChange={(e) => {
+                  setOtp(e.target.value);
+                  setOtpError("");
+                }}
+                className={`w-full px-4 py-2 border rounded focus:outline-none text-sm ${
+                  otpError ? "border-red-500 focus:border-red-500" : "border-gray-300 focus:border-blue-500"
+                }`}
                 onKeyDown={(e) => e.key === "Enter" && handleVerifyOtpSubmit()}
                 autoFocus
               />
+              {otpError && <p className="text-red-500 text-xs mt-1">{otpError}</p>}
             </div>
 
             <div className="flex items-center justify-between">
