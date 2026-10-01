@@ -221,7 +221,7 @@
 import React, { useEffect, useState } from "react";
 import { FaSearch } from "react-icons/fa";
 import { getIptvPackageListFromThirdParty } from "../../service/package";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
 
 export default function IptvList() {
@@ -231,32 +231,34 @@ export default function IptvList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [openMenuId, setOpenMenuId] = useState(null);
-  
+  const [isUpdateMenuOpen, setIsUpdateMenuOpen] = useState(false);
+
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  useEffect(() => {
-    const loadPackages = async () => {
-      setLoading(true);
-      try {
-        const res = await getIptvPackageListFromThirdParty();
-        if (res && Array.isArray(res)) {
-          setPackages(res);
-        } else {
-          setPackages([]);
-        }
-      } catch (err) {
-        console.error("Error fetching IPTV packages:", err);
-        setError("Failed to load IPTV packages");
-        toast.error(err.message || "Failed to load IPTV packages");
-      } finally {
-        setLoading(false);
+  const loadPackages = async () => {
+    setLoading(true);
+    try {
+      const res = await getIptvPackageListFromThirdParty();
+      if (res && Array.isArray(res)) {
+        setPackages(res);
+      } else {
+        setPackages([]);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching IPTV packages:", err);
+      setError("Failed to load IPTV packages");
+      toast.error(err.message || "Failed to load IPTV packages");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadPackages();
   }, []);
 
@@ -317,7 +319,7 @@ export default function IptvList() {
   if (error) return <p className="p-6 text-center text-red-500">{error}</p>;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" onClick={() => setOpenMenuId(null)}>
+    <div className="p-6 bg-gray-50 min-h-screen" onClick={() => { setOpenMenuId(null); setIsUpdateMenuOpen(false); }}>
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">IPTV Packages List</h1>
 
@@ -339,25 +341,45 @@ export default function IptvList() {
             </button>
           </div>
 
+          <button
+            onClick={exportToExcel}
+            className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
+          >
+            Export Excel
+          </button>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap flex items-center gap-2"
+          >
+            <span>+</span> Add IPTV Packages
+          </button>
+          <div className="relative">
             <button
-              onClick={exportToExcel}
-              className="px-5 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition whitespace-nowrap"
-            >
-              Export Excel
-            </button>
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition whitespace-nowrap flex items-center gap-2"
-            >
-              <span>+</span> Add IPTV Packages
-            </button>
-            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsUpdateMenuOpen(!isUpdateMenuOpen);
+              }}
               className="px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition whitespace-nowrap"
             >
               Upd. Package
             </button>
+            {isUpdateMenuOpen && (
+              <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <button
+                  onClick={() => {
+                    setIsUpdateMenuOpen(false);
+                    toast.success("Packages updated successfully");
+                    loadPackages();
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-indigo-600 transition"
+                >
+                  Ziggtv
+                </button>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
       {displayedPackages.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">
@@ -392,7 +414,7 @@ export default function IptvList() {
                       </td>
                       <td className="px-4 py-3 text-gray-600 font-mono text-xs">{pkg.plan_code || "—"}</td>
                       <td className="px-4 py-3 text-center relative">
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleMenu(pkg.plan_Id);
@@ -425,7 +447,7 @@ export default function IptvList() {
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-sm font-medium text-gray-500">#{startIndex + index + 1}</span>
                   <div className="relative">
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleMenu(`mobile-${pkg.plan_Id}`);
