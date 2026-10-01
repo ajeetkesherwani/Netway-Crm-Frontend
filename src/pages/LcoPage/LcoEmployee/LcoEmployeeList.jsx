@@ -82,7 +82,16 @@ export default function LcoEmployeeList() {
     try {
       const res = await login(formData);
 
-      if (res && res.success) {
+      if (res?.loginSessionId || (res?.message && res.message.toLowerCase().includes("otp"))) {
+        toast.success(res?.message || "OTP sent successfully!");
+        navigate("/lco", {
+          state: {
+            otpRequired: true,
+            pendingPayload: formData,
+            loginSessionId: res.loginSessionId
+          }
+        });
+      } else if (res && res.success) {
         console.log(res, "✅ LCO login response");
 
         // ✅ Store token and permissions

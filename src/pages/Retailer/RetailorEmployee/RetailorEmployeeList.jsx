@@ -83,7 +83,16 @@ export default function RetailerEmployeeList() {
     try {
       const res = await login(formData);
 
-      if (res && res.success) {
+      if (res?.loginSessionId || (res?.message && res.message.toLowerCase().includes("otp"))) {
+        toast.success(res?.message || "OTP sent successfully!");
+        navigate("/reseller", {
+          state: {
+            otpRequired: true,
+            pendingPayload: formData,
+            loginSessionId: res.loginSessionId
+          }
+        });
+      } else if (res && res.success) {
         console.log(
           res,
           res?.data?.user?.role?.permissions,
