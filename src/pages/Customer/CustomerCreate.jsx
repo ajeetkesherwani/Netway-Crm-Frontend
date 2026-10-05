@@ -6,7 +6,7 @@ import { getRetailer } from "../../service/retailer";
 import { getAllLco } from "../../service/lco";
 import { toast } from "react-toastify";
 import { getStaffList } from "../../service/ticket";
-// import { getAllPackageList } from "../../service/package";
+import { getAllPackageList } from "../../service/package";
 import { assignPackageToUser } from "../../service/userPackage";
 import DatePicker from "react-datepicker";
 import { characterValidate } from "../../validations/characterValidate";
@@ -153,8 +153,17 @@ export default function CreateUser() {
     setSelectedLco("");
     setLcosForSelectedRetailer([]);
 
-    // update createdFor → reseller id
-    setFieldValue("customer.createdFor.id", retailerId);
+    // update createdFor → reseller id and temporarily set type to reseller
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        createdFor: {
+          type: "reseller",
+          id: retailerId,
+        },
+      },
+    }));
 
     if (!retailerId) return;
 
@@ -177,7 +186,7 @@ export default function CreateUser() {
       customer: {
         ...prev.customer,
         createdFor: {
-          type: "Lco",
+          type: "lco",
           id: lcoId,
         },
       },
@@ -339,27 +348,36 @@ export default function CreateUser() {
 
   // ================== FIX 2: PACKAGE FETCH LOGIC ==================
   const fetchPackagesForRole = async () => {
-    const type = formData.customer.createdFor.type || "Admin";
+    const type = (formData.customer.createdFor.type || "admin").toLowerCase();
     const targetId = formData.customer.createdFor.id || "";
 
     // If Reseller / LCO but ID not selected yet
-    if ((type === "Reseller" || type === "Lco") && !targetId) {
+    if ((type === "reseller" || type === "lco") && !targetId) {
       setRoleSpecificPackages([]);
       return;
     }
 
     setPackageLoading(true);
     try {
-      const res = await getPackagesByRole({
-        targetRole: type,
-        targetId,
-      });
-
-      if (res?.status) {
-        // ✅ SAME RESPONSE FOR ALL ROLES
-        setRoleSpecificPackages(res.data?.packages || []);
+      if (type === "self" || type === "admin") {
+        const res = await getAllPackageList();
+        let fetchedPkgs = res.data || [];
+        fetchedPkgs = fetchedPkgs.filter(pkg => pkg.servertype === "Ipacct");
+        setRoleSpecificPackages(fetchedPkgs);
       } else {
-        setRoleSpecificPackages([]);
+        // Format the role exactly as the backend might expect it (Title Case)
+        const formattedRole = type.charAt(0).toUpperCase() + type.slice(1);
+        const res = await getPackagesByRole({
+          targetRole: formattedRole,
+          targetId,
+        });
+
+        if (res?.status) {
+          // ✅ SAME RESPONSE FOR ALL ROLES
+          setRoleSpecificPackages(res.data?.packages || []);
+        } else {
+          setRoleSpecificPackages([]);
+        }
       }
     } catch (err) {
       setRoleSpecificPackages([]);
@@ -753,6 +771,76 @@ export default function CreateUser() {
           </div>
           <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* column layout inspired by screenshot: 4 columns */}
+            <div>
+              <label className="block text-sm font-medium">Created For</label>
+              <select
+                name="createdFor"
+                className="mt-1 p-2 border rounded w-full"
+                value={selectedCreatedFor}
+                onChange={(e) => handleCreatedForChange(e.target.value)}
+              >
+                <option value="" disabled selected>
+                  Select Created For
+                </option>
+                <option value="Admin">Ipacct</option>
+                <option value="Reseller">Reseller</option>
+                <option value="Lco">Lco</option>
+              </select>
+            </div>
+            {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
+            {(selectedCreatedFor === "Reseller" ||
+              selectedCreatedFor === "Lco") && (
+                <div>
+                  <label className="block text-sm font-medium">Reseller</label>
+                  <select
+                    name="reseller"
+                    className="mt-1 p-2 border rounded w-full"
+                    value={
+                      selectedCreatedFor === "Lco"
+                        ? selectedRetailerForLco
+                        : formData.customer.createdFor.id
+                    }
+                    onChange={(e) => {
+                      if (selectedCreatedFor === "Lco") {
+                        handleRetailerForLcoChange(e.target.value);
+                      } else {
+                        // if just reseller, set ID directly
+                        setFieldValue("customer.createdFor.id", e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select Reseller
+                    </option>
+                    {retailers
+                      .filter((r) => r.resellerName)
+                      .map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.resellerName}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+            {/* LCO Dropdown - Show only if Created For is Lco */}
+            {selectedCreatedFor === "Lco" && (
+              <div>
+                <label className="block text-sm font-medium">Lco</label>
+                <select
+                  className="mt-1 p-2 border rounded w-full"
+                  value={selectedLco} // or formData.customer.createdFor.id
+                  onChange={(e) => handleLcoChange(e.target.value)}
+                  disabled={!selectedRetailerForLco} // disable if no reseller selected
+                >
+                  <option value="">Select LCO</option>
+                  {lcosForSelectedRetailer.map((l) => (
+                    <option key={l._id} value={l._id}>
+                      {l.lcoName || l.lcoName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium">Title</label>
               <select
@@ -1396,76 +1484,7 @@ export default function CreateUser() {
                 className="mt-1 p-2 border rounded w-full"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium">Created For</label>
-              <select
-                name="createdFor"
-                className="mt-1 p-2 border rounded w-full"
-                value={selectedCreatedFor}
-                onChange={(e) => handleCreatedForChange(e.target.value)}
-              >
-                <option value="" disabled selected>
-                  Select Created For
-                </option>
-                <option value="Admin">Admin</option>
-                <option value="Reseller">Reseller</option>
-                <option value="Lco">Lco</option>
-              </select>
-            </div>
-            {/* Reseller Dropdown - Show if Created For is Reseller OR Lco */}
-            {(selectedCreatedFor === "Reseller" ||
-              selectedCreatedFor === "Lco") && (
-                <div>
-                  <label className="block text-sm font-medium">Reseller</label>
-                  <select
-                    name="reseller"
-                    className="mt-1 p-2 border rounded w-full"
-                    value={
-                      selectedCreatedFor === "Lco"
-                        ? selectedRetailerForLco
-                        : formData.customer.createdFor.id
-                    }
-                    onChange={(e) => {
-                      if (selectedCreatedFor === "Lco") {
-                        handleRetailerForLcoChange(e.target.value);
-                      } else {
-                        // if just reseller, set ID directly
-                        setFieldValue("customer.createdFor.id", e.target.value);
-                      }
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select Reseller
-                    </option>
-                    {retailers
-                      .filter((r) => r.resellerName)
-                      .map((r) => (
-                        <option key={r._id} value={r._id}>
-                          {r.resellerName}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            {/* LCO Dropdown - Show only if Created For is Lco */}
-            {selectedCreatedFor === "Lco" && (
-              <div>
-                <label className="block text-sm font-medium">Lco</label>
-                <select
-                  className="mt-1 p-2 border rounded w-full"
-                  value={selectedLco} // or formData.customer.createdFor.id
-                  onChange={(e) => handleLcoChange(e.target.value)}
-                  disabled={!selectedRetailerForLco} // disable if no reseller selected
-                >
-                  <option value="">Select LCO</option>
-                  {lcosForSelectedRetailer.map((l) => (
-                    <option key={l._id} value={l._id}>
-                      {l.lcoName || l.lcoName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+
           </div>
         </section>
 
@@ -1821,20 +1840,19 @@ export default function CreateUser() {
                   value={formData.customer.ipAddress || ""}
                   onChange={(e) => handleChange(e, "customer.ipAddress")}
                   disabled={!formData.customer.pool || ipLoading}
-                  className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                    !formData.customer.pool || ipLoading
-                      ? "bg-gray-100 cursor-not-allowed"
-                      : "bg-white"
-                  }`}
+                  className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${!formData.customer.pool || ipLoading
+                    ? "bg-gray-100 cursor-not-allowed"
+                    : "bg-white"
+                    }`}
                 >
                   <option value="">
                     {ipLoading
                       ? "-- Loading IPs... --"
                       : !formData.customer.pool
-                      ? "-- First Select Pool --"
-                      : poolIpList.length === 0
-                      ? "-- No Free IPs Available --"
-                      : "-- Select IP Address --"}
+                        ? "-- First Select Pool --"
+                        : poolIpList.length === 0
+                          ? "-- No Free IPs Available --"
+                          : "-- Select IP Address --"}
                   </option>
                   {formData.customer.ipAddress &&
                     !poolIpList.some(item => item.ip === formData.customer.ipAddress) && (
@@ -1843,8 +1861,8 @@ export default function CreateUser() {
                       </option>
                     )}
                   {poolIpList.map((item) => (
-                    <option 
-                      key={item.ip} 
+                    <option
+                      key={item.ip}
                       value={item.ip}
                       disabled={!item.available}
                       style={{ color: item.available ? 'inherit' : 'red' }}

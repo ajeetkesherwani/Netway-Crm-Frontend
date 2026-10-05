@@ -269,7 +269,11 @@ export default function PackageCreate() {
        
          <div>
           <label className="block font-medium mb-1">Server Type</label>
-          <input type="text" name="servertype" value={formData.servertype} onChange={handleChange} className="border p-2 w-full rounded" />
+          <select name="servertype" value={formData.servertype} onChange={handleChange} className="border p-2 w-full rounded">
+            <option value="">Select Server Type</option>
+            <option value="Ipacct">Ipacct</option>
+            <option value="H8">H8</option>
+          </select>
         </div>
         <div>
           <label className="block font-medium mb-1">Package ID</label>

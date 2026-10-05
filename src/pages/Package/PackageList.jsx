@@ -266,14 +266,19 @@ export default function PackageList() {
           <div className="flex items-center gap-2">
 
             {/* Server Type */}
-            <input
-              type="text"
+            <select
               value={serverTypeSearch}
-              onChange={(e) => setServerTypeSearch(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Server Type..."
-              className="h-9 px-3 border border-gray-300 rounded text-sm w-32 focus:outline-none focus:border-blue-400"
-            />
+              onChange={(e) => {
+                const val = e.target.value;
+                setServerTypeSearch(val);
+                setAppliedServerType(val);
+              }}
+              className="h-9 px-3 border border-gray-300 rounded text-sm w-36 focus:outline-none focus:border-blue-400 bg-white"
+            >
+              <option value="">All Servers</option>
+              <option value="Ipacct">Ipacct</option>
+              <option value="H8">H8</option>
+            </select>
 
             {/* Name search */}
             <div className="flex items-center">

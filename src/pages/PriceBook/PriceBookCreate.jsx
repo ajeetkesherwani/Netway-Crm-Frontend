@@ -39,7 +39,7 @@ export default function PriceBookCreate() {
           getRetailerList(),
           getLcoList(),
         ]);
-        setPackages(packageRes.data || []); // Load all packages initially
+        setPackages((packageRes.data || []).filter(pkg => pkg.servertype === 'H8')); // Load all packages initially
         setRetailers(retailerRes.data || []);
         setLcos(lcoRes.data || []);
       } catch (err) {
@@ -63,8 +63,12 @@ export default function PriceBookCreate() {
           setPackages([]);
         }
       } else if (formData.priceBookFor === "Reseller") {
-        // Fetch all packages when switching to Reseller
-        fetchInitialPackages();
+        try {
+          const res = await getPackageList();
+          setPackages((res.data || []).filter(pkg => pkg.servertype === 'H8'));
+        } catch (err) {
+          console.error(err);
+        }
       } else {
         setPackages([]); // Clear packages if no reseller selected in LCO
       }
@@ -85,7 +89,9 @@ export default function PriceBookCreate() {
     setSelectedResellers([]);
     setPackages([]); // Clear packages initially
     if (formData.priceBookFor === "Reseller") {
-      fetchInitialPackages(); // Reload all packages for Reseller
+      getPackageList().then(res => {
+        setPackages((res.data || []).filter(pkg => pkg.servertype === 'H8'));
+      }).catch(err => console.error(err));
     }
   }, [formData.priceBookFor]);
 
@@ -496,39 +502,39 @@ export default function PriceBookCreate() {
                 <table className="min-w-full border border-gray-300 rounded-lg">
                   <thead className="bg-gray-100">
                     <tr>
-                      <th className="px-4 py-3">
+                      <th className="px-2 py-2 text-sm">
                         <input
                           type="checkbox"
                           ref={selectAllRef}
                           onChange={handleSelectAll}
-                          className="h-5 w-5 text-blue-600 rounded"
+                          className="h-4 w-4 text-blue-600 rounded cursor-pointer"
                         />
                       </th>
-                      <th className="px-4 py-3 text-left">Package Name</th>
-                      <th className="px-4 py-3 text-left">Base Price</th>
-                      <th className="px-4 py-3 text-left">Price *</th>
-                      <th className="px-4 py-3 text-left">Retailer Price</th>
-                      <th className="px-4 py-3 text-left">Offer Price</th>
+                      <th className="px-2 py-2 text-sm text-left">Package Name</th>
+                      <th className="px-2 py-2 text-sm text-left">Base Price</th>
+                      <th className="px-2 py-2 text-sm text-left">Price *</th>
+                      <th className="px-2 py-2 text-sm text-left">Retailer Price</th>
+                      <th className="px-2 py-2 text-sm text-left">Offer Price</th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y">
                     {currentPackages.map((pkg) => (
                       <tr key={pkg._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
+                        <td className="px-2 py-1">
                           <input
                             type="checkbox"
                             checked={!!formData.package[pkg._id]}
                             onChange={() => handlePackageToggle(pkg)}
-                            className="h-5 w-5 text-blue-600 rounded"
+                            className="h-4 w-4 text-blue-600 rounded cursor-pointer"
                           />
                         </td>
 
-                        <td className="px-4 py-3">{pkg.name}</td>
-                        <td className="px-4 py-3">{pkg.basePrice ?? "N/A"}</td>
+                        <td className="px-2 py-1 text-sm font-medium">{pkg.name}</td>
+                        <td className="px-2 py-1 text-sm">{pkg.basePrice ?? "N/A"}</td>
 
                         {["price", "retailerPrice", "offerPrice"].map((field) => (
-                          <td key={field} className="px-4 py-3">
+                          <td key={field} className="px-2 py-1">
                             <input
                               type="number"
                               min="0"
@@ -538,7 +544,7 @@ export default function PriceBookCreate() {
                               }
                               disabled={!formData.package[pkg._id]}
                               required={field === "price" && !!formData.package[pkg._id]}
-                              className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 text-sm"
                             />
                           </td>
                         ))}
@@ -554,8 +560,8 @@ export default function PriceBookCreate() {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 mx-1 rounded ${currentPage === page
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 text-gray-700"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700"
                       }`}
                   >
                     {page}

@@ -567,7 +567,7 @@ export default function PriceBookUpdate() {
     status: "active",
     description: "",
     priceBookFor: "Reseller",
-    package: {}, 
+    package: {},
     assignedTo: [],
   });
 
@@ -674,7 +674,7 @@ export default function PriceBookUpdate() {
         });
 
         // Set packages
-        setPackages(packageRes.data || []);
+        setPackages((packageRes.data || []).filter(pkg => pkg.servertype === 'H8'));
         setRetailers(retailerRes.data || []);
         setLcos(lcoRes.data || []);
 
@@ -717,7 +717,7 @@ export default function PriceBookUpdate() {
       } else if (formData.priceBookFor === "Reseller") {
         try {
           const res = await getPackageList();
-          setPackages(res.data || []);
+          setPackages((res.data || []).filter(pkg => pkg.servertype === 'H8'));
         } catch (err) {
           toast.error("Failed to load packages ❌");
         }
@@ -1203,10 +1203,10 @@ export default function PriceBookUpdate() {
                       {packages
                         .filter((pkg) => !formData.package[pkg._id])
                         .filter((pkg) => pkg.name.toLowerCase().includes(addPlanSearch.toLowerCase())).length === 0 && (
-                        <tr>
-                          <td colSpan="6" className="text-gray-500 text-sm py-4 text-center">No plans found or all plans added.</td>
-                        </tr>
-                      )}
+                          <tr>
+                            <td colSpan="6" className="text-gray-500 text-sm py-4 text-center">No plans found or all plans added.</td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -1238,48 +1238,48 @@ export default function PriceBookUpdate() {
               <table className="min-w-full border border-gray-300 rounded-lg">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-gray-700">Package Name</th>
-                    <th className="px-4 py-3 text-left text-gray-700">Base Price</th>
-                    <th className="px-4 py-3 text-left text-gray-700">Price *</th>
-                    <th className="px-4 py-3 text-left text-gray-700">Retailer Price</th>
-                    <th className="px-4 py-3 text-left text-gray-700">Offer Price</th>
-                    <th className="px-4 py-3 text-left text-gray-700">Remove</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Package Name</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Base Price</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Price *</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Retailer Price</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Offer Price</th>
+                    <th className="px-2 py-2 text-sm text-left text-gray-700">Remove</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {Object.values(formData.package).map((pkg) => (
                     <tr key={pkg.packageId} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-900 font-medium">{pkg.name}</td>
-                      <td className="px-4 py-3 text-gray-600">{pkg.basePrice || "N/A"}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-1 text-sm text-gray-900 font-medium">{pkg.name}</td>
+                      <td className="px-2 py-1 text-sm text-gray-600">{pkg.basePrice || "N/A"}</td>
+                      <td className="px-2 py-1">
                         <input
                           type="number"
                           value={pkg.price || ""}
                           onChange={(e) => handlePackagePriceChange(pkg.packageId, "price", e.target.value)}
-                          className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 text-sm"
                           min="0"
                           required
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-1">
                         <input
                           type="number"
                           value={pkg.retailerPrice || ""}
                           onChange={(e) => handlePackagePriceChange(pkg.packageId, "retailerPrice", e.target.value)}
-                          className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 text-sm"
                           min="0"
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-1">
                         <input
                           type="number"
                           value={pkg.offerPrice || ""}
                           onChange={(e) => handlePackagePriceChange(pkg.packageId, "offerPrice", e.target.value)}
-                          className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="border border-gray-300 p-1 w-full rounded focus:ring-1 focus:ring-blue-500 text-sm"
                           min="0"
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-1">
                         <button
                           type="button"
                           onClick={() => {
@@ -1289,7 +1289,7 @@ export default function PriceBookUpdate() {
                               return { ...prev, package: newPkg };
                             });
                           }}
-                          className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                          className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
                         >
                           Remove
                         </button>
