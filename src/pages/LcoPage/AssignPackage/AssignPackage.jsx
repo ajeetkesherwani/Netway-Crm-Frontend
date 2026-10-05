@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { getAllPackageList, assignPackageToReseller } from "../../../service/rolePermission";
+import { assignPackageToReseller } from "../../../service/rolePermission";
+import { getPackagesByRole } from "../../../service/user";
+import { getLcoDetails } from "../../../service/lco";
+import { getAllPackageList } from "../../../service/package";
 
 export default function AssignPackage() {
   const { id } = useParams(); // Reseller ID from URL params
@@ -15,8 +18,33 @@ export default function AssignPackage() {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const res = await getAllPackageList();
-        setPackages(res.data || []);
+        // 1. Fetch LCO Details to find parent Reseller
+        const lcoRes = await getLcoDetails(id);
+        const retailerId = lcoRes?.data?.retailerId?._id || lcoRes?.data?.retailerId;
+        if (!retailerId) {
+          toast.error("Could not find parent Reseller for this LCO");
+          setPackages([]);
+          return;
+        }
+
+        // 2. Fetch parent Reseller's assigned packages
+        const parentRes = await getPackagesByRole({
+          targetRole: "Reseller",
+          targetId: retailerId
+        });
+        const parentPackages = parentRes?.data?.packages || [];
+
+        // 3. Fetch ALREADY ASSIGNED packages for this LCO
+        const assignedRes = await getPackagesByRole({
+          targetRole: "Lco",
+          targetId: id
+        });
+        const assignedPackages = assignedRes?.data?.packages || [];
+        const assignedIds = new Set(assignedPackages.map(p => p._id || p.packageId));
+
+        // 4. Show only available packages (parent packages NOT already assigned)
+        const availablePackages = parentPackages.filter(pkg => !assignedIds.has(pkg._id || pkg.packageId));
+        setPackages(availablePackages);
       } catch (err) {
         console.error("Error fetching packages:", err);
         setError("Failed to load packages");
@@ -77,7 +105,7 @@ export default function AssignPackage() {
     setLoading(true);
     try {
       const payload = {
-        assignTo: "Reseller",
+        assignTo: "Lco", // Fix bug: was "Reseller"
         assignToId: id,
         package: selectedPackages,
       };
@@ -102,49 +130,49 @@ export default function AssignPackage() {
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold mb-6">Assign Packages to Reseller</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
+    <div className="max-w-7xl mx-auto p-4 bg-white shadow rounded text-sm">
+      <h2 className="text-lg font-bold mb-4">Assign Packages to LCO</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">
         <div>
-          <h3 className="text-xl font-semibold mb-2">Select Packages</h3>
+          <h3 className="text-base font-semibold mb-2">Select Packages</h3>
           {packages.length === 0 ? (
             <p className="text-gray-500">No packages found.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {packages.map((pkg) => (
-                <div key={pkg._id} className="border p-4 rounded">
-                  <div className="flex items-center gap-2 mb-2">
+                <div key={pkg._id} className="border p-2 rounded bg-gray-50">
+                  <div className="flex items-center gap-2 mb-1">
                     <input
                       type="checkbox"
                       checked={selectedPackages.some((p) => p.packageId === pkg._id)}
                       onChange={() => handleCheckboxChange(pkg)}
-                      className="h-4 w-4"
+                      className="h-3 w-3"
                     />
-                    <span className="font-medium">{pkg.name}</span>
+                    <span className="font-semibold text-gray-800">{pkg.name}</span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 ml-5">
                     <div>
-                      <label className="block font-medium">Base Price</label>
+                      <label className="block text-xs font-medium text-gray-600">Base Price</label>
                       <input
                         type="number"
                         value={pkg.basePrice}
                         disabled
-                        className="border p-2 w-full rounded bg-gray-100"
+                        className="border p-1 w-full rounded bg-gray-200 text-xs h-7"
                       />
                     </div>
                     <div>
-                      <label className="block font-medium">Offer Price</label>
+                      <label className="block text-xs font-medium text-gray-600">Offer Price</label>
                       <input
                         type="number"
                         defaultValue={offerPrices[pkg._id] || pkg.offerPrice || pkg.basePrice}
                         onBlur={(e) => handleOfferPriceChange(pkg._id, e.target.value)}
-                        className="border p-2 w-full rounded"
+                        className="border p-1 w-full rounded text-xs h-7"
                         min={pkg.basePrice}
                         disabled={!selectedPackages.some((p) => p.packageId === pkg._id)}
                       />
                     </div>
                     <div>
-                      <label className="block font-medium">Status</label>
+                      <label className="block text-xs font-medium text-gray-600">Status</label>
                       <select
                         value={
                           selectedPackages.find((p) => p.packageId === pkg._id)?.status ||
@@ -157,7 +185,7 @@ export default function AssignPackage() {
                             )
                           )
                         }
-                        className="border p-2 w-full rounded"
+                        className="border p-1 w-full rounded text-xs h-7"
                         disabled={!selectedPackages.some((p) => p.packageId === pkg._id)}
                       >
                         <option value="active">Active</option>
@@ -171,25 +199,25 @@ export default function AssignPackage() {
           )}
         </div>
 
-        <div className="flex justify-end gap-3 mt-4">
+        <div className="flex justify-end gap-2 mt-2">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-700"
+            className="px-3 py-1.5 bg-gray-500 text-white rounded text-sm hover:bg-gray-700"
           >
             Back
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+            className="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-700"
           >
             {loading ? "Saving..." : "Assign Packages"}
           </button>
           <button
             type="button"
             onClick={handleClear}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
+            className="px-3 py-1.5 bg-red-500 text-white rounded text-sm hover:bg-red-700"
           >
             Clear
           </button>

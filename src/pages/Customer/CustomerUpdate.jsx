@@ -15,6 +15,7 @@ import { getRetailer } from "../../service/retailer";
 import { getStaffList } from "../../service/ticket";
 import { toast } from "react-toastify";
 import { getSubzonesWithZoneId, getIpacctPools } from "../../service/apiClient";
+import { getAllPackageList } from "../../service/package";
 
 export default function CustomerUpdate() {
   const { id } = useParams();
@@ -24,7 +25,7 @@ export default function CustomerUpdate() {
 
   const handleSyncIp = async () => {
     try {
-      const ipacctId = formData.customer.ipacctCustomerId || formData.customer.ipactId || id; 
+      const ipacctId = formData.customer.ipacctCustomerId || formData.customer.ipactId || id;
       setSyncIpLoading(true);
       const res = await syncUserIpFromIpacct(ipacctId);
       if (res && res.status) {
@@ -480,11 +481,11 @@ export default function CustomerUpdate() {
 
   // NEW: Fetch packages based on role (like create)
   const fetchPackagesForRole = async () => {
-    const type = formData.customer.createdFor.type || "Admin"; // Default to Admin like Create
+    const type = (formData.customer.createdFor.type || "admin").toLowerCase(); // Default to Admin like Create
     const targetId = formData.customer.createdFor.id || "";
 
     // Ensure valid roles are sent
-    const validRoles = ["Admin", "reseller", "lco", "Self"];
+    const validRoles = ["admin", "reseller", "lco", "self"];
     if (!validRoles.includes(type)) {
       console.error("Invalid role type:", type);
       setRoleSpecificPackages([]);
@@ -498,15 +499,24 @@ export default function CustomerUpdate() {
 
     setPackageLoading(true);
     try {
-      const res = await getPackagesByRole({
-        targetRole: type,
-        targetId,
-      });
-
-      if (res?.status) {
-        setRoleSpecificPackages(res.data?.packages || []);
+      if (type === "self" || type === "admin") {
+        const res = await getAllPackageList();
+        let fetchedPkgs = res.data || [];
+        fetchedPkgs = fetchedPkgs.filter(pkg => pkg.servertype === "Ipacct");
+        setRoleSpecificPackages(fetchedPkgs);
       } else {
-        setRoleSpecificPackages([]);
+        // Format the role exactly as the backend might expect it (Title Case)
+        const formattedRole = type.charAt(0).toUpperCase() + type.slice(1);
+        const res = await getPackagesByRole({
+          targetRole: formattedRole,
+          targetId,
+        });
+
+        if (res?.status) {
+          setRoleSpecificPackages(res.data?.packages || []);
+        } else {
+          setRoleSpecificPackages([]);
+        }
       }
     } catch (err) {
       console.error("Error fetching packages:", err);
@@ -727,6 +737,16 @@ export default function CustomerUpdate() {
       return;
     }
     setSelectedRetailerForLco(retailerId);
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        createdFor: {
+          type: "reseller",
+          id: retailerId,
+        },
+      },
+    }));
     try {
       const res = await getLcoByRetailer(retailerId);
       setLcosForSelectedRetailer(res.data || []);
@@ -738,7 +758,16 @@ export default function CustomerUpdate() {
 
   const handleLcoChange = (lcoId) => {
     setSelectedLco(lcoId);
-    setFieldValue("customer.createdFor.id", lcoId || null);
+    setFormData((prev) => ({
+      ...prev,
+      customer: {
+        ...prev.customer,
+        createdFor: {
+          type: "lco",
+          id: lcoId || null,
+        },
+      },
+    }));
   };
 
   // Submit
@@ -916,6 +945,76 @@ export default function CustomerUpdate() {
             Customer Details
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-5">
+            {/* Created For Section */}
+            <div>
+              <label className="block text-sm font-medium">Created For</label>
+              <select
+                name="createdFor"
+                className="mt-1 p-2 border rounded w-full"
+                value={selectedCreatedFor}
+                onChange={(e) => handleCreatedForChange(e.target.value)}
+              >
+                {/* <option value="Self">Self</option> */}
+                <option value="admin">Ipacct</option>
+                <option value="reseller">Reseller</option>
+                <option value="lco">Lco</option>
+              </select>
+            </div>
+
+            {/* Reseller Dropdown */}
+            {(selectedCreatedFor === "reseller" ||
+              selectedCreatedFor === "lco") && (
+                <div>
+                  <label className="block text-sm font-medium">Reseller</label>
+                  <select
+                    name="reseller"
+                    className="mt-1 p-2 border rounded w-full"
+                    value={
+                      selectedCreatedFor === "lco"
+                        ? selectedRetailerForLco
+                        : formData.customer.createdFor.id
+                    }
+                    onChange={(e) => {
+                      if (selectedCreatedFor === "lco") {
+                        handleRetailerForLcoChange(e.target.value);
+                      } else {
+                        setFieldValue("customer.createdFor.id", e.target.value);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>
+                      Select Reseller
+                    </option>
+                    {retailers
+                      .filter((r) => r.resellerName)
+                      .map((r) => (
+                        <option key={r._id} value={r._id}>
+                          {r.resellerName}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+            {/* LCO Dropdown */}
+            {selectedCreatedFor === "lco" && (
+              <div>
+                <label className="block text-sm font-medium">Lco</label>
+                <select
+                  className="mt-1 p-2 border rounded w-full"
+                  value={selectedLco}
+                  onChange={(e) => handleLcoChange(e.target.value)}
+                  disabled={!selectedRetailerForLco}
+                >
+                  <option value="">Select LCO</option>
+                  {lcosForSelectedRetailer.map((l) => (
+                    <option key={l._id} value={l._id}>
+                      {l.lcoName || l.name || l.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label>Title</label>
               <select
@@ -1431,77 +1530,6 @@ export default function CustomerUpdate() {
                 className="mt-1 p-2 border rounded w-full"
               />
             </div>
-
-            {/* Created For Section */}
-            <div>
-              <label className="block text-sm font-medium">Created For</label>
-              <select
-                name="createdFor"
-                className="mt-1 p-2 border rounded w-full"
-                value={selectedCreatedFor}
-                onChange={(e) => handleCreatedForChange(e.target.value)}
-              >
-                <option value="Self">Self</option>
-                <option value="admin">Admin</option>
-                <option value="reseller">Reseller</option>
-                <option value="lco">Lco</option>
-              </select>
-            </div>
-
-            {/* Reseller Dropdown */}
-            {(selectedCreatedFor === "reseller" ||
-              selectedCreatedFor === "lco") && (
-                <div>
-                  <label className="block text-sm font-medium">Reseller</label>
-                  <select
-                    name="reseller"
-                    className="mt-1 p-2 border rounded w-full"
-                    value={
-                      selectedCreatedFor === "lco"
-                        ? selectedRetailerForLco
-                        : formData.customer.createdFor.id
-                    }
-                    onChange={(e) => {
-                      if (selectedCreatedFor === "lco") {
-                        handleRetailerForLcoChange(e.target.value);
-                      } else {
-                        setFieldValue("customer.createdFor.id", e.target.value);
-                      }
-                    }}
-                  >
-                    <option value="" disabled>
-                      Select Reseller
-                    </option>
-                    {retailers
-                      .filter((r) => r.resellerName)
-                      .map((r) => (
-                        <option key={r._id} value={r._id}>
-                          {r.resellerName}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-            {/* LCO Dropdown */}
-            {selectedCreatedFor === "lco" && (
-              <div>
-                <label className="block text-sm font-medium">Lco</label>
-                <select
-                  className="mt-1 p-2 border rounded w-full"
-                  value={selectedLco}
-                  onChange={(e) => handleLcoChange(e.target.value)}
-                  disabled={!selectedRetailerForLco}
-                >
-                  <option value="">Select LCO</option>
-                  {lcosForSelectedRetailer.map((l) => (
-                    <option key={l._id} value={l._id}>
-                      {l.lcoName || l.name || l.username}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
         </section>
 
@@ -1769,19 +1797,18 @@ export default function CustomerUpdate() {
                     setFieldValue("customer.ipAddress", "");
                   }
                 }}
-                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                  !selectedArea || poolLoading ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-                }`}
+                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${!selectedArea || poolLoading ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+                  }`}
                 disabled={!selectedArea || poolLoading}
               >
                 <option value="">
                   {poolLoading
                     ? "-- Loading Pools... --"
                     : !selectedArea
-                    ? "-- First Select Zone --"
-                    : poolList.length === 0
-                    ? "-- No Pools Available --"
-                    : "-- Select Pool --"}
+                      ? "-- First Select Zone --"
+                      : poolList.length === 0
+                        ? "-- No Pools Available --"
+                        : "-- Select Pool --"}
                 </option>
                 {formData.customer.pool &&
                   !poolList.some((p) => String(p.id ?? p.poolId ?? p._id) === String(formData.customer.pool)) && (
@@ -1807,52 +1834,51 @@ export default function CustomerUpdate() {
                 IP Address
               </label>
               <div className="flex gap-2 items-center">
-              <select
-                value={formData.customer.ipAddress || ""}
-                onChange={(e) =>
-                  setFieldValue("customer.ipAddress", e.target.value)
-                }
-                disabled={!formData.customer.pool || ipLoading}
-                className={`mt-1 p-3 border border-gray-300 rounded-lg w-full flex-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                  !formData.customer.pool || ipLoading
-                    ? "bg-gray-100 cursor-not-allowed"
-                    : "bg-white"
-                }`}
-              >
-                <option value="">
-                  {ipLoading
-                    ? "-- Loading IPs... --"
-                    : !formData.customer.pool
-                    ? "-- First Select Pool --"
-                    : poolIpList.length === 0
-                    ? "-- No Free IPs Available --"
-                    : "-- Select IP Address --"}
-                </option>
-                {formData.customer.ipAddress &&
-                  !poolIpList.some(item => item.ip === formData.customer.ipAddress) && (
-                    <option value={formData.customer.ipAddress}>
-                      {formData.customer.ipAddress} (Current)
-                    </option>
-                  )}
-                {poolIpList.map((item) => (
-                  <option 
-                    key={item.ip} 
-                    value={item.ip}
-                    disabled={!item.available && item.ip !== formData.customer.ipAddress}
-                    style={{ color: (!item.available && item.ip !== formData.customer.ipAddress) ? 'red' : 'inherit' }}
-                  >
-                    {item.ip} {(!item.available && item.ip !== formData.customer.ipAddress) ? "(Unavailable)" : ""}
+                <select
+                  value={formData.customer.ipAddress || ""}
+                  onChange={(e) =>
+                    setFieldValue("customer.ipAddress", e.target.value)
+                  }
+                  disabled={!formData.customer.pool || ipLoading}
+                  className={`mt-1 p-3 border border-gray-300 rounded-lg w-full flex-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${!formData.customer.pool || ipLoading
+                      ? "bg-gray-100 cursor-not-allowed"
+                      : "bg-white"
+                    }`}
+                >
+                  <option value="">
+                    {ipLoading
+                      ? "-- Loading IPs... --"
+                      : !formData.customer.pool
+                        ? "-- First Select Pool --"
+                        : poolIpList.length === 0
+                          ? "-- No Free IPs Available --"
+                          : "-- Select IP Address --"}
                   </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={handleSyncIp}
-                disabled={syncIpLoading}
-                className="mt-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition whitespace-nowrap"
-              >
-                {syncIpLoading ? "Syncing..." : "Sync IP"}
-              </button>
+                  {formData.customer.ipAddress &&
+                    !poolIpList.some(item => item.ip === formData.customer.ipAddress) && (
+                      <option value={formData.customer.ipAddress}>
+                        {formData.customer.ipAddress} (Current)
+                      </option>
+                    )}
+                  {poolIpList.map((item) => (
+                    <option
+                      key={item.ip}
+                      value={item.ip}
+                      disabled={!item.available && item.ip !== formData.customer.ipAddress}
+                      style={{ color: (!item.available && item.ip !== formData.customer.ipAddress) ? 'red' : 'inherit' }}
+                    >
+                      {item.ip} {(!item.available && item.ip !== formData.customer.ipAddress) ? "(Unavailable)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleSyncIp}
+                  disabled={syncIpLoading}
+                  className="mt-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition whitespace-nowrap"
+                >
+                  {syncIpLoading ? "Syncing..." : "Sync IP"}
+                </button>
               </div>
             </div>
           </div>
@@ -1941,8 +1967,8 @@ export default function CustomerUpdate() {
                     }}
                     disabled={!packageSearch || packageLoading}
                     className={`w-full sm:w-auto px-5 py-2.5 font-semibold rounded-lg text-sm transition flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm ${!packageSearch || packageLoading
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700 text-white shadow hover:shadow-md cursor-pointer"
                       }`}
                   >
                     <svg

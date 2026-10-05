@@ -1018,19 +1018,21 @@ export default function PackageUpdate() {
           />
         </div>
 
-                  {/* Server Type */}
+          {/* Server Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Server Type
             </label>
-            <input
-              type="text"
+            <select
               name="servertype"
               value={formData.servertype}
               onChange={handleChange}
               className="w-full border p-2 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter Server Type"
-            />
+            >
+              <option value="">Select Server Type</option>
+              <option value="Ipacct">Ipacct</option>
+              <option value="H8">H8</option>
+            </select>
           </div>
 
           {/* Package ID */}
