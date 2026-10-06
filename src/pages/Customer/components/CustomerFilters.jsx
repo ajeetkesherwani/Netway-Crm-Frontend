@@ -241,19 +241,18 @@ export default function CustomerFilters({ filters, setSearchParams }) {
         />
 
              {/* Server Type */}
-        <input
-          type="text"
-          placeholder="Filter by Server Type"
+        <select
           value={serverTypeDisplay}
-          onChange={(e) => setServerTypeDisplay(e.target.value)}
-          onBlur={(e) => updateParam("serverType", e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              updateParam("serverType", e.target.value);
-            }
+          onChange={(e) => {
+            setServerTypeDisplay(e.target.value);
+            updateParam("serverType", e.target.value);
           }}
           className="border p-1 rounded"
-        />
+        >
+          <option value="">Server Type</option>
+          <option value="ipacct">ipacct</option>
+          <option value="H8">H8</option>
+        </select>
 
         {/* Installation By */}
         <div className="relative" ref={staffRef}>

@@ -1144,13 +1144,15 @@ export default function CreateUser() {
             {/* Server Type */}
             <div>
               <label className="block text-sm font-medium">Server Type</label>
-              <input
-                type="text"
+              <select
                 value={formData.customer.serverType}
                 onChange={(e) => handleChange(e, "customer.serverType")}
                 className="mt-1 p-2 border rounded w-full"
-                placeholder="e.g. NAS-01, NAS-02"
-              />
+              >
+                <option value="">Select Server Type</option>
+                <option value="ipacct">ipacct</option>
+                <option value="H8">H8</option>
+              </select>
             </div>
 
             <div>
