@@ -1180,15 +1180,17 @@ export default function CustomerUpdate() {
             </div>
             <div>
               <label>Server Type</label>
-              <input
-                type="text"
+              <select
                 value={formData.customer.serverType}
                 onChange={(e) =>
                   setFieldValue("customer.serverType", e.target.value)
                 }
                 className="mt-1 p-2 border rounded w-full"
-                placeholder="e.g. NAS-01, NAS-02"
-              />
+              >
+                <option value="">Select Server Type</option>
+                <option value="ipacct">ipacct</option>
+                <option value="H8">H8</option>
+              </select>
             </div>
             <div>
               <label>Sales Executive</label>
