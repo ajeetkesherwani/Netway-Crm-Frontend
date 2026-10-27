@@ -661,22 +661,22 @@ const AppSidebar: React.FC = () => {
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
+            <div className="relative h-10 w-[150px] overflow-hidden">
               <img
-                className="dark:hidden"
-                src="/images/logo/auth-logo.png"
+                className="absolute left-0 top-[-54px] w-[150px] max-w-none dark:hidden"
+                src="/images/logo/netway-logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <img
-                className="hidden dark:block"
+                className="absolute inset-0 hidden h-full w-full object-contain dark:block"
                 src="/images/logo/logo-dark.svg"
                 alt="Logo"
                 width={150}
                 height={40}
               />
-            </>
+            </div>
           ) : (
             <img
               src="/images/logo/logo-icon.svg"

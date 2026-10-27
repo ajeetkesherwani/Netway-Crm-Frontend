@@ -17,13 +17,16 @@ export default function AuthLayout({
             {/* <!-- ===== Common Grid Shape Start ===== --> */}
             <GridShape />
             <div className="flex flex-col items-center max-w-xs">
-              <Link to="/" className="block mb-4">
-                <img
-                  width={231}
-                  height={48}
-                  src="/images/logo/auth-logo.png"
-                  alt="Logo"
-                />
+              <Link to="/" className="block">
+                <div className="relative h-20 w-[300px] overflow-hidden">
+                  <img
+                    className="absolute left-0 top-[-109px] w-[300px] max-w-none"
+                    width={300}
+                    height={296}
+                    src="/images/logo/netway-logo.png"
+                    alt="Logo"
+                  />
+                </div>
               </Link>
               <p className="text-center text-gray-400 dark:text-white/60">
                 Netway Internet Service
