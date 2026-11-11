@@ -348,7 +348,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
                 />
                 Admin
               </label>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              {/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                 <input
                   type="radio"
                   name="loginType"
@@ -358,8 +358,8 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
                   className="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 cursor-pointer"
                 />
                 Reseller
-              </label>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              </label> */}
+              {/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                 <input
                   type="radio"
                   name="loginType"
@@ -369,7 +369,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
                   className="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 cursor-pointer"
                 />
                 LCO
-              </label>
+              </label> */}
             </div>
 
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
