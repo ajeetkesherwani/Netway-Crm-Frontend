@@ -190,9 +190,9 @@ export default function App() {
           {/* Auth Routes (Public) */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/reseller" element={<SignInReseller />} />
+          {/* <Route path="/reseller" element={<SignInReseller />} /> */}
           <Route path="/staff" element={<SignInStaff />} />
-          <Route path="/lco" element={<SignInLco />} />
+          {/* <Route path="/lco" element={<SignInLco />} /> */}
           {/* Protected Dashboard Layout */}
           <Route
             path="/"
