@@ -36,7 +36,7 @@ import PackageCreate from "./pages/Package/PackageCreate";
 import CustomerList from "./pages/Customer/CustomerList";
 import UserDetails from "./pages/Customer/CustomerDetails";
 import CreateUser from "./pages/Customer/CustomerCreate";
-import SignInReseller from "./pages/AuthPages/SignInReseller";
+// import SignInReseller from "./pages/AuthPages/SignInReseller";
 import RoleList from "./pages/RolePerrmission/RoleList";
 import CreateRole from "./pages/RolePerrmission/CreateRole";
 import ViewRoleDetail from "./pages/RolePerrmission/ViewRoleDetail";
@@ -47,7 +47,7 @@ import ViewAssignedPackage from "./pages/Retailer/AssignPackage/ViewAssignedPack
 // import TicketList from "./pages/Ticket/RenewalTicket";
 // import TicketCreate from "./pages/Ticket/TIcketCreate";
 import SignInStaff from "./pages/AuthPages/StaffSignIn";
-import SignInLco from "./pages/AuthPages/LcoSignIn";
+// import SignInLco from "./pages/AuthPages/LcoSignIn";
 import RetailerWalletList from "./pages/Retailer/RetailerWallet/RetailerWalletList";
 import RetailerWalletView from "./pages/Retailer/RetailerWallet/RetailerWalletView";
 import LcoWalletList from "./pages/LcoPage/LcoWallet/LcoWalletList";
