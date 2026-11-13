@@ -469,7 +469,7 @@ const AppSidebar: React.FC = () => {
           {
             icon: <PieChartIcon />,
             name: "CMS",
-            subItems: [{ name: "User CMS", path: "/signin" }],
+            subItems: [{ name: "User CMS", path: "/user-cms" }],
           },
         ]
         : []),

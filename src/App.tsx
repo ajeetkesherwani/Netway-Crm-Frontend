@@ -179,6 +179,7 @@ import ManageLead from "./pages/Lead/ManageLead";
 import ConvertedLead from "./pages/Lead/ConvertedLead";
 import LeadView from "./pages/Lead/LeadView";
 import EditLead from "./pages/Lead/EditLead";
+import UserCms from "./pages/Setting/UserCms";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -396,6 +397,7 @@ export default function App() {
             <Route path="/setting/zonelist" element={<ZoneList />} />
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
             <Route path="/setting/zone/update" element={<ZoneUpdate />} />
+            <Route path="user-cms" element={<UserCms />} />
 
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/subZone/list" element={<SubZoneList />} />
