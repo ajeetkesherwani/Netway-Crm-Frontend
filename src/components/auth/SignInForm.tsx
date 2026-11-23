@@ -143,6 +143,7 @@ type SignInFormProps = {
     email?: string;
     username?: string;
     userName?: string;
+    logId?: string;
     employeeUserName?: string;
     password: string;
   }) => Promise<any>;
@@ -157,6 +158,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
   const getInitialRole = () => {
     const h = heading?.toLowerCase() || "";
     const p = location.pathname?.toLowerCase() || "";
+    if (h.includes("staff") || p === "/staff") return "staff";
     if (h.includes("reseller") || p.includes("reseller")) return "reseller";
     if (h.includes("lco") || p.includes("lco")) return "lco";
     return "admin";
@@ -225,15 +227,14 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
       const effectiveRole = selectedRole;
       const type = heading?.toLowerCase();
 
-      if (effectiveRole === "admin" || type === "admin login") {
-        // ✅ Admin Login → email + password
-        dataToSend = { email: formData.email, password: formData.password };
-      } else if (type === "staff login") {
-        // ✅ Staff Login → userName + password
+      if (effectiveRole === "staff" || type === "staff login") {
         dataToSend = {
-          userName: formData.username,
+          logId: formData.username,
           password: formData.password,
         };
+      } else if (effectiveRole === "admin" || type === "admin login") {
+        // ✅ Admin Login → email + password
+        dataToSend = { email: formData.email, password: formData.password };
       } else {
         // ✅ Reseller / LCO Login → employeeUserName + password
         dataToSend = {
@@ -324,11 +325,13 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
   const displayHeading =
     selectedRole === "admin"
       ? "Admin Login"
-      : selectedRole === "reseller"
-        ? "Reseller Login"
-        : selectedRole === "lco"
-          ? "LCO Login"
-          : heading || "Sign In";
+      : selectedRole === "staff"
+        ? "Staff Login"
+        : selectedRole === "reseller"
+          ? "Reseller Login"
+          : selectedRole === "lco"
+            ? "LCO Login"
+            : heading || "Sign In";
 
   return (
     <div className="flex flex-col flex-1">
@@ -336,18 +339,21 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
         <div>
           <div className="mb-5 sm:mb-8">
             {/* Radio Buttons with type="radio" above heading */}
-            <div className="flex items-center gap-6 mb-5">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-                <input
-                  type="radio"
-                  name="loginType"
-                  value="admin"
-                  checked={selectedRole === "admin"}
-                  onChange={() => handleRoleChange("admin")}
-                  className="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 cursor-pointer"
-                />
-                Admin
-              </label>
+            {selectedRole !== "staff" && (
+              <div className="flex items-center gap-6 mb-5">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="loginType"
+                    value="admin"
+                    checked={selectedRole === "admin"}
+                    onChange={() => handleRoleChange("admin")}
+                    className="w-4 h-4 text-brand-500 border-gray-300 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800 cursor-pointer"
+                  />
+                  Admin
+                </label>
+              </div>
+            )}
               {/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
                 <input
                   type="radio"
@@ -370,7 +376,6 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
                 />
                 LCO
               </label> */}
-            </div>
 
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
               {displayHeading}
@@ -398,10 +403,15 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
               ) : (
                 <div>
                   <Label>
-                    Username <span className="text-error-500">*</span>
+                    {selectedRole === "staff" ? "Staff Login ID" : "Username"}{" "}
+                    <span className="text-error-500">*</span>
                   </Label>
                   <Input
-                    placeholder="Enter username"
+                    placeholder={
+                      selectedRole === "staff"
+                        ? "Enter staff login ID"
+                        : "Enter username"
+                    }
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
