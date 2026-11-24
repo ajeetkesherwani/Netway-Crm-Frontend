@@ -44,13 +44,13 @@ export const useLogin = () => {
             const result = await res.json();
             console.log("🔐 Login API response:", result);
 
-            const isSuccess = result.success || result.status === true || result.status === 200 || result.isOtpSent || (result.message && result.message.toLowerCase().includes("otp"));
+            const isSuccess = result.success || result.status === "success" || result.status === true || result.status === 200 || result.isOtpSent || (result.message && result.message.toLowerCase().includes("otp"));
             const requiresOtp = !result.token || result.otpRequired || result.isOtpSent || result.otp_sent || (result.message && result.message.toLowerCase().includes("otp"));
 
             if (isSuccess) {
                 if (requiresOtp) {
                     // ✅ OTP required case
-                    toast.success(result.message || "OTP sent successfully!");
+                    toast.success(result.message || "OTP verification required.");
                 } else if (result.token) {
                     // ✅ Save token persistently
                     saveToken(result.token);

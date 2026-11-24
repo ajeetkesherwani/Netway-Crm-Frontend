@@ -145,6 +145,7 @@ type SignInFormProps = {
     userName?: string;
     logId?: string;
     employeeUserName?: string;
+    resendOtp?: boolean;
     password: string;
   }) => Promise<any>;
   heading?: string;
@@ -179,6 +180,7 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
   const [otpError, setOtpError] = useState("");
   const [pendingPayload, setPendingPayload] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   // Sync role if heading or path changes
   useEffect(() => {
@@ -308,8 +310,9 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
 
   const handleResendOtp = async () => {
     if (!pendingPayload) return;
+    setIsSendingOtp(true);
     try {
-      const res = await loginApi(pendingPayload);
+      const res = await loginApi({ ...pendingPayload, resendOtp: true });
       if (res?.loginSessionId) {
         // Update the session ID in case the backend generated a new one
         setPendingPayload((prev: any) => ({
@@ -319,6 +322,8 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSendingOtp(false);
     }
   };
 
@@ -475,6 +480,9 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
             <h2 className="text-sm font-bold text-gray-800 mb-3">
               Enter OTP
             </h2>
+            <p className="mb-4 text-sm text-gray-500">
+              Use your previously sent OTP, or select Send OTP to receive a new one.
+            </p>
 
             <div className="mb-4">
               <input
@@ -498,9 +506,10 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
               <button
                 type="button"
                 onClick={handleResendOtp}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                disabled={isSendingOtp}
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
               >
-                Send OTP
+                {isSendingOtp ? "Sending..." : "Send OTP"}
               </button>
 
               <button

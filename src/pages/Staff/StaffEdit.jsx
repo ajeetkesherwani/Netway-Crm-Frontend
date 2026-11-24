@@ -1146,7 +1146,7 @@ export default function StaffUpdate() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  required
+                  // required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>

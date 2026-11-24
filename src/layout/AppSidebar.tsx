@@ -104,21 +104,40 @@ const AppSidebar: React.FC = () => {
 
     // 🏢 Reseller + LCO
     const resellerSubItems = [];
-    if (permissions.reseller?.Listing)
-      resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
-    if (permissions.lco?.Listing)
-      resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
-    if (resellerSubItems.length > 0)
-      if (permissions.pricebook?.Listing)
-        resellerSubItems.push({
-          name: "Price Book List",
-          path: "/pricebook/list",
-        });
-    generatedNavItems.push({
-      name: "Reseller/Lco",
-      icon: <UserCircleIcon />,
-      subItems: resellerSubItems,
-    });
+
+// if (permissions.reseller?.Listing)
+//   resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
+
+// if (permissions.lco?.Listing)
+//   resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
+
+if (permissions.pricebook?.Listing)
+  resellerSubItems.push({
+    name: "Price Book List",
+    path: "/pricebook/list",
+  });
+
+generatedNavItems.push({
+  name: "Price Book",
+  icon: <UserCircleIcon />,
+  subItems: resellerSubItems,
+});
+    // const resellerSubItems = [];
+    // if (permissions.reseller?.Listing)
+    //   resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
+    // if (permissions.lco?.Listing)
+    //   resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
+    // if (resellerSubItems.length > 0)
+    //   if (permissions.pricebook?.Listing)
+    //     resellerSubItems.push({
+    //       name: "Price Book List",
+    //       path: "/pricebook/list",
+    //     });
+    // generatedNavItems.push({
+    //   name: "Reseller/Lco",
+    //   icon: <UserCircleIcon />,
+    //   subItems: resellerSubItems,
+    // });
 
     //    if (permissions.pricebook?.listing)
     // priceBookSubItems.push({
@@ -439,6 +458,10 @@ const AppSidebar: React.FC = () => {
           name: "Banner",
           path: "/setting/banner/list",
         });
+      settingSubItems.push({
+        name: "SMS Templates",
+        path: "/setting/sms-template/list",
+      });
 
       // if (permissions.setting?.PoolList)
       //   settingSubItems.push({
