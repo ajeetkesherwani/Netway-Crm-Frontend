@@ -422,6 +422,14 @@ generatedNavItems.push({
     // 🧩 Settings
     const settingSubItems = [];
     if (hasTruePermission(permissions.setting)) {
+      settingSubItems.push({
+        name: "Activity Logs",
+        path: "/setting/monitoring-logs",
+      });
+      settingSubItems.push({
+        name: "SMS Templates",
+        path: "/setting/sms-template/list",
+      });
       if (permissions.setting?.TicketReplyList)
         settingSubItems.push({
           name: "Ticket Reply",
@@ -458,10 +466,6 @@ generatedNavItems.push({
           name: "Banner",
           path: "/setting/banner/list",
         });
-      settingSubItems.push({
-        name: "SMS Templates",
-        path: "/setting/sms-template/list",
-      });
 
       // if (permissions.setting?.PoolList)
       //   settingSubItems.push({
