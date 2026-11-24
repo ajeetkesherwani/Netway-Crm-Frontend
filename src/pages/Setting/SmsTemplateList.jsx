@@ -3,18 +3,18 @@ import toast from "react-hot-toast";
 import { FaSearch } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { getSmsTemplatelist } from "../../service/common";
-
+ 
 export default function SmsTemplateList() {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
-
+ 
   const fetchTemplates = async () => {
     setLoading(true);
     setError("");
-
+ 
     try {
       const response = await getSmsTemplatelist();
       if (response?.status === "success") {
@@ -29,21 +29,21 @@ export default function SmsTemplateList() {
       setLoading(false);
     }
   };
-
+ 
   useEffect(() => {
     fetchTemplates();
   }, []);
-
+ 
   const handleSearch = () => {
     setAppliedSearch(searchTerm.trim().toLowerCase());
   };
-
+ 
   const exportToExcel = () => {
     if (templates.length === 0) {
       toast.error("No data to export");
       return;
     }
-
+ 
     const data = templates.map((template, index) => ({
       "S.No": index + 1,
       "Template ID": template.templateId || "",
@@ -52,33 +52,33 @@ export default function SmsTemplateList() {
       Content: template.content || "",
       Variables: Array.isArray(template.variables) ? template.variables.join(", ") : "",
     }));
-
+ 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "SMS Templates");
     XLSX.writeFile(workbook, "sms_templates.xlsx");
     toast.success("Exported successfully!");
   };
-
+ 
   const displayedTemplates = templates.filter((template) => {
     if (!appliedSearch) return true;
-
+ 
     return [template.templateId, template.templateName, template.category, template.content]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(appliedSearch));
   });
-
+ 
   if (loading) {
     return <p className="p-6 text-gray-600">Loading SMS templates...</p>;
   }
-
+ 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <h1 className="text-xl font-semibold text-gray-800 leading-tight">
           SMS Templates
         </h1>
-
+ 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center bg-white rounded-md shadow-sm border border-gray-300">
             <input
@@ -97,7 +97,7 @@ export default function SmsTemplateList() {
               <FaSearch />
             </button>
           </div>
-
+ 
           <button
             type="button"
             onClick={exportToExcel}
@@ -107,13 +107,13 @@ export default function SmsTemplateList() {
           </button>
         </div>
       </div>
-
+ 
       {error && (
         <div className="mb-5 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
           {error}
         </div>
       )}
-
+ 
       {displayedTemplates.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg">
@@ -168,3 +168,5 @@ export default function SmsTemplateList() {
     </div>
   );
 }
+ 
+ 

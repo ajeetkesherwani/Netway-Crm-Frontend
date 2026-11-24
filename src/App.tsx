@@ -180,6 +180,7 @@ import ConvertedLead from "./pages/Lead/ConvertedLead";
 import LeadView from "./pages/Lead/LeadView";
 import EditLead from "./pages/Lead/EditLead";
 import UserCms from "./pages/Setting/UserCms";
+import MonitoringLogs from "./pages/Setting/MonitoringLogs";
 import SmsTemplateList from "./pages/Setting/SmsTemplateList";
 
 // import UserList from "./pages/User/UserList";
@@ -391,9 +392,14 @@ export default function App() {
             {/* this is for the setting of the ticket */}
             <Route path="/setting/jon" element={<Jon />} />
             <Route
+              path="/setting/monitoring-logs"
+              element={<MonitoringLogs />}
+            />
+            <Route
               path="/setting/ticketcattogry"
               element={<TicketCattogry />}
             />
+            <Route path="/setting/sms-template/list" element={<SmsTemplateList />} />
             {/*----------------------------------------------------------------------------------------------Zone Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/zonelist" element={<ZoneList />} />
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
@@ -403,7 +409,6 @@ export default function App() {
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/subZone/list" element={<SubZoneList />} />
             <Route path="/setting/subzone/create" element={<SubZoneCreate />} />
-            <Route path="/setting/sms-template/list" element={<SmsTemplateList />} />
 
             {/*----------------------------------------------------------------------------------------------hardware Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/hardware/list" element={<HardwareList />} />

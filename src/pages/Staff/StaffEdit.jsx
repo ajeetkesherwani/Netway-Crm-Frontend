@@ -1264,7 +1264,7 @@ export default function StaffUpdate() {
                           Activity Details
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                          Added By
+                          Actor
                         </th>
                       </tr>
                     </thead>
@@ -1289,11 +1289,14 @@ export default function StaffUpdate() {
                           </td>
                           <td className="px-6 py-5 text-sm">
                             <div className="font-semibold text-blue-700">
-                              {getCreatedByName(log)}
+                              {log.actorName || getCreatedByName(log)}
                             </div>
-                            {/* <div className="text-xs text-gray-500 mt-1">
-                              ({log.createdByRole || "System"})
-                            </div> */}
+                            {(log.actorRole || log.ip) && (
+                              <div className="mt-1 text-xs text-gray-500">
+                                {log.actorRole && <div>Role: {log.actorRole}</div>}
+                                {log.ip && <div>IP: {log.ip}</div>}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
