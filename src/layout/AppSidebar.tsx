@@ -249,19 +249,19 @@ generatedNavItems.push({
       });
 
     // 🏷️ Sales (Lead)
-    // const salesSubItems = [];
-    // if (permissions.lead?.Create)
-    //   salesSubItems.push({ name: "Create Lead", path: "/sales/lead/create" });
-    // if (permissions.lead?.Listing)
-    //   salesSubItems.push({ name: "Manage Lead", path: "/sales/lead/manage" });
-    // if (permissions.lead?.ConvertedList)
-    //   salesSubItems.push({ name: "Converted Lead", path: "/sales/lead/converted" });
-    // if (salesSubItems.length > 0)
-    //   generatedNavItems.push({
-    //     name: "Sales",
-    //     icon: <PieChartIcon />,
-    //     subItems: salesSubItems,
-    //   });
+    const salesSubItems = [];
+    if (permissions.lead?.Create)
+      salesSubItems.push({ name: "Create Lead", path: "/sales/lead/create" });
+    if (permissions.lead?.Listing)
+      salesSubItems.push({ name: "Manage Lead", path: "/sales/lead/manage" });
+    if (permissions.lead?.ConvertedList)
+      salesSubItems.push({ name: "Converted Lead", path: "/sales/lead/converted" });
+    if (salesSubItems.length > 0)
+      generatedNavItems.push({
+        name: "Sales/Leads",
+        icon: <PieChartIcon />,
+        subItems: salesSubItems,
+      });
 
     // 💰 Invoice
     const invoiceSubItems = [];
