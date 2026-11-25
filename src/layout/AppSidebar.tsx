@@ -365,37 +365,44 @@ generatedNavItems.push({
       });
     }
 
-    // // 📦 Stock Category
-    // const stockCategorySubItems = [];
+    // 📦 Stock Category
+    const stockCategorySubItems = [];
 
-    // if (permissions.stockCategory?.TotalAvailable)
-    //   stockCategorySubItems.push({
-    //     name: "Total Available Stock",
-    //     path: "/stock-category/total-available",
-    //   });
-    // if (permissions.stockCategory?.TotalAssigned)
-    //   stockCategorySubItems.push({
-    //     name: "Total Assigned Stock",
-    //     path: "/stock-category/total-assigned",
-    //   });
-    // if (permissions.stockCategory?.AssignToEngineer)
-    //   stockCategorySubItems.push({
-    //     name: "Assign to Engineer",
-    //     path: "/stock-category/assign-to-engineer",
-    //   });
-    // if (permissions.stockCategory?.AssignToUser)
-    //   stockCategorySubItems.push({
-    //     name: "Assign to User",
-    //     path: "/stock-category/assign-to-user",
-    //   });
+    if (hasTruePermission(permissions.stockCategory)) {
+      stockCategorySubItems.push({
+        name: "Categories",
+        path: "/stock-category/categories",
+      });
+    }
 
-    // if (stockCategorySubItems.length > 0) {
-    //   generatedNavItems.push({
-    //     name: "Stock Category",
-    //     icon: <BoxIconLine />,
-    //     subItems: stockCategorySubItems,
-    //   });
-    // }
+    if (permissions.stockCategory?.TotalAvailable)
+      stockCategorySubItems.push({
+        name: "Total Available Stock",
+        path: "/stock-category/total-available",
+      });
+    if (permissions.stockCategory?.TotalAssigned)
+      stockCategorySubItems.push({
+        name: "Total Assigned Stock",
+        path: "/stock-category/total-assigned",
+      });
+    if (permissions.stockCategory?.AssignToEngineer)
+      stockCategorySubItems.push({
+        name: "Assign to Engineer",
+        path: "/stock-category/assign-to-engineer",
+      });
+    if (permissions.stockCategory?.AssignToUser)
+      stockCategorySubItems.push({
+        name: "Assign to User",
+        path: "/stock-category/assign-to-user",
+      });
+
+    if (stockCategorySubItems.length > 0) {
+      generatedNavItems.push({
+        name: "Stock Category",
+        icon: <BoxIconLine />,
+        subItems: stockCategorySubItems,
+      });
+    }
 
     // 🏷️ Expenses
     // const categorySubItems = [];

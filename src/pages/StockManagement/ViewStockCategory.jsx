@@ -92,8 +92,9 @@ export default function ViewStockCategory() {
           <Row label="Vendor" value={item.vendor} />
           <Row label="Serial No" value={item.serialNo} />
           <Row label="MAC Address" value={item.macAddress} />
-          <Row label="Quantity" value={item.quantity} />
-          <Row label="Alert Quantity" value={item.stockAlertQuantity} />
+          <Row label="Total Quantity" value={item.quantity} />
+          <Row label="Available Quantity" value={item.availableQuantity ?? item.quantity} />
+          <Row label="Stock Alert Quantity" value={item.stockAlertQuantity} />
           <Row label="Status" value={item.status || "In Stock"} />
           <Row label="Created At" value={formatDate(item.createdAt)} />
           {item.assignedToEngineer && (

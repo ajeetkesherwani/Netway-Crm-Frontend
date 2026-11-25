@@ -1,11 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { createStockCategory } from "../../service/stockCategory";
+import { getStockProductCategories } from "../../service/stockProductCategory";
 import toast from "react-hot-toast";
+
+const getCategoryOptionValue = (category, index) =>
+  String(category._id || category.id || `category-${index}`);
 
 export default function CreateStockCategory() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loadingProductCategories, setLoadingProductCategories] = useState(true);
+  const [productCategories, setProductCategories] = useState([]);
   const [formData, setFormData] = useState({
     productName: "",
     vendor: "",
@@ -16,9 +22,49 @@ export default function CreateStockCategory() {
     description: "",
   });
 
+  useEffect(() => {
+    let isMounted = true;
+    getStockProductCategories()
+      .then((categories) => {
+        if (isMounted) setProductCategories(categories);
+      })
+      .catch((err) => {
+        toast.error(err.message || "Failed to load product categories");
+      })
+      .finally(() => {
+        if (isMounted) setLoadingProductCategories(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const handleProductChange = (e) => {
+    const category = productCategories.find(
+      (item, index) => getCategoryOptionValue(item, index) === e.target.value
+    );
+    if (!category) {
+      setFormData((current) => ({ ...current, productName: "", vendor: "" }));
+      return;
+    }
+
+    setFormData((current) => ({
+      ...current,
+      productName: category.productName || "",
+      vendor: category.vendor || "",
+    }));
+  };
+
+  const selectedProductCategoryIndex = productCategories.findIndex(
+    (category) =>
+      category.productName === formData.productName &&
+      category.vendor === formData.vendor
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,15 +90,44 @@ export default function CreateStockCategory() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Product Name <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="productName"
-                value={formData.productName}
-                onChange={handleChange}
+              <select
+                value={
+                  selectedProductCategoryIndex >= 0
+                    ? getCategoryOptionValue(
+                        productCategories[selectedProductCategoryIndex],
+                        selectedProductCategoryIndex
+                      )
+                    : ""
+                }
+                onChange={handleProductChange}
                 required
+                disabled={loadingProductCategories || productCategories.length === 0}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-                placeholder="e.g. WiFi Router"
-              />
+              >
+                <option value="">
+                  {loadingProductCategories
+                    ? "Loading product categories..."
+                    : productCategories.length
+                      ? "Select a product"
+                      : "No product categories available"}
+                </option>
+                {productCategories.map((category, index) => (
+                  <option
+                    key={getCategoryOptionValue(category, index)}
+                    value={getCategoryOptionValue(category, index)}
+                  >
+                    {category.productName}
+                  </option>
+                ))}
+              </select>
+              {!loadingProductCategories && productCategories.length === 0 && (
+                <Link
+                  to="/stock-category/categories"
+                  className="mt-1 inline-block text-xs text-indigo-600 hover:underline"
+                >
+                  Add a product category
+                </Link>
+              )}
             </div>
 
             <div>
@@ -61,10 +136,10 @@ export default function CreateStockCategory() {
                 type="text"
                 name="vendor"
                 value={formData.vendor}
-                onChange={handleChange}
                 required
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-                placeholder="e.g. Cisco"
+                placeholder="Select a product first"
               />
             </div>
 
