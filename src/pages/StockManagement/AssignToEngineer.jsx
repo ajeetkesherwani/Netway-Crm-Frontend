@@ -13,6 +13,7 @@ export default function AssignToEngineer() {
   
   const [selectedStocks, setSelectedStocks] = useState([]); // List of added products
   const [currentStock, setCurrentStock] = useState(null); // Currently selected in dropdown
+  const [currentQuantity, setCurrentQuantity] = useState(1);
   const [selectedEngineer, setSelectedEngineer] = useState(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,12 +25,11 @@ export default function AssignToEngineer() {
 
   const fetchStock = async () => {
     try {
-      const res = await getStockCategories();
+      const res = await getStockCategories("?availableOnly=true");
       const list = res?.data?.stockCategories || [];
-      const available = list.filter(item => !item.assignedToEngineer && !item.assignedToUser);
-      setStock(available);
+      setStock(list.filter((item) => Number(item.availableQuantity) > 0));
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || "Failed to load available stock");
     }
   };
 
@@ -55,21 +55,49 @@ export default function AssignToEngineer() {
       toast.error("Please select at least one stock item and an engineer");
       return;
     }
+    if (selectedStocks.some((item) =>
+      !Number.isInteger(Number(item.quantity)) ||
+      Number(item.quantity) < 1 ||
+      Number(item.quantity) > item.availableQuantity
+    )) {
+      toast.error("Each quantity must be a whole number within the available stock");
+      return;
+    }
 
     setLoading(true);
     try {
-      const promises = selectedStocks.map(stockOpt => 
-        assignStockToEngineer(stockOpt.value, { staffId: selectedEngineer.value, comment })
+      const results = await Promise.allSettled(
+        selectedStocks.map((stockOpt) =>
+          assignStockToEngineer(stockOpt.value, {
+            staffId: selectedEngineer.value,
+            quantity: Number(stockOpt.quantity),
+            comment,
+          })
+        )
       );
-      
-      await Promise.all(promises);
+      const failedCount = results.filter((result) => result.status === "rejected").length;
+      if (failedCount) {
+        const assignedCount = results.length - failedCount;
+        const failureMessage = results.find(
+          (result) => result.status === "rejected"
+        )?.reason?.message;
+        setSelectedStocks([]);
+        await fetchStock();
+        toast.error(
+          `${assignedCount} item(s) assigned; ${failedCount} failed. ${
+            failureMessage || "Stock was refreshed."
+          }`
+        );
+        return;
+      }
+
       toast.success("Stock assigned to engineer successfully");
       setSelectedStocks([]);
       setSelectedEngineer(null);
       setComment("");
       navigate("/stock-category/total-available");
     } catch (err) {
-      toast.error("Failed to assign one or more stock items");
+      toast.error(err.message || "Failed to assign stock");
     } finally {
       setLoading(false);
     }
@@ -77,6 +105,15 @@ export default function AssignToEngineer() {
 
   const handleAddStock = () => {
     if (!currentStock) return;
+
+    if (
+      !Number.isInteger(currentQuantity) ||
+      currentQuantity < 1 ||
+      currentQuantity > currentStock.availableQuantity
+    ) {
+      toast.error("Choose a whole number within the available stock quantity");
+      return;
+    }
     
     // Check if already added
     if (selectedStocks.find(s => s.value === currentStock.value)) {
@@ -84,18 +121,41 @@ export default function AssignToEngineer() {
       return;
     }
     
-    setSelectedStocks([...selectedStocks, currentStock]);
+    setSelectedStocks([
+      ...selectedStocks,
+      { ...currentStock, quantity: currentQuantity },
+    ]);
     setCurrentStock(null);
+    setCurrentQuantity(1);
+  };
+
+  const handleQuantityChange = (id, value) => {
+    setSelectedStocks((current) =>
+      current.map((item) =>
+        item.value === id
+          ? { ...item, quantity: value === "" ? "" : Number(value) }
+          : item
+      )
+    );
   };
 
   const handleRemoveStock = (id) => {
     setSelectedStocks(selectedStocks.filter(s => s.value !== id));
   };
 
-  const stockOptions = stock.map(s => ({
-    value: s._id,
-    label: `${s.productName} (${s.serialNo || s.macAddress})`
-  }));
+  const selectedStockIds = new Set(selectedStocks.map((item) => item.value));
+  const stockOptions = stock.map((item) => {
+    const productLabel = `${item.productName} (${item.vendor}) — ${
+      item.serialNo || item.macAddress || "No serial number"
+    }`;
+    return {
+      value: item._id,
+      label: `${productLabel} — available: ${item.availableQuantity}`,
+      productLabel,
+      availableQuantity: Number(item.availableQuantity),
+      isDisabled: selectedStockIds.has(item._id),
+    };
+  });
 
   const engineerOptions = engineers.map(eng => ({
     value: eng._id || eng.id,
@@ -108,7 +168,7 @@ export default function AssignToEngineer() {
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2 className="text-xl font-bold text-gray-800 mb-1">Assign Stock to Engineer</h2>
-            <p className="text-sm text-gray-500">Select multiple available stock items and assign them to an engineer.</p>
+            <p className="text-sm text-gray-500">Select available stock, choose a quantity for each item, and assign it to an engineer.</p>
           </div>
           <button
             onClick={() => navigate(-1)}
@@ -139,17 +199,44 @@ export default function AssignToEngineer() {
                 <Select
                   options={stockOptions}
                   value={currentStock}
-                  onChange={setCurrentStock}
-                  placeholder="Search and select a product..."
+                  onChange={(option) => {
+                    setCurrentStock(option);
+                    setCurrentQuantity(1);
+                  }}
+                  placeholder="Select available product / stock..."
                   isClearable
+                  noOptionsMessage={() => "No available stock"}
                   className="react-select-container"
                   classNamePrefix="react-select"
                 />
               </div>
+              <label className="text-xs text-gray-600">
+                Quantity
+                <input
+                  type="number"
+                  min="1"
+                  max={currentStock?.availableQuantity || 0}
+                  step="1"
+                  value={currentQuantity}
+                  disabled={!currentStock}
+                  onChange={(event) =>
+                    setCurrentQuantity(
+                      event.target.value === "" ? "" : Number(event.target.value)
+                    )
+                  }
+                  className="mt-1 block w-24 rounded border border-gray-300 px-2 py-2 text-sm"
+                />
+              </label>
               <button
                 type="button"
                 onClick={handleAddStock}
-                className="bg-gray-800 text-white px-4 py-2 rounded font-medium text-sm hover:bg-gray-900 transition"
+                disabled={
+                  !currentStock ||
+                  !Number.isInteger(currentQuantity) ||
+                  currentQuantity < 1 ||
+                  currentQuantity > currentStock.availableQuantity
+                }
+                className="bg-gray-800 text-white px-4 py-2 rounded font-medium text-sm hover:bg-gray-900 transition disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Add
               </button>
@@ -162,8 +249,24 @@ export default function AssignToEngineer() {
               <h4 className="font-semibold text-gray-700 mb-3 text-sm">Products to Assign ({selectedStocks.length})</h4>
               <ul className="space-y-2">
                 {selectedStocks.map((s, idx) => (
-                  <li key={s.value} className="flex justify-between items-center bg-white p-3 rounded border border-gray-100 shadow-sm">
-                    <span className="text-sm font-medium text-gray-700">{idx + 1}. {s.label}</span>
+                  <li key={s.value} className="flex flex-wrap justify-between items-center gap-3 bg-white p-3 rounded border border-gray-100 shadow-sm">
+                    <div className="text-sm font-medium text-gray-700">
+                      {idx + 1}. {s.productLabel}
+                      <span className="ml-2 text-xs text-gray-500">of {s.availableQuantity} available</span>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs text-gray-600">
+                      Assign quantity
+                      <input
+                        type="number"
+                        min="1"
+                        max={s.availableQuantity}
+                        step="1"
+                        required
+                        value={s.quantity}
+                        onChange={(event) => handleQuantityChange(s.value, event.target.value)}
+                        className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
+                      />
+                    </label>
                     <button
                       type="button"
                       onClick={() => handleRemoveStock(s.value)}

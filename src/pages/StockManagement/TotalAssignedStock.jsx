@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   FaEye,
   FaEdit,
-  FaTrash,
   FaEllipsisV,
   FaSearch,
   FaFileExcel,
@@ -11,7 +10,6 @@ import {
 } from "react-icons/fa";
 import {
   getStockCategories,
-  deleteStockCategory,
   reassignStockToEngineer,
   reassignStockToUser,
 } from "../../service/stockCategory";
@@ -38,9 +36,6 @@ export default function TotalAssignedStock() {
     serialNo: "",
     macAddress: ""
   });
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmItem, setConfirmItem] = useState(null);
 
   const [reassignOpen, setReassignOpen] = useState(false);
   const [reassignItem, setReassignItem] = useState(null);
@@ -112,26 +107,6 @@ export default function TotalAssignedStock() {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  const handleDelete = (id, name) => {
-    setConfirmItem({ id, name: name || "Item" });
-    setConfirmOpen(true);
-    setOpenMenuId(null);
-  };
-
-  const confirmDelete = async () => {
-    if (!confirmItem) return;
-    try {
-      await deleteStockCategory(confirmItem.id);
-      toast.success("Stock category deleted successfully");
-      await fetchStock();
-    } catch (err) {
-      toast.error("Failed to delete stock category");
-    } finally {
-      setConfirmOpen(false);
-      setConfirmItem(null);
-    }
-  };
-
   const openReassign = async (item) => {
     setReassignItem(item);
     setReassignValue(null);
@@ -201,7 +176,13 @@ export default function TotalAssignedStock() {
       "Vendor": hw.vendor || "-",
       "Serial No": hw.serialNo || "-",
       "MAC Address": hw.macAddress || "-",
-      "Quantity": hw.quantity || 0,
+      "Assigned Quantity": Math.max(
+        0,
+        (Number(hw.quantity) || 0) -
+          (Number(hw.availableQuantity ?? hw.quantity) || 0)
+      ),
+      "Total Quantity": hw.quantity ?? 0,
+      "Available Quantity": hw.availableQuantity ?? hw.quantity ?? 0,
       "Stock Alert Quantity": hw.stockAlertQuantity || 0,
       "Description": hw.description || "-",
       "Assigned To": hw.assignedToEngineer ? `Engg: ${hw.assignedToEngineer.name}` : (hw.assignedToUser ? `User: ${hw.assignedToUser.generalInformation?.name || "Unknown"}` : "-"),
@@ -314,7 +295,7 @@ export default function TotalAssignedStock() {
                   <th className="px-6 py-4">Vendor</th>
                   <th className="px-6 py-4">Serial No</th>
                   <th className="px-6 py-4">MAC Address</th>
-                  <th className="px-6 py-4">Quantity</th>
+                  <th className="px-6 py-4">Assigned Qty</th>
                   <th className="px-6 py-4">Assigned To</th>
                   <th className="px-6 py-4">Assigned Date</th>
                   <th className="px-6 py-4 text-center">Action</th>
@@ -331,7 +312,13 @@ export default function TotalAssignedStock() {
                       <td className="px-6 py-4">{item.vendor || "-"}</td>
                       <td className="px-6 py-4">{item.serialNo || "-"}</td>
                       <td className="px-6 py-4">{item.macAddress || "-"}</td>
-                      <td className="px-6 py-4">{item.quantity ?? "-"}</td>
+                      <td className="px-6 py-4">
+                        {Math.max(
+                          0,
+                          (Number(item.quantity) || 0) -
+                            (Number(item.availableQuantity ?? item.quantity) || 0)
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         {item.assignedToEngineer ? (
                           <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
@@ -372,12 +359,6 @@ export default function TotalAssignedStock() {
                             >
                               <FaExchangeAlt className="text-gray-400" /> Reassign
                             </button>
-                            <button
-                              onClick={() => handleDelete(item._id, item.productName)}
-                              className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2 text-sm"
-                            >
-                              <FaTrash /> Delete
-                            </button>
                           </div>
                         )}
                       </td>
@@ -385,7 +366,7 @@ export default function TotalAssignedStock() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="11" className="px-6 py-8 text-center text-gray-500">
                       No assigned stock found.
                     </td>
                   </tr>
@@ -395,31 +376,6 @@ export default function TotalAssignedStock() {
           </div>
         )}
       </div>
-
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Item</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Are you sure you want to delete <span className="font-semibold text-gray-800">{confirmItem?.name}</span>? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmOpen(false)}
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition text-sm font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition text-sm font-medium shadow-sm"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Reassign Modal */}
       {reassignOpen && (

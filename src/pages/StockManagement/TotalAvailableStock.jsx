@@ -51,6 +51,7 @@ export default function TotalAvailableStock() {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
+      queryParams.append("availableOnly", "true");
       if (appliedFilters.productName) queryParams.append("productName", appliedFilters.productName);
       if (appliedFilters.vendor) queryParams.append("vendor", appliedFilters.vendor);
       if (appliedFilters.serialNo) queryParams.append("serialNo", appliedFilters.serialNo);
@@ -60,8 +61,7 @@ export default function TotalAvailableStock() {
       
       const res = await getStockCategories(queryStr);
       const list = res?.data?.stockCategories || [];
-      const availableList = list.filter(item => !item.assignedToEngineer && !item.assignedToUser);
-      setStock(availableList);
+      setStock(list.filter((item) => Number(item.availableQuantity) > 0));
       setCurrentPage(1); // Reset to first page on new data
     } catch (err) {
       toast.error("Failed to load stock categories");
@@ -148,7 +148,8 @@ export default function TotalAvailableStock() {
       "Vendor": hw.vendor || "-",
       "Serial No": hw.serialNo || "-",
       "MAC Address": hw.macAddress || "-",
-      "Quantity": hw.quantity || 0,
+      "Total Quantity": hw.quantity || 0,
+      "Available Quantity": hw.availableQuantity ?? hw.quantity ?? 0,
       "Stock Alert Quantity": hw.stockAlertQuantity || 0,
       "Description": hw.description || "-",
     }));
@@ -290,8 +291,10 @@ export default function TotalAvailableStock() {
                   <th className="px-6 py-4">Vendor</th>
                   <th className="px-6 py-4">Serial No</th>
                   <th className="px-6 py-4">MAC Address</th>
-                  <th className="px-6 py-4">Quantity</th>
-                  <th className="px-6 py-4 text-center">Action</th>
+                  <th className="px-6 py-4">Total Qty</th>
+                  <th className="px-6 py-4">Available Qty</th>
+                  {/* <th className="px-6 py-4">Alert Quantity</th> */}
+                  <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
@@ -306,6 +309,15 @@ export default function TotalAvailableStock() {
                       <td className="px-6 py-4">{item.serialNo || "-"}</td>
                       <td className="px-6 py-4">{item.macAddress || "-"}</td>
                       <td className="px-6 py-4">{item.quantity ?? "-"}</td>
+                      <td className="px-6 py-4">
+                        <span>{item.availableQuantity ?? item.quantity ?? "-"}</span>
+                        {Number(item.availableQuantity ?? item.quantity) <= Number(item.stockAlertQuantity) && (
+                          <span className="ml-2 rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                            Low stock
+                          </span>
+                        )}
+                      </td>
+                      {/* <td className="px-6 py-4">{item.stockAlertQuantity ?? "-"}</td> */}
                       <td className="px-6 py-4 text-center relative">
                         <button
                           onClick={(e) => {
@@ -343,7 +355,7 @@ export default function TotalAvailableStock() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
                       No stock found.
                     </td>
                   </tr>

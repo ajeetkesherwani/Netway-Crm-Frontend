@@ -171,6 +171,7 @@ import AssignToUser from "./pages/StockManagement/AssignToUser";
 import CreateStockCategory from "./pages/StockManagement/CreateStockCategory";
 import UpdateStockCategory from "./pages/StockManagement/UpdateStockCategory";
 import ViewStockCategory from "./pages/StockManagement/ViewStockCategory";
+import StockProductCategoryList from "./pages/StockManagement/StockProductCategoryList";
 import AttendanceList from "./pages/Attendance/AttendanceList";
 import ExpensesCategoryList from "./pages/Category/ExpensesCategoryList";
 import ExpenseList from "./pages/Category/ExpenseList";
@@ -433,6 +434,7 @@ export default function App() {
             <Route path="/stock-category/create" element={<CreateStockCategory />} />
             <Route path="/stock-category/update/:id" element={<UpdateStockCategory />} />
             <Route path="/stock-category/view/:id" element={<ViewStockCategory />} />
+            <Route path="/stock-category/categories" element={<StockProductCategoryList />} />
 
             {/*---------------------------------------------------------ticket reply--------------------------------------------- */}
             <Route

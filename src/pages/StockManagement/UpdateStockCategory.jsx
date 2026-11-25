@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getStockCategories, updateStockCategory } from "../../service/stockCategory";
+import { getStockProductCategories } from "../../service/stockProductCategory";
 import toast from "react-hot-toast";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
+const LEGACY_CATEGORY_VALUE = "__current_stock_product__";
+const getCategoryOptionValue = (category, index) =>
+  String(category._id || category.id || `category-${index}`);
 
 export default function UpdateStockCategory() {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [loadingProductCategories, setLoadingProductCategories] = useState(true);
+  const [productCategories, setProductCategories] = useState([]);
+  const [assignedQuantity, setAssignedQuantity] = useState(0);
   
   const [formData, setFormData] = useState({
     productName: "",
@@ -19,35 +25,24 @@ export default function UpdateStockCategory() {
     quantity: 0,
     stockAlertQuantity: 0,
     description: "",
-    assignedToEngineer: "",
-    assignedToUser: "",
-    status: "",
   });
 
-  const [engineers, setEngineers] = useState([]);
-  const [users, setUsers] = useState([]);
-
   useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const engRes = await fetch(`${BASE_URL}/staff/list`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const engData = await engRes.json();
-        const engList = Array.isArray(engData) ? engData : (engData?.data?.staffs || engData?.staffs || []);
-        setEngineers(Array.isArray(engList) ? engList : []);
+    let isMounted = true;
+    getStockProductCategories()
+      .then((categories) => {
+        if (isMounted) setProductCategories(categories);
+      })
+      .catch((err) => {
+        toast.error(err.message || "Failed to load product categories");
+      })
+      .finally(() => {
+        if (isMounted) setLoadingProductCategories(false);
+      });
 
-        const usrRes = await fetch(`${BASE_URL}/users`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        const usrData = await usrRes.json();
-        const usrList = Array.isArray(usrData) ? usrData : (usrData?.data?.users || usrData?.users || []);
-        setUsers(Array.isArray(usrList) ? usrList : []);
-      } catch (err) {
-        console.error(err);
-      }
+    return () => {
+      isMounted = false;
     };
-    fetchDropdowns();
   }, []);
 
   useEffect(() => {
@@ -65,10 +60,14 @@ export default function UpdateStockCategory() {
             quantity: item.quantity || 0,
             stockAlertQuantity: item.stockAlertQuantity || 0,
             description: item.description || "",
-            assignedToEngineer: item.assignedToEngineer?._id || item.assignedToEngineer || "",
-            assignedToUser: item.assignedToUser?._id || item.assignedToUser || "",
-            status: item.status || "",
           });
+          setAssignedQuantity(
+            Math.max(
+              0,
+              Number(item.quantity || 0) -
+                Number(item.availableQuantity ?? item.quantity ?? 0)
+            )
+          );
         } else {
           toast.error("Stock item not found");
           navigate("/stock-category/total-available");
@@ -84,21 +83,45 @@ export default function UpdateStockCategory() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // If they change assignee, we need to clear the other one
-    if (name === "assignedToEngineer" && value) {
-      setFormData({ ...formData, [name]: value, assignedToUser: "", status: "Assigned to Engineer" });
-    } else if (name === "assignedToUser" && value) {
-      setFormData({ ...formData, [name]: value, assignedToEngineer: "", status: "Assigned to User" });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    setFormData({ ...formData, [name]: value });
   };
+
+  const handleProductChange = (e) => {
+    const category = productCategories.find(
+      (item, index) => getCategoryOptionValue(item, index) === e.target.value
+    );
+    if (!category) return;
+
+    setFormData((current) => ({
+      ...current,
+      productName: category.productName || "",
+      vendor: category.vendor || "",
+    }));
+  };
+
+  const selectedProductCategoryIndex = productCategories.findIndex(
+    (category) =>
+      category.productName === formData.productName &&
+      category.vendor === formData.vendor
+  );
+  const availableQuantityPreview = Math.max(
+    0,
+    Number(formData.quantity || 0) - assignedQuantity
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await updateStockCategory(id, formData);
+      const payload = {
+        ...formData,
+        quantity: Number(formData.quantity),
+        stockAlertQuantity: Number(formData.stockAlertQuantity || 0),
+      };
+      delete payload.availableQuantity;
+      delete payload.restockQuantity;
+
+      await updateStockCategory(id, payload);
       toast.success("Stock category updated successfully!");
       navigate(-1); // go back
     } catch (err) {
@@ -122,14 +145,47 @@ export default function UpdateStockCategory() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Product Name <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="productName"
-                value={formData.productName}
-                onChange={handleChange}
+              <select
+                value={
+                  selectedProductCategoryIndex >= 0
+                    ? getCategoryOptionValue(
+                        productCategories[selectedProductCategoryIndex],
+                        selectedProductCategoryIndex
+                      )
+                    : formData.productName
+                      ? LEGACY_CATEGORY_VALUE
+                      : ""
+                }
+                onChange={handleProductChange}
                 required
+                disabled={loadingProductCategories}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-              />
+              >
+                <option value="">
+                  {loadingProductCategories ? "Loading product categories..." : "Select a product"}
+                </option>
+                {selectedProductCategoryIndex < 0 && formData.productName && (
+                  <option value={LEGACY_CATEGORY_VALUE}>
+                    {formData.productName} (current item)
+                  </option>
+                )}
+                {productCategories.map((category, index) => (
+                  <option
+                    key={getCategoryOptionValue(category, index)}
+                    value={getCategoryOptionValue(category, index)}
+                  >
+                    {category.productName}
+                  </option>
+                ))}
+              </select>
+              {!loadingProductCategories && productCategories.length === 0 && (
+                <Link
+                  to="/stock-category/categories"
+                  className="mt-1 inline-block text-xs text-indigo-600 hover:underline"
+                >
+                  Add a product category
+                </Link>
+              )}
             </div>
 
             <div>
@@ -138,8 +194,8 @@ export default function UpdateStockCategory() {
                 type="text"
                 name="vendor"
                 value={formData.vendor}
-                onChange={handleChange}
                 required
+                readOnly
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
               />
             </div>
@@ -168,7 +224,7 @@ export default function UpdateStockCategory() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Quantity <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Total Quantity</label>
               <input
                 type="number"
                 name="quantity"
@@ -176,11 +232,25 @@ export default function UpdateStockCategory() {
                 onChange={handleChange}
                 required
                 min="0"
+                step="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
               />
             </div>
 
             <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Available Quantity</label>
+              <input
+                type="number"
+                value={availableQuantityPreview}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-100"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Assigned quantity ({assignedQuantity}) stays unchanged. Increasing total stock adds only the increase to available stock.
+              </p>
+            </div>
+
+            {/* <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Stock Alert Quantity</label>
               <input
                 type="number"
@@ -190,41 +260,8 @@ export default function UpdateStockCategory() {
                 min="0"
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
               />
-            </div>
+            </div> */}
 
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Assign to Engineer</label>
-              <select
-                name="assignedToEngineer"
-                value={formData.assignedToEngineer}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-              >
-                <option value="">-- None --</option>
-                {engineers.map((eng) => (
-                  <option key={eng._id || eng.id} value={eng._id || eng.id}>
-                    {eng.name || eng.firstName || "Engineer"}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Assign to User</label>
-              <select
-                name="assignedToUser"
-                value={formData.assignedToUser}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-              >
-                <option value="">-- None --</option>
-                {users.map((usr) => (
-                  <option key={usr._id || usr.id} value={usr._id || usr.id}>
-                    {usr.generalInformation?.name || usr.name || "User"}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           <div>
