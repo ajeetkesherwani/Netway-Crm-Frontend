@@ -4,6 +4,7 @@ import { createLead } from "../../service/lead";
 import { getZones, getSubzonesWithZoneId } from "../../service/apiClient";
 import { getStaff } from "../../service/staffService";
 import { usePermission } from "../../context/PermissionContext";
+import LeadDocumentPreviews from "./LeadDocumentPreviews";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import { FaLongArrowAltLeft, FaPlus, FaTrash } from "react-icons/fa";
@@ -374,37 +375,43 @@ export default function CreateLead() {
             {docRows.map((row, idx) => (
               <div
                 key={idx}
-                className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 border rounded-lg p-3"
+                className="space-y-3 bg-gray-50 border rounded-lg p-3"
               >
-                <select
-                  value={row.documentType}
-                  onChange={(e) => updateDocType(idx, e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full md:w-48"
-                >
-                  {DOCUMENT_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,.pdf"
-                  onChange={(e) => updateDocFiles(idx, e.target.files)}
-                  className="text-sm text-gray-600 flex-1"
+                <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
+                  <select
+                    value={row.documentType}
+                    onChange={(e) => updateDocType(idx, e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full md:w-48"
+                  >
+                    {DOCUMENT_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    onChange={(e) => updateDocFiles(idx, e.target.files)}
+                    className="text-sm text-gray-600 flex-1"
+                  />
+                  {row.files.length > 0 && (
+                    <span className="text-xs text-green-600 font-medium">
+                      {row.files.length} file{row.files.length > 1 ? "s" : ""} selected
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeDocRow(idx)}
+                    className="text-red-500 hover:text-red-700 p-1"
+                    title="Remove"
+                  >
+                    <FaTrash size={14} />
+                  </button>
+                </div>
+                <LeadDocumentPreviews
+                  documentType={row.documentType}
+                  files={row.files}
                 />
-                {row.files.length > 0 && (
-                  <span className="text-xs text-green-600 font-medium">
-                    {row.files.length} file{row.files.length > 1 ? "s" : ""} selected
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeDocRow(idx)}
-                  className="text-red-500 hover:text-red-700 p-1"
-                  title="Remove"
-                >
-                  <FaTrash size={14} />
-                </button>
               </div>
             ))}
           </div>
