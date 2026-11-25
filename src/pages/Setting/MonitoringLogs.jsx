@@ -249,7 +249,42 @@ export default function MonitoringLogs() {
         </div>
       )}
 
-      {activeFilter === "audit" ? (
+      {activeFilter === "activity" ? (
+        <div className="space-y-2">
+          {loading ? (
+            <div className="rounded border border-gray-200 bg-white p-5 text-sm text-gray-500">
+              Loading logs...
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="rounded border border-gray-200 bg-white p-5 text-center text-sm text-gray-500">
+              No logs found.
+            </div>
+          ) : (
+            logs.map((log, index) => (
+              <article
+                key={log._id || log.id || `${page}-${index}`}
+                className="border border-gray-200 bg-white px-4 py-4 text-sm text-gray-800 shadow-sm sm:px-5"
+              >
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {displayDate(firstValue(log.timestamp, log.createdAt, log.date, log.time))}
+                </p>
+                <p className="break-words whitespace-pre-wrap">
+                  <strong>Description:</strong>{" "}
+                  {displayValue(firstValue(log.description, log.action, log.event))}
+                </p>
+                <p>
+                  <strong>By:</strong> {getActorName(log)}
+                </p>
+                <p>
+                  <strong>IP:</strong>{" "}
+                  {displayValue(firstValue(log.ip, log.ipAddress))}
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+      ) : activeFilter === "audit" ? (
         <div className="space-y-2">
           {loading ? (
             <div className="rounded border border-gray-200 bg-white p-5 text-sm text-gray-500">
