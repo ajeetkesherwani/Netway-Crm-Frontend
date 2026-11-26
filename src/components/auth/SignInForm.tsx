@@ -129,7 +129,7 @@
 // }
 
 import { useState, useEffect } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
@@ -313,13 +313,28 @@ export default function SignInForm({ loginApi, heading }: SignInFormProps) {
     setIsSendingOtp(true);
     try {
       const res = await loginApi({ ...pendingPayload, resendOtp: true });
-      if (res?.loginSessionId) {
-        // Update the session ID in case the backend generated a new one
+      const loginSessionId =
+        res?.loginSessionId ||
+        res?.data?.loginSessionId ||
+        res?.sessionId ||
+        res?.data?.sessionId;
+      const isSuccess =
+        res?.success ||
+        res?.status === "success" ||
+        res?.status === true ||
+        res?.status === 200 ||
+        res?.isOtpSent ||
+        res?.otp_sent ||
+        (typeof res?.message === "string" &&
+          res.message.toLowerCase().includes("otp"));
+
+      if (loginSessionId) {
         setPendingPayload((prev: any) => ({
           ...prev,
-          loginSessionId: res.loginSessionId
+          loginSessionId,
         }));
       }
+      if (isSuccess) toast.success("OTP sent successfully");
     } catch (err) {
       console.error(err);
     } finally {

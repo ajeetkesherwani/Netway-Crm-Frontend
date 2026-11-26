@@ -50,7 +50,9 @@ export const useLogin = () => {
             if (isSuccess) {
                 if (requiresOtp) {
                     // ✅ OTP required case
-                    toast.success(result.message || "OTP verification required.");
+                    if (!payload.resendOtp) {
+                        toast.success(result.message || "OTP verification required.");
+                    }
                 } else if (result.token) {
                     // ✅ Save token persistently
                     saveToken(result.token);
