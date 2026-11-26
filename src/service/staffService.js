@@ -14,8 +14,9 @@ export const getStaff = async () => {
   return data;
 };
 // Get staff details by ID
-export const getStaffDetails = async (id) => {
-  const res = await fetch(`${BASE_URL}/staff/list/${id}`, {
+export const getStaffDetails = async (id, filter = "") => {
+  const query = filter ? `?filter=${encodeURIComponent(filter)}` : "";
+  const res = await fetch(`${BASE_URL}/staff/list/${id}${query}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

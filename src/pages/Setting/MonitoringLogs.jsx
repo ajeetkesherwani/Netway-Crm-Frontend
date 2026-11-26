@@ -63,6 +63,10 @@ function getActorName(log) {
   );
 }
 
+function getActorRole(log) {
+  return firstValue(log.actorRole, log.role, log.actor?.role);
+}
+
 function getDetails(log) {
   const detailFields = [
     ["API Path", firstValue(log.apiPath, log.path, log.endpoint)],
@@ -275,6 +279,7 @@ export default function MonitoringLogs() {
                 </p>
                 <p>
                   <strong>By:</strong> {getActorName(log)}
+                  {getActorRole(log) ? ` (${displayValue(getActorRole(log))})` : ""}
                 </p>
                 <p>
                   <strong>IP:</strong>{" "}
@@ -296,7 +301,7 @@ export default function MonitoringLogs() {
             </div>
           ) : (
             logs.map((log, index) => {
-              const role = firstValue(log.actorRole, log.role, log.actor?.role);
+              const role = getActorRole(log);
               return (
                 <article
                   key={log._id || log.id || `${page}-${index}`}
