@@ -461,8 +461,8 @@ export default function StaffPage() {
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-[2px] py-[2px] text-left">S.No</th>
-                <th className="px-[2px] py-[2px] text-left">User ID</th>
                 <th className="px-[2px] py-[2px] text-left">Name</th>
+                <th className="px-[2px] py-[2px] text-left">User ID</th>
                 <th className="px-[2px] py-[2px] text-left">Phone No</th>
                 <th className="px-[2px] py-[2px] text-left">Email</th>
                 <th className="px-[2px] py-[2px] text-left">Role</th>
@@ -474,13 +474,13 @@ export default function StaffPage() {
               {displayedStaff.map((staff, index) => (
                 <tr key={staff._id} className="hover:bg-gray-50">
                   <td className="px-[2px] py-[2px]">{index + 1}</td>
-                  <td className="px-[2px] py-[2px] font-medium">{staff.logId || "—"}</td>
-                  <td
+                   <td
                     className="px-[2px] py-[2px] text-black hover:text-blue-600 hover:underline cursor-pointer"
-                    onClick={() => handleView(staff._id)}
+                    onClick={() => handleEdit(staff._id)}
                   >
                     {staff.name}
                   </td>
+                  <td className="px-[2px] py-[2px] font-medium">{staff.logId || "—"}</td>
                   <td className="px-[2px] py-[2px]">{staff.phoneNo}</td>
                   <td className="px-[2px] py-[2px]">{staff.email || "—"}</td>
                   <td className="px-[2px] py-[2px]">{staff.role?.roleName || "—"}</td>
