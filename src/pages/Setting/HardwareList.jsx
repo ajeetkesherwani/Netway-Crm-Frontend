@@ -17,6 +17,8 @@ import {
   getAllUserList,
   bulkUploadHardware,
 } from "../../service/hardware";
+import { getStaff } from "../../service/staffService";
+import Select from "react-select";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 
@@ -32,7 +34,9 @@ export default function HardwareList() {
 
   // Users for assign
   const [users, setUsers] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [staffLoading, setStaffLoading] = useState(false);
 
   // Modals
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -40,7 +44,8 @@ export default function HardwareList() {
 
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignHw, setAssignHw] = useState(null);
-  const [assignUserId, setAssignUserId] = useState("");
+  const [assignType, setAssignType] = useState("staff");
+  const [assignTarget, setAssignTarget] = useState(null);
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignError, setAssignError] = useState(null);
 
@@ -73,9 +78,25 @@ export default function HardwareList() {
     }
   };
 
+  const fetchStaff = async () => {
+    setStaffLoading(true);
+    try {
+      const res = await getStaff();
+      const list = Array.isArray(res?.data)
+        ? res.data
+        : res?.data?.staff || res?.staff || [];
+      setStaff(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error("Failed to load staff", err);
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchHardware();
     fetchUsers();
+    fetchStaff();
   }, []);
 
   // Close menu on outside click
@@ -101,10 +122,12 @@ export default function HardwareList() {
 
   const handleAssign = (id, name) => {
     setAssignHw({ id, name });
-    setAssignUserId("");
+    setAssignType("staff");
+    setAssignTarget(null);
     setAssignError(null);
     setAssignOpen(true);
-    if (users.length === 0) fetchUsers();
+    if (users.length === 0 && !usersLoading) fetchUsers();
+    if (staff.length === 0 && !staffLoading) fetchStaff();
     setOpenMenuId(null);
   };
 
@@ -129,13 +152,16 @@ export default function HardwareList() {
   };
 
   const confirmAssign = async () => {
-    if (!assignHw || !assignUserId) {
-      setAssignError("Please select a user");
+    if (!assignHw || !assignTarget) {
+      setAssignError("Please select a user or staff member");
       return;
     }
     setAssignLoading(true);
     try {
-      await assignHardware({ hardwareId: assignHw.id, userId: assignUserId });
+      await assignHardware({
+        hardwareId: assignHw.id,
+        [assignTarget.type === "staff" ? "staffId" : "userId"]: assignTarget.value,
+      });
       toast.success("Hardware assigned successfully");
       await fetchHardware();
       setAssignOpen(false);
@@ -143,7 +169,6 @@ export default function HardwareList() {
       toast.error(err?.message || "Failed to assign");
     } finally {
       setAssignLoading(false);
-      setAssignUserId("");
       setAssignHw(null);
     }
   };
@@ -187,7 +212,7 @@ export default function HardwareList() {
       Type: hw.hardwareType || hw.type || "-",
       "Brand/Model": `${hw.brand || ""} ${hw.model || ""}`.trim() || "-",
       Serial: hw.serialNumber || hw.serialNo || "-",
-      "Assigned To": getAssignedName(hw.assignedTo),
+      "Assigned To": getAssignedName(hw.assignedTo, hw.assignedToStaff),
       Status: hw.status || "-",
     }));
     const ws = XLSX.utils.json_to_sheet(data);
@@ -197,13 +222,50 @@ export default function HardwareList() {
     toast.success("Hardware exported successfully!");
   };
 
-  const getAssignedName = (userId) => {
+  const getAssignedName = (userId, staffId) => {
+    const getId = (value) =>
+      value && typeof value === "object" ? value._id || value.id : value;
+
+    if (staffId) {
+      const id = getId(staffId);
+      const assignedStaff = staff.find((member) => (member._id || member.id) === id);
+      return `Staff: ${
+        assignedStaff?.staffName ||
+        assignedStaff?.name ||
+        (typeof staffId === "object" ? staffId.staffName || staffId.name : id)
+      }`;
+    }
     if (!userId) return "-";
-    const user = users.find((u) => (u._id || u.id) === userId);
-    return user
-      ? user.generalInformation?.name || user.name || user.email || userId
-      : userId;
+    const id = getId(userId);
+    const user = users.find((item) => (item._id || item.id) === id);
+    return `User: ${
+      user?.generalInformation?.name ||
+      user?.name ||
+      user?.email ||
+      (typeof userId === "object"
+        ? userId.generalInformation?.name || userId.name || id
+        : id)
+    }`;
   };
+
+  const assignmentOptions =
+    assignType === "staff"
+      ? staff.map((member) => {
+          const id = member._id || member.id;
+          return {
+            value: id,
+            type: "staff",
+            label: member.staffName || member.name || member.email || id,
+          };
+        })
+      : users.map((user) => {
+          const id = user._id || user.id;
+          return {
+            value: id,
+            type: "user",
+            label: user.generalInformation?.name || user.name || user.email || id,
+          };
+        });
 
   const displayedHardware = hardware.filter((hw) =>
     (hw.hardwareName || hw.name || "").toLowerCase().includes(appliedSearch)
@@ -316,7 +378,7 @@ export default function HardwareList() {
                   const type = hw.hardwareType || hw.type || "-";
                   const brandModel = `${hw.brand || ""} ${hw.model || ""}`.trim() || "-";
                   const serial = hw.serialNumber || hw.serialNo || "-";
-                  const assignedName = getAssignedName(hw.assignedTo);
+                  const assignedName = getAssignedName(hw.assignedTo, hw.assignedToStaff);
                   const status = hw.status || "-";
 
                   return (
@@ -441,22 +503,49 @@ export default function HardwareList() {
 
             {assignError && <p className="text-red-600 mb-4">{assignError}</p>}
 
-            <select
-              value={assignUserId}
-              onChange={(e) => setAssignUserId(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
+            <div
+              role="tablist"
+              aria-label="Choose who to assign this hardware to"
+              className="mb-4 flex border-b border-gray-200"
             >
-              <option value="">-- Select User --</option>
-              {users.map((u) => {
-                const id = u._id || u.id;
-                const label = u.generalInformation?.name || u.name || u.email || id;
-                return (
-                  <option key={id} value={id}>
-                    {label}
-                  </option>
-                );
-              })}
-            </select>
+              {[
+                { id: "staff", label: "Staff" },
+                { id: "user", label: "User" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={assignType === tab.id}
+                  onClick={() => {
+                    setAssignType(tab.id);
+                    setAssignTarget(null);
+                    setAssignError(null);
+                  }}
+                  className={`border-b-2 px-4 py-2 text-sm font-medium ${
+                    assignType === tab.id
+                      ? "border-blue-600 text-blue-700"
+                      : "border-transparent text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <Select
+              value={assignTarget}
+              onChange={setAssignTarget}
+              options={assignmentOptions}
+              isLoading={assignType === "staff" ? staffLoading : usersLoading}
+              isClearable
+              placeholder={`Search and select ${assignType === "staff" ? "staff" : "a user"}...`}
+              noOptionsMessage={() =>
+                `No ${assignType === "staff" ? "staff" : "users"} found`
+              }
+              className="mb-6"
+              classNamePrefix="react-select"
+            />
 
             <div className="flex justify-end gap-3">
               <button
@@ -468,7 +557,7 @@ export default function HardwareList() {
               </button>
               <button
                 onClick={confirmAssign}
-                disabled={assignLoading || !assignUserId}
+                disabled={assignLoading || !assignTarget}
                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-70"
               >
                 {assignLoading ? "Assigning..." : "Assign"}

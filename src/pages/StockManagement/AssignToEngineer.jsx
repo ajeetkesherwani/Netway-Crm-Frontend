@@ -159,7 +159,7 @@ export default function AssignToEngineer() {
 
   const engineerOptions = engineers.map(eng => ({
     value: eng._id || eng.id,
-    label: eng.name || eng.firstName || "Engineer"
+    label: eng.staffName || eng.name || eng.firstName || "Engineer"
   }));
 
   return (

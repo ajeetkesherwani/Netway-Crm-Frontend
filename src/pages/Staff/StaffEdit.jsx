@@ -885,9 +885,10 @@ import {
   updateStaff,
   getAllZoneList,
   getStaffDetails,
-  getActivityLogs,
 } from "../../service/staffService";
 import { getAllRolesList } from "../../service/ticket";
+import { getMonitoringLogs } from "../../service/common";
+import { getStockCategories } from "../../service/stockCategory";
 
 export default function StaffUpdate() {
   const { id } = useParams();
@@ -896,7 +897,14 @@ export default function StaffUpdate() {
   const [saving, setSaving] = useState(false);
   const [logsLoading, setLogsLoading] = useState(true);
   const [logs, setLogs] = useState([]);
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsTotal, setLogsTotal] = useState(0);
+  const [logsTotalPages, setLogsTotalPages] = useState(1);
   const [logsError, setLogsError] = useState("");
+  const [assetLoading, setAssetLoading] = useState(false);
+  const [assetError, setAssetError] = useState("");
+  const [assignedHardware, setAssignedHardware] = useState([]);
+  const [assignedProductStock, setAssignedProductStock] = useState([]);
 
   const [roles, setRoles] = useState([]);
   const [zoneList, setZoneList] = useState([]);
@@ -969,31 +977,102 @@ export default function StaffUpdate() {
     if (id) fetchAll();
   }, [id]);
 
-  // Fetch Activity Logs
+  // Fetch activity or audit logs for the current staff member.
   useEffect(() => {
+    if (activeTab !== "logs" && activeTab !== "audit") return undefined;
+    const controller = new AbortController();
+
     const fetchLogs = async () => {
       if (!id) return;
       setLogsLoading(true);
       setLogsError("");
       try {
-        const res = await getActivityLogs("Staff", id);
-        if (res.status && res.data?.data?.length > 0) {
-          setLogs(res.data.data);
-        } else {
-          setLogs([]);
+        const filter = activeTab === "audit" ? "audit" : "activity";
+        const response = await getMonitoringLogs(
+          { filter, actorId: id, page: logsPage, limit: 20 },
+          { signal: controller.signal }
+        );
+        if (response?.status === false) {
+          throw new Error(response.message || "Failed to load logs.");
         }
+
+        const result = Array.isArray(response?.data)
+          ? response.data
+          : response?.data?.data;
+        if (!Array.isArray(result)) {
+          throw new Error("The logs response did not contain a data list.");
+        }
+
+        const total = Number(
+          Array.isArray(response.data)
+            ? response.total
+            : response.data.total
+        );
+        setLogs(result);
+        setLogsTotal(Number.isFinite(total) ? total : result.length);
+        setLogsTotalPages(
+          Math.max(
+            1,
+            Math.ceil((Number.isFinite(total) ? total : result.length) / 20)
+          )
+        );
       } catch (err) {
+        if (err.name === "AbortError") return;
         console.error("Failed to load logs:", err);
         setLogs([]);
-        setLogsError("Failed to load activity logs. Please try again.");
+        setLogsTotal(0);
+        setLogsTotalPages(1);
+        setLogsError(err.message || "Failed to load logs. Please try again.");
       } finally {
-        setLogsLoading(false);
+        if (!controller.signal.aborted) setLogsLoading(false);
       }
     };
 
-    if (activeTab === "logs") {
-      fetchLogs();
-    }
+    fetchLogs();
+    return () => controller.abort();
+  }, [id, activeTab, logsPage]);
+
+  useEffect(() => {
+    if (activeTab !== "warehouse" && activeTab !== "product-house") return undefined;
+    const controller = new AbortController();
+
+    const fetchAssignedStock = async () => {
+      if (!id) return;
+      setAssetLoading(true);
+      setAssetError("");
+      try {
+        if (activeTab === "warehouse") {
+          const response = await getStaffDetails(id, "warestock");
+          if (controller.signal.aborted) return;
+          const hardware = response?.data?.assignedHardware;
+          if (!Array.isArray(hardware)) {
+            throw new Error("The hardware response did not contain a list.");
+          }
+          setAssignedHardware(hardware);
+        } else {
+          const response = await getStockCategories(
+            `?assignedToEngineer=${encodeURIComponent(id)}`
+          );
+          if (controller.signal.aborted) return;
+          const products = response?.data?.stockCategories;
+          if (!Array.isArray(products)) {
+            throw new Error("The product stock response did not contain a list.");
+          }
+          setAssignedProductStock(products);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to load staff-assigned stock:", error);
+        setAssetError(error.message || "Failed to load assigned stock.");
+        if (activeTab === "warehouse") setAssignedHardware([]);
+        else setAssignedProductStock([]);
+      } finally {
+        if (!controller.signal.aborted) setAssetLoading(false);
+      }
+    };
+
+    fetchAssignedStock();
+    return () => controller.abort();
   }, [id, activeTab]);
 
   const handleChange = (e) => {
@@ -1041,15 +1120,16 @@ export default function StaffUpdate() {
     if (!dateString) return "—";
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return "—";
-    return date.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const time = date.toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: true,
     });
+    return `${day}-${month}-${year} ${time}`;
   };
 
   // Extract name from populated createdById
@@ -1072,12 +1152,48 @@ export default function StaffUpdate() {
     }
   };
 
+  const renderLogsPagination = () => {
+    const firstRecord = logs.length ? (logsPage - 1) * 20 + 1 : 0;
+    const lastRecord = Math.min(logsPage * 20, logsTotal);
+
+    return (
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 pt-3 text-sm text-gray-600">
+        <span>
+          Showing {firstRecord}-{lastRecord} of {logsTotal} records
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLogsPage((page) => Math.max(1, page - 1))}
+            disabled={logsPage <= 1 || logsLoading}
+            className="rounded border border-gray-300 px-3 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span>
+            Page {logsPage} of {logsTotalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setLogsPage((page) => Math.min(logsTotalPages, page + 1))
+            }
+            disabled={logsPage >= logsTotalPages || logsLoading}
+            className="rounded border border-gray-300 px-3 py-1.5 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="p-6 text-center text-sm text-gray-600">Loading staff details...</div>;
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-3 sm:p-5">
+    <div className="w-full min-w-0 space-y-4 p-3 sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Edit Staff</h1>
@@ -1096,11 +1212,11 @@ export default function StaffUpdate() {
         <div
           role="tablist"
           aria-label="Staff details sections"
-          className="flex gap-1 overflow-x-auto border-b border-gray-200 px-2 pt-2"
+          className="flex flex-wrap gap-1 border-b border-gray-200 px-2 pt-2"
         >
           {[
             { id: "edit", label: "Edit Staff" },
-            { id: "logs", label: "Activity Logs" },
+            { id: "logs", label: "Staff Logs" },
             { id: "audit", label: "Audit Logs" },
             { id: "warehouse", label: "Ware Stock" },
             { id: "product-house", label: "Product Stock" },
@@ -1110,8 +1226,11 @@ export default function StaffUpdate() {
               type="button"
               role="tab"
               aria-selected={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === "logs" || tab.id === "audit") setLogsPage(1);
+              }}
+              className={`border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? "border-blue-600 text-blue-700"
                   : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
@@ -1124,7 +1243,7 @@ export default function StaffUpdate() {
 
         <div className="p-4 sm:p-5">
           {activeTab === "edit" ? (
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <form onSubmit={handleSubmit} className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Staff Name *</label>
                 <input
@@ -1259,63 +1378,55 @@ export default function StaffUpdate() {
             </form>
           ) : activeTab === "logs" ? (
             <div>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">Activity Logs</h2>
-
               {logsLoading ? (
-                <div className="py-8 text-center text-sm text-gray-500">Loading activity logs...</div>
+                <div className="py-8 text-center text-sm text-gray-500">Loading staff logs...</div>
               ) : logsError ? (
                 <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {logsError}
                 </div>
               ) : logs.length === 0 ? (
                 <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
-                  No activity logs found for this staff member.
+                  No staff logs found.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-300 border border-gray-300 rounded-xl overflow-hidden shadow-sm">
-                    <thead className="bg-gray-50">
+                <div className="w-full min-w-0">
+                  <table className="w-full table-fixed border border-gray-300 text-sm">
+                    <thead className="bg-gray-100 text-xs uppercase text-gray-700">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                          Date & Time
+                        <th className="w-[20%] border-r border-gray-300 px-2 py-2 text-left font-semibold sm:px-3">
+                          Date
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                          Activity Details
+                        <th className="w-[62%] border-r border-gray-300 px-2 py-2 text-left font-semibold sm:px-3">
+                          Description
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
-                          Actor
+                        <th className="w-[18%] px-2 py-2 text-left font-semibold sm:px-3">
+                          Added By
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 bg-white">
                       {logs.map((log, index) => (
-                        <tr
-                          key={log._id || index}
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                            {formatDate(log.createdAt)}
+                        <tr key={log._id || index} className="hover:bg-gray-50">
+                          <td className="break-words border-r border-gray-200 px-2 py-3 align-top text-gray-700 sm:px-3">
+                            {formatDate(log.createdAt || log.timestamp)}
                           </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="font-semibold text-gray-900">
-                              {log.action || "Unknown Action"}
-                            </div>
-                            {log.description && (
-                              <div className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-600">
-                                {log.description}
+                          <td className="whitespace-pre-wrap break-words border-r border-gray-200 px-2 py-3 align-top text-gray-800 sm:px-3">
+                            {log.description || log.action || log.message || "—"}
+                            {log.details && (
+                              <pre className="mt-1 max-w-full whitespace-pre-wrap break-words font-sans text-xs text-gray-600">
+                                {typeof log.details === "string"
+                                  ? log.details
+                                  : JSON.stringify(log.details)}
+                              </pre>
+                            )}
+                            {(log.ip || log.ipAddress) && (
+                              <div className="mt-1 text-xs text-gray-700">
+                                <strong>IP:</strong> {log.ip || log.ipAddress}
                               </div>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm">
-                            <div className="font-semibold text-blue-700">
-                              {log.actorName || getCreatedByName(log)}
-                            </div>
-                            {(log.actorRole || log.ip) && (
-                              <div className="mt-1 text-xs text-gray-500">
-                                {log.actorRole && <div>Role: {log.actorRole}</div>}
-                                {log.ip && <div>IP: {log.ip}</div>}
-                              </div>
-                            )}
+                          <td className="break-words px-2 py-3 align-top text-gray-700 sm:px-3">
+                            {log.actorName || getCreatedByName(log)}
                           </td>
                         </tr>
                       ))}
@@ -1323,15 +1434,123 @@ export default function StaffUpdate() {
                   </table>
                 </div>
               )}
+              {!logsLoading && !logsError && renderLogsPagination()}
+            </div>
+          ) : activeTab === "audit" ? (
+            <div className="space-y-2">
+              {logsLoading ? (
+                <div className="rounded border border-gray-200 bg-white p-5 text-sm text-gray-500">
+                  Loading audit logs...
+                </div>
+              ) : logsError ? (
+                <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {logsError}
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="rounded border border-gray-200 bg-white p-5 text-center text-sm text-gray-500">
+                  No audit logs found.
+                </div>
+              ) : (
+                logs.map((log, index) => (
+                  <article
+                    key={log._id || index}
+                    className="break-words border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm leading-5 text-gray-800"
+                  >
+                    <p>
+                      <strong>Date:</strong>{" "}
+                      {formatDate(log.createdAt || log.timestamp)}
+                    </p>
+                    <p>
+                      <strong>Action:</strong>{" "}
+                      {log.action || log.description || "—"}
+                    </p>
+                    <p>
+                      <strong>By:</strong>{" "}
+                      {log.actorName || getCreatedByName(log)}
+                      {log.actorRole
+                        ? ` (${log.actorRole})`
+                        : ""}
+                    </p>
+                    <p>
+                      <strong>IP:</strong> {log.ip || log.ipAddress || "—"}
+                    </p>
+                  </article>
+                ))
+              )}
+              {!logsLoading && !logsError && renderLogsPagination()}
             </div>
           ) : (
-            <section aria-live="polite" className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
-              <h2 className="text-base font-semibold text-gray-800">
-                {activeTab === "audit" ? "Audit Logs" : activeTab === "warehouse" ? "Warehouse" : "Product House"}
+            <section aria-live="polite">
+              <h2 className="mb-4 text-base font-semibold text-gray-800">
+                {activeTab === "warehouse" ? "Hardware assigned to this staff member" : "Product stock assigned to this staff member"}
               </h2>
-              <p className="mt-1 text-sm text-gray-600">
-                This section is not available yet.
-              </p>
+              {assetLoading ? (
+                <p className="py-8 text-center text-sm text-gray-500">Loading assigned stock...</p>
+              ) : assetError ? (
+                <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {assetError}
+                </div>
+              ) : activeTab === "warehouse" ? (
+                assignedHardware.length === 0 ? (
+                  <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
+                    No hardware assigned to this staff member.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[700px] border border-gray-300 text-sm">
+                      <thead className="bg-gray-100 text-left text-xs uppercase text-gray-700">
+                        <tr>
+                          <th className="border-r px-3 py-2">Hardware</th>
+                          <th className="border-r px-3 py-2">Type</th>
+                          <th className="border-r px-3 py-2">Brand / Model</th>
+                          <th className="border-r px-3 py-2">Serial Number</th>
+                          <th className="px-3 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 bg-white">
+                        {assignedHardware.map((hardware) => (
+                          <tr key={hardware._id}>
+                            <td className="border-r px-3 py-2">{hardware.hardwareName || "—"}</td>
+                            <td className="border-r px-3 py-2">{hardware.hardwareType || "—"}</td>
+                            <td className="border-r px-3 py-2">{[hardware.brand, hardware.model].filter(Boolean).join(" ") || "—"}</td>
+                            <td className="border-r px-3 py-2">{hardware.serialNumber || "—"}</td>
+                            <td className="px-3 py-2">{hardware.status || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : assignedProductStock.length === 0 ? (
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
+                  No product stock assigned to this staff member.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[700px] border border-gray-300 text-sm">
+                    <thead className="bg-gray-100 text-left text-xs uppercase text-gray-700">
+                      <tr>
+                        <th className="border-r px-3 py-2">Product</th>
+                        <th className="border-r px-3 py-2">Vendor</th>
+                        <th className="border-r px-3 py-2">Serial Number</th>
+                        <th className="border-r px-3 py-2">MAC Address</th>
+                        <th className="px-3 py-2">Assigned Quantity</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {assignedProductStock.map((stock) => (
+                        <tr key={stock._id}>
+                          <td className="border-r px-3 py-2">{stock.productName || "—"}</td>
+                          <td className="border-r px-3 py-2">{stock.vendor || "—"}</td>
+                          <td className="border-r px-3 py-2">{stock.serialNo || "—"}</td>
+                          <td className="border-r px-3 py-2">{stock.macAddress || "—"}</td>
+                          <td className="px-3 py-2">{stock.assignedQuantity ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           )}
         </div>
