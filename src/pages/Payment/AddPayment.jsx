@@ -436,6 +436,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { addWalletPayment, getAllUserList } from "../../service/user.js";
 import { getWalletBalance } from "../../service/recharge.js";
+import { getPaymentModes } from "../../service/paymentMode.js";
 
 export default function AddPayment() {
     const navigate = useNavigate();
@@ -452,6 +453,9 @@ export default function AddPayment() {
 
     const [paymentDate, setPaymentDate] = useState(new Date());
     const [paymentMode, setPaymentMode] = useState("");
+    const [paymentModes, setPaymentModes] = useState([]);
+    const [paymentModesLoading, setPaymentModesLoading] = useState(true);
+    const [paymentModesError, setPaymentModesError] = useState("");
     const [transactionNo, setTransactionNo] = useState("");
     const [comments, setComments] = useState("");
     const [fullPaid, setFullPaid] = useState(false);
@@ -464,6 +468,43 @@ export default function AddPayment() {
     const [success, setSuccess] = useState("");
 
     const debounceRef = useRef(null);
+
+    useEffect(() => {
+        let isCurrent = true;
+
+        const loadPaymentModes = async () => {
+            try {
+                const modes = await getPaymentModes();
+                if (isCurrent) {
+                    setPaymentModes(
+                        modes.filter((mode) => {
+                            if (mode.status === undefined || mode.status === null) {
+                                return Boolean(mode.name);
+                            }
+                            const status = String(mode.status).toLowerCase();
+                            return (
+                                Boolean(mode.name) &&
+                                !["false", "0", "inactive"].includes(status)
+                            );
+                        })
+                    );
+                }
+            } catch (requestError) {
+                if (isCurrent) {
+                    setPaymentModesError(
+                        requestError.message || "Failed to load payment modes."
+                    );
+                }
+            } finally {
+                if (isCurrent) setPaymentModesLoading(false);
+            }
+        };
+
+        loadPaymentModes();
+        return () => {
+            isCurrent = false;
+        };
+    }, []);
 
     // Load users
     useEffect(() => {
@@ -771,15 +812,29 @@ export default function AddPayment() {
                         <select
                             value={paymentMode}
                             onChange={(e) => setPaymentMode(e.target.value)}
+                            disabled={paymentModesLoading || Boolean(paymentModesError)}
                             className="w-full border border-gray-300 rounded-lg px-4 py-3"
                         >
                             <option value="">Select Mode</option>
-                            <option>Cash</option>
-                            <option>UPI</option>
-                            <option>Card</option>
-                            <option>Bank Transfer</option>
-                            <option>Cheque</option>
+                            {paymentModes.map((mode) => (
+                                <option key={mode._id || mode.id || mode.name} value={mode.name}>
+                                    {mode.name}
+                                </option>
+                            ))}
                         </select>
+                        {paymentModesLoading && (
+                            <p className="mt-1 text-xs text-gray-500">Loading payment modes...</p>
+                        )}
+                        {paymentModesError && (
+                            <p role="alert" className="mt-1 text-xs text-red-600">
+                                {paymentModesError}
+                            </p>
+                        )}
+                        {!paymentModesLoading && !paymentModesError && paymentModes.length === 0 && (
+                            <p className="mt-1 text-xs text-gray-500">
+                                No active payment modes are available.
+                            </p>
+                        )}
                     </div>
 
                     {/* Amount to be paid */}

@@ -502,6 +502,14 @@ if (stockManagementSubItems.length > 0) {
         name: "SMS Templates",
         path: "/setting/sms-template/list",
       });
+      settingSubItems.push({
+        name: "Payment Mode",
+        path: "/setting/payment-mode",
+      });
+      settingSubItems.push({
+        name: "Lead Stage",
+        path: "/setting/lead-stage",
+      });
       if (permissions.setting?.TicketReplyList)
         settingSubItems.push({
           name: "Ticket Reply",

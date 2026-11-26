@@ -183,6 +183,8 @@ import EditLead from "./pages/Lead/EditLead";
 import UserCms from "./pages/Setting/UserCms";
 import MonitoringLogs from "./pages/Setting/MonitoringLogs";
 import SmsTemplateList from "./pages/Setting/SmsTemplateList";
+import PaymentModeList from "./pages/Setting/PaymentModeList";
+import LeadStageList from "./pages/Setting/LeadStageList";
 
 // import UserList from "./pages/User/UserList";
 export default function App() {
@@ -401,6 +403,14 @@ export default function App() {
               element={<TicketCattogry />}
             />
             <Route path="/setting/sms-template/list" element={<SmsTemplateList />} />
+            <Route
+              path="/setting/payment-mode"
+              element={<PaymentModeList />}
+            />
+            <Route
+              path="/setting/lead-stage"
+              element={<LeadStageList />}
+            />
             {/*----------------------------------------------------------------------------------------------Zone Routes ----------------------------------------------------------------------------------------------*/}
             <Route path="/setting/zonelist" element={<ZoneList />} />
             <Route path="/setting/zone/create" element={<ZoneCreate />} />
