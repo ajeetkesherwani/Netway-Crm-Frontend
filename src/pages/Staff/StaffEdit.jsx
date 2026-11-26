@@ -896,6 +896,7 @@ export default function StaffUpdate() {
   const [saving, setSaving] = useState(false);
   const [logsLoading, setLogsLoading] = useState(true);
   const [logs, setLogs] = useState([]);
+  const [logsError, setLogsError] = useState("");
 
   const [roles, setRoles] = useState([]);
   const [zoneList, setZoneList] = useState([]);
@@ -973,6 +974,7 @@ export default function StaffUpdate() {
     const fetchLogs = async () => {
       if (!id) return;
       setLogsLoading(true);
+      setLogsError("");
       try {
         const res = await getActivityLogs("Staff", id);
         if (res.status && res.data?.data?.length > 0) {
@@ -983,6 +985,7 @@ export default function StaffUpdate() {
       } catch (err) {
         console.error("Failed to load logs:", err);
         setLogs([]);
+        setLogsError("Failed to load activity logs. Please try again.");
       } finally {
         setLogsLoading(false);
       }
@@ -1035,7 +1038,10 @@ export default function StaffUpdate() {
 
   // Format date
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString("en-IN", {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString("en-IN", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1067,54 +1073,72 @@ export default function StaffUpdate() {
   };
 
   if (loading) {
-    return <div className="p-10 text-center text-xl">Loading staff details...</div>;
+    return <div className="p-6 text-center text-sm text-gray-600">Loading staff details...</div>;
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Tabs */}
-      <div className="bg-white shadow-lg rounded-xl overflow-hidden">
-        <div className="flex border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab("edit")}
-            className={`px-8 py-4 font-semibold text-sm transition-all ${
-              activeTab === "edit"
-                ? "bg-blue-600 text-white shadow-inner"
-                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            Edit Staff
-          </button>
-          <button
-            onClick={() => setActiveTab("logs")}
-            className={`px-8 py-4 font-semibold text-sm transition-all ${
-              activeTab === "logs"
-                ? "bg-blue-600 text-white shadow-inner"
-                : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            Activity Logs
-          </button>
+    <div className="mx-auto max-w-6xl space-y-4 p-3 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Edit Staff</h1>
+          <p className="mt-1 text-sm text-gray-500">Update staff details and review records.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/staff/list")}
+          className="shrink-0 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Back to staff
+        </button>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div
+          role="tablist"
+          aria-label="Staff details sections"
+          className="flex gap-1 overflow-x-auto border-b border-gray-200 px-2 pt-2"
+        >
+          {[
+            { id: "edit", label: "Edit Staff" },
+            { id: "logs", label: "Activity Logs" },
+            { id: "audit", label: "Audit Logs" },
+            { id: "warehouse", label: "Ware Stock" },
+            { id: "product-house", label: "Product Stock" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "border-blue-600 text-blue-700"
+                  : "border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-900"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-5">
           {activeTab === "edit" ? (
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* All your existing form fields - unchanged */}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Staff Name *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Staff Name *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Phone Number *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Phone Number *</label>
                 <input
                   type="tel"
                   name="phoneNo"
@@ -1123,53 +1147,53 @@ export default function StaffUpdate() {
                   required
                   maxLength={10}
                   pattern="\d{10}"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">User ID *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">User ID *</label>
                 <input
                   type="text"
                   name="logId"
                   value={formData.logId}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Password * (leave blank to keep current)</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Password <span className="font-normal text-gray-500">(leave blank to keep current)</span></label>
                 <input
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   // required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Email</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Role *</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Role *</label>
                 <select
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 >
                   <option value="" disabled>Select Role</option>
                   {roles.map((role) => (
@@ -1181,12 +1205,12 @@ export default function StaffUpdate() {
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Status</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Status</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 >
                   <option value="true">Active</option>
                   <option value="false">Inactive</option>
@@ -1194,76 +1218,71 @@ export default function StaffUpdate() {
               </div>
 
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Salary</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Salary</label>
                 <input
                   type="number"
                   name="salary"
                   value={formData.salary}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block font-medium text-gray-700 mb-1">Comment</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Comment</label>
                 <textarea
                   name="comment"
                   value={formData.comment}
                   onChange={handleChange}
                   rows="4"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
-              {/* Buttons */}
-              <div className="md:col-span-2 flex justify-end gap-4 mt-8">
-                <button
-                  type="button"
-                  onClick={() => navigate("/staff/list")}
-                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-                >
-                  Back
-                </button>
+              <div className="mt-2 flex justify-end gap-2 md:col-span-2">
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Clear Form
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 transition"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? "Saving..." : "Update Staff"}
                 </button>
               </div>
             </form>
-          ) : (
-            /* ==================== PROFESSIONAL ACTIVITY LOGS SECTION ==================== */
+          ) : activeTab === "logs" ? (
             <div>
-              <h3 className="text-2xl font-bold mb-8 text-gray-800 border-b pb-4">Activity Logs</h3>
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">Activity Logs</h2>
 
               {logsLoading ? (
-                <div className="text-center py-16 text-gray-500 text-lg">Loading activity logs...</div>
+                <div className="py-8 text-center text-sm text-gray-500">Loading activity logs...</div>
+              ) : logsError ? (
+                <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {logsError}
+                </div>
               ) : logs.length === 0 ? (
-                <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200 text-gray-600 text-lg">
+                <div className="rounded-md border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
                   No activity logs found for this staff member.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-300 border border-gray-300 rounded-xl overflow-hidden shadow-sm">
-                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                           Date & Time
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-300">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                           Activity Details
                         </th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
                           Actor
                         </th>
                       </tr>
@@ -1272,22 +1291,22 @@ export default function StaffUpdate() {
                       {logs.map((log, index) => (
                         <tr
                           key={log._id || index}
-                          className="hover:bg-blue-50 transition-all duration-200"
+                          className="hover:bg-gray-50"
                         >
-                          <td className="px-6 py-5 text-sm text-gray-700 font-medium whitespace-nowrap border-r border-gray-200">
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
                             {formatDate(log.createdAt)}
                           </td>
-                          <td className="px-6 py-5 text-sm border-r border-gray-200">
+                          <td className="px-4 py-3 text-sm">
                             <div className="font-semibold text-gray-900">
                               {log.action || "Unknown Action"}
                             </div>
                             {log.description && (
-                              <div className="mt-2 text-gray-600 text-xs leading-relaxed max-w-2xl">
+                              <div className="mt-1 max-w-2xl text-xs leading-relaxed text-gray-600">
                                 {log.description}
                               </div>
                             )}
                           </td>
-                          <td className="px-6 py-5 text-sm">
+                          <td className="px-4 py-3 text-sm">
                             <div className="font-semibold text-blue-700">
                               {log.actorName || getCreatedByName(log)}
                             </div>
@@ -1305,6 +1324,15 @@ export default function StaffUpdate() {
                 </div>
               )}
             </div>
+          ) : (
+            <section aria-live="polite" className="rounded-md border border-dashed border-gray-300 bg-gray-50 px-4 py-8 text-center">
+              <h2 className="text-base font-semibold text-gray-800">
+                {activeTab === "audit" ? "Audit Logs" : activeTab === "warehouse" ? "Warehouse" : "Product House"}
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                This section is not available yet.
+              </p>
+            </section>
           )}
         </div>
       </div>

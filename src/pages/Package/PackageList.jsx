@@ -346,7 +346,7 @@ export default function PackageList() {
           </div>
 
           {/* Row 2: Reseller / LCO filter */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Select
               options={retailers.map(r => ({ value: r._id, label: r.resellerName }))}
               value={selectedReseller}
@@ -381,7 +381,7 @@ export default function PackageList() {
             >
               <FaSearch size={13} /> Search
             </button>
-          </div>
+          </div> */}
 
         </div>
       </div>

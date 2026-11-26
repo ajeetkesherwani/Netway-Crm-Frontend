@@ -229,16 +229,16 @@ export default function CustomerFilters({ filters, setSearchParams }) {
         </select>
 
         {/* Reseller */}
-        <AsyncResellerSelect
+        {/* <AsyncResellerSelect
           value={filters.reseller}
           onSelect={(id) => updateParam("reseller", id)}
-        />
+        /> */}
 
         {/* LCO */}
-        <AsyncLcoSelect
+        {/* <AsyncLcoSelect
           value={filters.lco}
           onSelect={(id) => updateParam("lco", id)}
-        />
+        /> */}
 
              {/* Server Type */}
         <select

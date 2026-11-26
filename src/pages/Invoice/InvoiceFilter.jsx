@@ -217,7 +217,7 @@ export const InvoiceFilters = ({
 
 
         {/* Reseller */}
-        <div ref={resellerRef} className="relative">
+        {/* <div ref={resellerRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">Select Reseller</label>
           <input
             type="text"
@@ -248,10 +248,10 @@ export const InvoiceFilters = ({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* LCO */}
-        <div ref={lcoRef} className="relative">
+        {/* <div ref={lcoRef} className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">Select LCO</label>
           <input
             type="text"
@@ -282,7 +282,7 @@ export const InvoiceFilters = ({
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Package */}
         <div ref={packageRef} className="relative">

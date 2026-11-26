@@ -19,6 +19,7 @@ import {
   PieChartIcon,
   PaperPlaneIcon,
 } from "../icons";
+import { LuWarehouse } from "react-icons/lu";
 
 type NavItem = {
   name: string;
@@ -103,7 +104,7 @@ const AppSidebar: React.FC = () => {
     // }
 
     // 🏢 Reseller + LCO
-    const resellerSubItems = [];
+    // const resellerSubItems = [];
 
 // if (permissions.reseller?.Listing)
 //   resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
@@ -111,17 +112,17 @@ const AppSidebar: React.FC = () => {
 // if (permissions.lco?.Listing)
 //   resellerSubItems.push({ name: "LCO List", path: "/lco/list" });
 
-if (permissions.pricebook?.Listing)
-  resellerSubItems.push({
-    name: "Price Book List",
-    path: "/pricebook/list",
-  });
+// if (permissions.pricebook?.Listing)
+//   resellerSubItems.push({
+//     name: "Price Book List",
+//     path: "/pricebook/list",
+//   });
 
-generatedNavItems.push({
-  name: "Price Book",
-  icon: <UserCircleIcon />,
-  subItems: resellerSubItems,
-});
+// generatedNavItems.push({
+//   name: "Price Book",
+//   icon: <UserCircleIcon />,
+//   subItems: resellerSubItems,
+// });
     // const resellerSubItems = [];
     // if (permissions.reseller?.Listing)
     //   resellerSubItems.push({ name: "Reseller List", path: "/retailer/list" });
@@ -345,64 +346,128 @@ generatedNavItems.push({
         subItems: configSubItems,
       });
 
-    // 📦 Stock Management
-    const stockManagementSubItems = [];
 
-    if (hasTruePermission(permissions.setting)) {
-      if (permissions.setting?.HardwareList) {
-        stockManagementSubItems.push({
-          name: "Hardware List",
-          path: "/setting/hardware/list",
-        });
-      }
-    }
+// 📦 Stock Management (Including Stock Category)
+const stockManagementSubItems = [];
 
-    if (stockManagementSubItems.length > 0) {
-      generatedNavItems.push({
-        name: "Stock Management",
-        icon: <FileIcon />, // any icon
-        subItems: stockManagementSubItems,
-      });
-    }
+// Hardware List
+if (hasTruePermission(permissions.setting)) {
+  if (permissions.setting?.HardwareList) {
+    stockManagementSubItems.push({
+      name: "Hardware List",
+      path: "/setting/hardware/list",
+    });
+  }
+}
 
-    // 📦 Stock Category
-    const stockCategorySubItems = [];
+// Stock Category - Categories
+if (hasTruePermission(permissions.stockCategory)) {
+  stockManagementSubItems.push({
+    name: "Categories",
+    path: "/stock-category/categories",
+  });
+}
 
-    if (hasTruePermission(permissions.stockCategory)) {
-      stockCategorySubItems.push({
-        name: "Categories",
-        path: "/stock-category/categories",
-      });
-    }
+// Total Available Stock
+if (permissions.stockCategory?.TotalAvailable) {
+  stockManagementSubItems.push({
+    name: "Total Available Stock",
+    path: "/stock-category/total-available",
+  });
+}
 
-    if (permissions.stockCategory?.TotalAvailable)
-      stockCategorySubItems.push({
-        name: "Total Available Stock",
-        path: "/stock-category/total-available",
-      });
-    if (permissions.stockCategory?.TotalAssigned)
-      stockCategorySubItems.push({
-        name: "Total Assigned Stock",
-        path: "/stock-category/total-assigned",
-      });
-    if (permissions.stockCategory?.AssignToEngineer)
-      stockCategorySubItems.push({
-        name: "Assign to Engineer",
-        path: "/stock-category/assign-to-engineer",
-      });
-    if (permissions.stockCategory?.AssignToUser)
-      stockCategorySubItems.push({
-        name: "Assign to User",
-        path: "/stock-category/assign-to-user",
-      });
+// Total Assigned Stock
+if (permissions.stockCategory?.TotalAssigned) {
+  stockManagementSubItems.push({
+    name: "Total Assigned Stock",
+    path: "/stock-category/total-assigned",
+  });
+}
 
-    if (stockCategorySubItems.length > 0) {
-      generatedNavItems.push({
-        name: "Stock Category",
-        icon: <BoxIconLine />,
-        subItems: stockCategorySubItems,
-      });
-    }
+// Assign to Engineer
+if (permissions.stockCategory?.AssignToEngineer) {
+  stockManagementSubItems.push({
+    name: "Assign to Engineer",
+    path: "/stock-category/assign-to-engineer",
+  });
+}
+
+// Assign to User
+if (permissions.stockCategory?.AssignToUser) {
+  stockManagementSubItems.push({
+    name: "Assign to User",
+    path: "/stock-category/assign-to-user",
+  });
+}
+
+// Generate Single Stock Management Menu
+if (stockManagementSubItems.length > 0) {
+  generatedNavItems.push({
+    name: "Stock Management",
+    icon: <LuWarehouse />,
+    subItems: stockManagementSubItems,
+  });
+}
+
+
+    // // 📦 Stock Management
+    // const stockManagementSubItems = [];
+
+    // if (hasTruePermission(permissions.setting)) {
+    //   if (permissions.setting?.HardwareList) {
+    //     stockManagementSubItems.push({
+    //       name: "Hardware List",
+    //       path: "/setting/hardware/list",
+    //     });
+    //   }
+    // }
+
+    // if (stockManagementSubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Stock Management",
+    //     icon: <FileIcon />, // any icon
+    //     subItems: stockManagementSubItems,
+    //   });
+    // }
+
+    // // 📦 Stock Category
+    // const stockCategorySubItems = [];
+
+    // if (hasTruePermission(permissions.stockCategory)) {
+    //   stockCategorySubItems.push({
+    //     name: "Categories",
+    //     path: "/stock-category/categories",
+    //   });
+    // }
+
+    // if (permissions.stockCategory?.TotalAvailable)
+    //   stockCategorySubItems.push({
+    //     name: "Total Available Stock",
+    //     path: "/stock-category/total-available",
+    //   });
+    // if (permissions.stockCategory?.TotalAssigned)
+    //   stockCategorySubItems.push({
+    //     name: "Total Assigned Stock",
+    //     path: "/stock-category/total-assigned",
+    //   });
+    // if (permissions.stockCategory?.AssignToEngineer)
+    //   stockCategorySubItems.push({
+    //     name: "Assign to Engineer",
+    //     path: "/stock-category/assign-to-engineer",
+    //   });
+    // if (permissions.stockCategory?.AssignToUser)
+    //   stockCategorySubItems.push({
+    //     name: "Assign to User",
+    //     path: "/stock-category/assign-to-user",
+    //   });
+
+    // if (stockCategorySubItems.length > 0) {
+    //   generatedNavItems.push({
+    //     name: "Stock Category",
+    //     icon: <BoxIconLine />,
+    //     subItems: stockCategorySubItems,
+    //   });
+    // }
 
     // 🏷️ Expenses
     // const categorySubItems = [];

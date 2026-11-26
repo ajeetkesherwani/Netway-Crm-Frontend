@@ -481,7 +481,7 @@ export default function TicketFilter({ setSearchParams }) {
         </div>
 
         {/* ───────────── RESELLER SEARCHABLE (UI SAME) ───────────── */}
-        <div className="relative">
+        {/* <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select Reseller
           </label>
@@ -495,10 +495,10 @@ export default function TicketFilter({ setSearchParams }) {
             cancelClassName="p-[1px]"
             inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
           />
-        </div>
+        </div> */}
 
         {/* ───────────── LCO SEARCHABLE (UI SAME) ───────────── */}
-        <div className="relative">
+        {/* <div className="relative">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Select LCO
           </label>
@@ -512,7 +512,7 @@ export default function TicketFilter({ setSearchParams }) {
             cancelClassName="p-[1px]"
             inputClassName="py-2 text-gray-500 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 px-4"
           />
-        </div>
+        </div> */}
 
         {/* Resolved By */}
         <div>
