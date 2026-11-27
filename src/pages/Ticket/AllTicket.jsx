@@ -956,9 +956,16 @@ export default function AllTicket() {
 
       const res = await getAllTicketListWithFilter(queryParamsString);
 
+      const filteredTicketKey = {
+        Open: "openTickets",
+        Assigned: "assignedTickets",
+      }[searchParamsVal.filter];
       const ticketData =
         res?.data?.data?.allTickets ||
         res?.data?.allTickets ||
+        res?.data?.data?.[filteredTicketKey] ||
+        res?.data?.[filteredTicketKey] ||
+        res?.[filteredTicketKey] ||
         res?.allTickets ||
         [];
 

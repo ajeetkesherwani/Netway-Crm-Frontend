@@ -7,6 +7,7 @@ import { usePermission } from "../../../context/PermissionContext";
 import { getDashboardSummary } from "../../../service/dashboardApi";
 import DashboardSection from "./DashboardSection";
 import MiniCard from "./MiniCard";
+import RenewalCalendar from "./RenewalCalendar";
 
 import {
   FaClock,
@@ -25,6 +26,19 @@ const typeMap = {
   'Case *': 'case',
   'Upcoming Renewal *': 'upcoming-renewal',
 };
+const userActivityPeriods = [
+  { key: "yesterday", label: "Yesterday" },
+  { key: "today", label: "Today" },
+  { key: "week", label: "This Week" },
+  { key: "month", label: "This Month" },
+  { key: "previousMonth", label: "Previous Month" },
+  { key: "year", label: "This Year" },
+];
+const userActivityRows = [
+  { key: "registered", label: "New Users" },
+  { key: "expired", label: "Expired Users" },
+  { key: "inactive", label: "Inactive Users" },
+];
 const Dashboard = () => {
   const { permissions, loading } = usePermission();
   const hasTruePermission = (group) =>
@@ -47,6 +61,7 @@ const Dashboard = () => {
     caf: {},
     serviceOpted: {},
     ekyc: {},
+    userActivity: {},
   });
 
   useEffect(() => {
@@ -117,6 +132,15 @@ const Dashboard = () => {
   // const handleViewDetails = (title) => setSelectedType(title);
   const handleViewDetails = (title) => navigate("/dashboard/details", { state: { type: typeMap[title], title: typeMap[title] } });
   const handleResellerWise = (title) => navigate("/reseller-wise-list/" + title);
+  const handleUserActivityCountClick = (type, period) => {
+    const params = new URLSearchParams({
+      dashboardActivity: type,
+      dashboardPeriod: period,
+    });
+    if (type === "inactive") params.set("status", "Inactive");
+    if (type === "suspended") params.set("status", "Suspend");
+    navigate(`/user/list?${params.toString()}`);
+  };
 
   if (selectedType) {
     return (
@@ -128,7 +152,7 @@ const Dashboard = () => {
     );
   }
   return (
-    <div className="p-6">
+    <div className="p-4">
       {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
           title="Registration *"
@@ -196,12 +220,12 @@ const Dashboard = () => {
       </div> */}
 
       <DashboardSection title="Complaint Status">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <MiniCard title="Open"
             value={summary.tickets?.Open}
             icon={<FaClock />}
             color="red"
-            onCountClick={() => navigate("ticket/manage")}
+            onCountClick={() => navigate("/ticket/all?status=Open")}
           />
 
           <MiniCard
@@ -209,7 +233,7 @@ const Dashboard = () => {
             value={summary.tickets?.Assigned}
             icon={<FaTasks />}
             color="orange"
-            onCountClick={() => navigate("ticket/manage")}
+            onCountClick={() => navigate("/ticket/all?status=Assigned")}
           />
 
           <MiniCard
@@ -240,55 +264,55 @@ const Dashboard = () => {
       </DashboardSection>
 
       <DashboardSection title="CAF Form">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MiniCard
             title="CAF Uploaded"
             value={summary.caf?.uploaded}
             icon={<FaCheckCircle />}
             color="green"
-            onCountClick={() => navigate("/user/list")}
+            onCountClick={() => navigate("/user/list?cafUploaded=yes")}
           />
           <MiniCard
             title="CAF Not Uploaded"
             value={summary.caf?.notUploaded}
             icon={<FaBan />}
             color="red"
-            onCountClick={() => navigate("/user/list")}
+            onCountClick={() => navigate("/user/list?cafUploaded=no")}
           />
         </div>
       </DashboardSection>
 
       <DashboardSection title="Service">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <MiniCard
             title="Intercom"
             value={summary.serviceOpted?.intercom}
             icon={<FaWifi />}
             color="blue"
-            onCountClick={() => navigate("/user/list")}
+            onCountClick={() => navigate("/user/list?serviceOpted=intercom")}
           />
           <MiniCard
             title="Broadband"
             value={
-              summary.serviceOpted?.broadband +
-              (summary.serviceOpted?.broadBand || 0)
+              (summary.serviceOpted?.broadband ?? 0) +
+              (summary.serviceOpted?.broadBand ?? 0)
             }
             icon={<FaWifi />}
             color="green"
-            onCountClick={() => navigate("/user/list")}
+            onCountClick={() => navigate("/user/list?serviceOpted=broadband")}
           />
           <MiniCard
             title="Corporate"
             value={summary.serviceOpted?.corporate}
             icon={<FaWifi />}
             color="gray"
-            onCountClick={() => navigate("/user/list")}
+            onCountClick={() => navigate("/user/list?serviceOpted=corporate")}
           />
         </div>
       </DashboardSection>
 
       <DashboardSection title="eKYC Status">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MiniCard
             title="eKYC Completed"
             value={summary.ekyc?.yes}
@@ -307,6 +331,54 @@ const Dashboard = () => {
         </div>
       </DashboardSection>
 
+      <RenewalCalendar />
+
+      <DashboardSection title="Total Records">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] border-collapse text-sm">
+            <thead>
+              <tr>
+                <th className="border border-gray-300 bg-[#ed145b] px-2 py-2 text-left text-white" />
+                {userActivityPeriods.map((period) => (
+                  <th
+                    key={period.key}
+                    className="border border-gray-300 bg-[#ed145b] px-2 py-2 text-center font-semibold text-white"
+                  >
+                    {period.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {userActivityRows.map((row, rowIndex) => (
+                <tr key={row.key}>
+                  <th className="border border-gray-300 bg-[#ed145b] px-2 py-2 text-left font-semibold text-white">
+                    {row.label}
+                  </th>
+                  {userActivityPeriods.map((period) => (
+                    <td
+                      key={period.key}
+                      className={`border border-gray-300 px-2 py-2 text-center ${
+                        rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleUserActivityCountClick(row.key, period.key)
+                        }
+                        className="font-medium text-blue-700 hover:text-blue-900 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                      >
+                        {summary.userActivity?.[row.key]?.[period.key] ?? 0}
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </DashboardSection>
 
     </div>
   );
