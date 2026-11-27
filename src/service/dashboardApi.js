@@ -56,14 +56,41 @@ export const getUserListDetails = async (type, filter, month, year) => {
 
 
 export const getDashboardSummary = async () => {
-  const token = localStorage.getItem("token");
+  const res = await fetch(`${BASE_URL}/common/count/summary`, {
+    method: "GET",
+    headers: getApiHeader(),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch dashboard summary");
+  }
+  return data;
+};
+
+export const getRenewalCalendar = async () => {
+  const res = await fetch(`${BASE_URL}/dashboard/renewal-calendar`, {
+    method: "GET",
+    headers: getApiHeader(),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch renewal calendar");
+  }
+  return data;
+};
+
+export const getRenewalCalendarUsers = async (date, type) => {
+  const params = new URLSearchParams({ date, type });
   const res = await fetch(
-    "http://localhost:5004/api/admin/common/count/summary",
+    `${BASE_URL}/dashboard/renewal-calendar/users?${params.toString()}`,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      method: "GET",
+      headers: getApiHeader(),
     }
   );
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to fetch renewal calendar users");
+  }
+  return data;
 };

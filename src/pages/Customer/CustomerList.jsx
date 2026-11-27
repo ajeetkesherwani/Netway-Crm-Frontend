@@ -18,11 +18,28 @@ import {
   resetUserPassword,
   getAllZoneList,
 } from "../../service/user";
+import { getRenewalCalendarUsers } from "../../service/dashboardApi";
 import { toast } from "react-toastify";
 import ProtectedAction from "../../components/ProtectedAction";
 import { useDebounce } from "../../hooks/useDebounce";
 import CustomerFilters from "./components/CustomerFilters";
 import * as XLSX from "xlsx";
+
+const dashboardActivityLabels = {
+  registered: "New Users",
+  expired: "Expired Users",
+  inactive: "Inactive Users",
+  deleted: "Deleted Users",
+  suspended: "Suspended Users",
+};
+const dashboardPeriodLabels = {
+  yesterday: "Yesterday",
+  today: "Today",
+  week: "This Week",
+  month: "This Month",
+  previousMonth: "Previous Month",
+  year: "This Year",
+};
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
@@ -39,6 +56,13 @@ export default function UserList() {
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const renewalDate = searchParams.get("renewalDate") || "";
+  const renewalType = searchParams.get("renewalType") || "";
+  const isRenewalCalendarList = Boolean(renewalDate && renewalType);
+  const dashboardActivity = searchParams.get("dashboardActivity") || "";
+  const dashboardPeriod = searchParams.get("dashboardPeriod") || "";
+  const isDashboardActivityList = Boolean(dashboardActivity && dashboardPeriod);
+  const isDeletedDashboardList = dashboardActivity === "deleted";
 
   const filters = {
     searchQuery: searchParams.get("searchQuery") || "",
@@ -55,6 +79,8 @@ export default function UserList() {
     lco: searchParams.get("lco") || "",
     cafUploaded: searchParams.get("cafUploaded") || "",
     serverType: searchParams.get("serverType") || "",
+    dashboardActivity,
+    dashboardPeriod,
   };
 
   const debouncedSearch = useDebounce(filters.searchQuery, 500);
@@ -80,7 +106,9 @@ export default function UserList() {
     try {
       setLoading(true);
       setError("");
-      const res = await getAllUserList({ ...filters });
+      const res = isRenewalCalendarList
+        ? await getRenewalCalendarUsers(renewalDate, renewalType)
+        : await getAllUserList({ ...filters });
       setUsers(res.data || []);
     } catch (err) {
       console.error("Error fetching users:", err);
@@ -108,6 +136,10 @@ export default function UserList() {
     filters.connectionType,
     filters.installationBy,
     filters.serverType,
+    filters.dashboardActivity,
+    filters.dashboardPeriod,
+    renewalDate,
+    renewalType,
   ]);
 
   const toggleMenu = (userId) => {
@@ -214,14 +246,35 @@ export default function UserList() {
 
   return (
     <div className="p-6">
-      <CustomerFilters
-        filters={filters}
-        setSearchParams={setSearchParams}
-        onAreaChange={handleAreaChange} // Pass the handler to CustomerFilters
-      />
+      {!isRenewalCalendarList && (
+        <CustomerFilters
+          filters={filters}
+          setSearchParams={setSearchParams}
+          onAreaChange={handleAreaChange}
+        />
+      )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h1 className="text-xl font-semibold">Customer List</h1>
+        <div>
+          <h1 className="text-xl font-semibold">
+            {isRenewalCalendarList
+              ? renewalType === "upcoming"
+                ? `Plans Expiring on ${new Date(`${renewalDate}T00:00:00`).toLocaleDateString("en-IN")}`
+                : `Customers Who Didn't Renew by ${new Date(`${renewalDate}T00:00:00`).toLocaleDateString("en-IN")}`
+              : isDashboardActivityList
+                ? `${dashboardActivityLabels[dashboardActivity] || "Users"} — ${dashboardPeriodLabels[dashboardPeriod] || dashboardPeriod}`
+                : "Customer List"}
+          </h1>
+          {isRenewalCalendarList && (
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard")}
+              className="mt-1 text-sm text-blue-600 hover:underline"
+            >
+              Back to Dashboard
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-wrap gap-3">
           {/* Download Excel Button */}
@@ -294,14 +347,16 @@ export default function UserList() {
           </button>
 
           {/* Add Customer Button */}
-          <ProtectedAction module="users" action="Create">
-            <button
-              onClick={() => navigate("/user/create")}
-              className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 font-medium"
-            >
-              Add Customer
-            </button>
-          </ProtectedAction>
+          {!isDeletedDashboardList && (
+            <ProtectedAction module="users" action="Create">
+              <button
+                onClick={() => navigate("/user/create")}
+                className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 font-medium"
+              >
+                Add Customer
+              </button>
+            </ProtectedAction>
+          )}
         </div>
       </div>
       {users.length === 0 ? (
@@ -319,7 +374,9 @@ export default function UserList() {
                   <th className="px-[2px] py-[2px] text-left">Phone</th>
                   <th className="px-[2px] py-[2px] text-left">Address</th>
                   <th className="px-[2px] py-[2px] text-left">Status</th>
-                  <th className="px-[2px] py-[2px] text-left">Action</th>
+                  {!isDeletedDashboardList && (
+                    <th className="px-[2px] py-[2px] text-left">Action</th>
+                  )}
                 </tr>
               </thead>
 
@@ -329,8 +386,16 @@ export default function UserList() {
                     <td className="px-[2px] py-[2px]">{index + 1}</td>
 
                     <td
-                      className="px-[2px] py-[2px] hover:underline cursor-pointer"
-                      onClick={() => navigate(`/user/profile/${user._id}`)}
+                      className={`px-[2px] py-[2px] ${
+                        isDeletedDashboardList
+                          ? ""
+                          : "hover:underline cursor-pointer"
+                      }`}
+                      onClick={
+                        isDeletedDashboardList
+                          ? undefined
+                          : () => navigate(`/user/profile/${user._id}`)
+                      }
                     >
                       {user.generalInformation?.name}
                     </td>
@@ -358,8 +423,8 @@ export default function UserList() {
                       </span>
                     </td>
 
-                    {/* ACTION MENU */}
-                    <td className="px-[2px] py-[2px] relative text-center">
+                    {!isDeletedDashboardList && (
+                      <td className="px-[2px] py-[2px] relative text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -471,7 +536,8 @@ export default function UserList() {
                           </ul>
                         </div>
                       )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
