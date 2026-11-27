@@ -184,6 +184,7 @@ import UserCms from "./pages/Setting/UserCms";
 import MonitoringLogs from "./pages/Setting/MonitoringLogs";
 import SmsTemplateList from "./pages/Setting/SmsTemplateList";
 import PaymentModeList from "./pages/Setting/PaymentModeList";
+import ThirdPartyApiList from "./pages/Setting/ThirdPartyApiList";
 import LeadStageList from "./pages/Setting/LeadStageList";
 
 // import UserList from "./pages/User/UserList";
@@ -397,6 +398,10 @@ export default function App() {
             <Route
               path="/setting/monitoring-logs"
               element={<MonitoringLogs />}
+            />
+            <Route
+              path="/setting/api-configuration"
+              element={<ThirdPartyApiList />}
             />
             <Route
               path="/setting/ticketcattogry"

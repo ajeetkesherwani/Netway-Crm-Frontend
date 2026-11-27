@@ -503,6 +503,10 @@ if (stockManagementSubItems.length > 0) {
         path: "/setting/sms-template/list",
       });
       settingSubItems.push({
+        name: "API Configuration",
+        path: "/setting/api-configuration",
+      });
+      settingSubItems.push({
         name: "Payment Mode",
         path: "/setting/payment-mode",
       });
